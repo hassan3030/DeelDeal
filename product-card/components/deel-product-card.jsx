@@ -1,0 +1,176 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { Heart, Star, Repeat, Check } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { useLanguage } from "@/lib/language-provider"
+import { useTranslations } from "@/lib/use-translations"
+import { getImageProducts } from "@/callAPI/products"
+import { useRouter } from "next/navigation"
+import { getCookie } from "@/callAPI/utiles"
+import { useToast } from "@/components/ui/use-toast"
+
+export function DeelProductCard({
+  id,
+  name,
+  price,
+  value_estimate,
+  description,
+  images,
+  status_item,
+  category
+}) {
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
+  const [isAddedToCart, setIsAddedToCart] = useState(false)
+  const { isRTL } = useLanguage()
+  const { t } = useTranslations()
+    const { toast } = useToast()
+const makeSwap = async(e)=>{
+  e.preventDefault()
+  e.stopPropagation()
+const token = await getCookie()
+
+     if(token){
+      router.push(`/swap/${id}`)
+    }
+    else{
+toast({
+        title: t("faildSwap") || "Faild Swap",
+        description:  "Invalid swap without login. Please try to login.",
+        variant: "destructive",
+      })
+      router.push(`/auth/login`)
+    } 
+  }
+  // const [item , setItem] =  useState(product)
+// const [images1 , setImages] =  useState([])
+const [bigImage , setBigImage] =  useState('')
+const router = useRouter()
+// console.log("product" , product  )
+
+  const getDataImage = async () => {
+  const images2 = await getImageProducts(images)
+  // setImages(images)
+  setBigImage(images2[0].directus_files_id)
+  console.log('i am in single product ' , images)
+}
+
+  const handleAddToCart = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsAddingToCart(true)
+
+    // Simulate API call for swap request
+    await new Promise((resolve) => setTimeout(resolve, 800))
+
+    setIsAddingToCart(false)
+    setIsAddedToCart(true)
+
+    // Reset added state after 2 seconds
+    setTimeout(() => {
+      setIsAddedToCart(false)
+    }, 2000)
+  }
+
+  // const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
+
+  // Format currency based on language
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat(isRTL ? "ar-EG" : "en-US", {
+      style: "currency",
+      currency: isRTL ? "EGP" : "USD",
+      maximumFractionDigits: 0,
+    }).format(value)
+  }
+
+  useEffect(() => {
+    getDataImage()
+  }
+  )
+  return (
+    <Link href={`/products/${id}`}>
+      <div className="group relative flex w-[220px] flex-col overflow-hidden rounded-md border bg-background transition-all hover:shadow-md">
+        {/* Image container */}
+        <div className="relative aspect-square overflow-hidden">
+          <Image
+          // imageSrc
+          src={`http://localhost:8055/assets/${bigImage}`}
+                // src={`http://localhost:8055/assets/${images.find(image => image.Items_id === item.id).directus_files_id}`}
+            // src={imageSrc || "/placeholder.svg?height=300&width=300"}
+            alt={name}
+            fill
+            className="object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+
+          {/* Badges */}
+          <div className="absolute left-2 top-2 flex flex-col gap-1">
+            <Badge className="bg-accent-orange text-white">{t(status_item)}</Badge>
+          </div>
+
+          {/* Favorite button */}
+         
+
+          {/* Discount badge */}
+          {/* {discount > 0 && (
+            <div className="absolute bottom-2 left-2 rounded-md bg-deep-orange px-1.5 py-0.5 text-xs font-bold text-white">
+              {discount}% {t("off")}
+            </div>
+          )} */}
+        </div>
+
+        {/* Content */}
+        <div className="flex flex-1 flex-col p-3">
+          {/* Title */}
+          <h3 className="mb-1 line-clamp-2 min-h-[40px] text-sm font-medium">{name}</h3>
+
+          {/* Rating */}
+          <div className="mb-2 flex items-center gap-1">
+            <div className="flex">
+              {
+                location? "yes location":"no location"
+              }
+            </div>
+           
+          </div>
+
+          {/* Price */}
+          <div className="mb-2">
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-bold">{formatCurrency(price)}</span>
+            </div>
+          </div>
+
+          {/* Swap button */}
+          <Button
+            className="mt-auto w-full bg-primary-yellow text-gray-800 hover:bg-primary-orange hover:text-white"
+            size="sm"
+            onClick={handleAddToCart}
+            disabled={isAddingToCart || isAddedToCart}
+          >
+            {isAddingToCart ? (
+              <span className="flex items-center gap-1">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                {t("requesting")}
+              </span>
+            ) : isAddedToCart ? (
+              <span className="flex items-center gap-1">
+                <Check className="h-4 w-4" />
+                {t("requested")}
+              </span>
+            ) : (
+              <span className="flex items-center gap-1"
+              onClick={(e)=>{makeSwap(e)}}
+              >
+                <Repeat className="h-4 w-4" />
+                {t("swap")}
+              </span>
+            )}
+          </Button>
+        </div>
+      </div>
+    </Link>
+  )
+}

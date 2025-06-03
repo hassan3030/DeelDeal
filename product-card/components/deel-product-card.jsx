@@ -1,5 +1,4 @@
 "use client"
-
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
@@ -21,7 +20,8 @@ export function DeelProductCard({
   description,
   images,
   status_item,
-  category
+  category,
+  location
 }) {
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [isAddedToCart, setIsAddedToCart] = useState(false)
@@ -107,7 +107,7 @@ const router = useRouter()
 
           {/* Badges */}
           <div className="absolute left-2 top-2 flex flex-col gap-1">
-            <Badge className="bg-accent-orange text-white">{t(status_item)}</Badge>
+            <Badge className="bg-accent-orange text-white capitalize">{t(status_item)}</Badge>
           </div>
 
           {/* Favorite button */}
@@ -124,11 +124,11 @@ const router = useRouter()
         {/* Content */}
         <div className="flex flex-1 flex-col p-3">
           {/* Title */}
-          <h3 className="mb-1 line-clamp-2 min-h-[40px] text-sm font-medium">{name}</h3>
+          <h3 className="mb-1 line-clamp-2 min-h-[40px] text-sm font-medium capitalize">{name}</h3>
 
           {/* Rating */}
           <div className="mb-2 flex items-center gap-1">
-            <div className="flex">
+            <div className="flex capitalize">
               {
                 location? "yes location":"no location"
               }
@@ -139,7 +139,7 @@ const router = useRouter()
           {/* Price */}
           <div className="mb-2">
             <div className="flex items-baseline gap-1">
-              <span className="text-lg font-bold">{formatCurrency(price)}</span>
+              <span className="text-lg font-bold">{price}LE</span>
             </div>
           </div>
 

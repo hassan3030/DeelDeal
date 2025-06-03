@@ -3,20 +3,22 @@
 import { ItemListingUpdate } from "@/components/item-listing-update"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
-import { getProductById } from "@/callAPI/products"
+import { getProductById , getImageProducts} from "@/callAPI/products"
 import Link from "next/link"
+import Image from "next/image"
+import { ProductGallery } from "@/components/product-gallery"
 
 export default async function NewItemPage({ params }) {
   const {id} = await params;
-  const item = async () => {
-    await getProductById(id)
-  }
+  const item = await getProductById(id)
 
+  
   return (
-    <div className="container py-10">
+    <>
+
+
+     <div className="container py-10">
       <h1>{id}</h1>
-      <h1>{item.name}</h1>
-      <h1>{item.price}</h1>
       <div className="mb-6 flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/profile">
@@ -33,5 +35,7 @@ export default async function NewItemPage({ params }) {
 
       <ItemListingUpdate {...item} />
     </div>
+    </>
+   
   )
 }

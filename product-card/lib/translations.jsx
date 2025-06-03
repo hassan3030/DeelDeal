@@ -1,5 +1,13 @@
+
+
 export const translations = {
   en: {
+    // toast 
+    successfully:" Successfully",
+    error:"Error",
+// deel-product-card product card comp 
+swap: 'Swap',
+
 // swap And transaction status
  pending : 'Pending',
   rejected  : 'Rejected',
@@ -152,16 +160,17 @@ unavailable: "Unavailable",
     hidePassword: "Hide password",
 
     // customer service
+    note:"Note Please",
     sendMessage: "Send Message",
     messageDescription: "Your message has been sent! We'll get back to you soon.",
     ifoDescription : "Live chat feature coming soon!",
+    ifoTelDescription:"Phone feature coming soon!",
     ifoCustomer : "Information",
     welcome: "Welcome to Your Application",
     startBuilding: "Start building your amazing project here!",
     visitCustomerService: "Visit Customer Service",
     phoneNumber: "Phone Number",
     phoneNumberPlaceholder: "123-456-7890",
-    // Customer service page
     customerSupport: "Customer Support",
     helpDescription: "We're here to help! Find answers to common questions or reach out to our support team.",
     liveChat: "Live Chat",
@@ -216,6 +225,11 @@ unavailable: "Unavailable",
    
   },
   ar: {
+// toast 
+successfully:"تمت بنجاح",
+error:"خطأ",
+    // deel-product-card product card comp 
+swap: 'إستبدال',
     // swap And transaction status
  pending : 'في انتظار الموافقة',
   rejected  : 'مرفوض',
@@ -370,6 +384,8 @@ unavailable: " غير متاح للتبادل",
     showPassword: "إظهار كلمة المرور",
     hidePassword: "إخفاء كلمة المرور",
     // customer service
+     ifoTelDescription : "ميزة المحمول قادمة قريبً",
+       note:"ملاحظة",
     messageDescription: "لقد تم إرسال رسالتك! سنعود إليك قريبًا.",
     ifoDescription : "ميزة الدردشة المباشرة قادمة قريبًا!",
     ifoCustomer : "معلومات",
@@ -379,8 +395,6 @@ unavailable: " غير متاح للتبادل",
      welcome: "مرحبًا بك في تطبيقك",
     startBuilding: "ابدأ في بناء مشروعك المذهل هنا!",
     visitCustomerService: "زيارة خدمة العملاء",
-
-    // Customer service page
     customerSupport: "دعم العملاء",
     helpDescription: "نحن هنا للمساعدة! ابحث عن إجابات للأسئلة الشائعة أو تواصل مع فريق الدعم لدينا.",
     liveChat: "المحادثة المباشرة",

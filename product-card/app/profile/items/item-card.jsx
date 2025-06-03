@@ -2,9 +2,8 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "@/components/ui/label"
-import { ChevronLeft, Search, Edit, Trash2, Eye, Plus, AlertCircle, ChevronDownIcon } from "lucide-react"
+import {  Edit, Trash2, Eye } from "lucide-react"
+import { useRouter } from "next/navigation";
 
 import {
   Dialog,
@@ -18,7 +17,6 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-// import { toast } from "@/components/ui/toast"
 import { useToast } from "@/components/ui/use-toast";
 import { deleteProduct , getImageProducts } from "@/callAPI/products";
 
@@ -26,6 +24,7 @@ import { deleteProduct , getImageProducts } from "@/callAPI/products";
 const ItemCard = ({item}) => {
     const { toast } = useToast();
     const [bigImage , setBigImage] =  useState('')
+  const router = useRouter();
 
        const getDataImage = async () => {
         const images2 = await getImageProducts(item.images)
@@ -40,6 +39,7 @@ const ItemCard = ({item}) => {
     description: "The item has been successfully deleted.",
     variant: "success", // Assuming your toast supports variants like 'success', 'error', etc.
   })
+  router.refresh()
   // Add yo
   }
 const dialogDelet = (
@@ -85,23 +85,26 @@ useEffect(() => {
                         <div className="flex flex-1 flex-col p-4">
                           <div className="mb-2 flex items-start justify-between">
                             <div>
-                              <h3 className="font-medium">{item.name}</h3>
-                              <div className="mt-1 flex items-center gap-2">
+                              <h3 className="font-medium capitalize ">{item.name}</h3>
+                              <div className="mt-1 flex items-center gap-2 capitalize">
                                 <Badge>{item.category}</Badge>
                                 <Badge>{item.status_swap}</Badge>
                                 <Badge variant={item.status_item === "available" ? "outline" : "secondary"}>
                                   {item.status_item}
                                 </Badge>
                               </div>
+
+<div className="mt-1 flex items-center gap-2 capitalize">
+                
+                                <Badge >Status Swap: {item.status_swap}</Badge>
+                               
+                              </div>
+
+
                             </div>
                             <div className="text-right">
-                              <p className="font-semibold">
-                                Value Estimate:
-                                {new Intl.NumberFormat("en-US", {
-                                  style: "currency",
-                                  currency: "USD",
-                                  maximumFractionDigits: 0,
-                                }).format(item.value_estimate)}
+                              <p className="font-semibold capitalize">
+                           Value Estimate: {item.value_estimate}LE
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 Listed on {new Date(item.date_created).toISOString().split("T")[0]}
@@ -130,10 +133,18 @@ useEffect(() => {
                                   Edit
                                 </Link>
                               </Button>
-                              <Button variant="destructive" size="sm" >
-                                <Trash2 className="mr-1 h-4 w-4" />
-                              {dialogDelet}
-                              </Button>
+
+
+{/*  */}
+
+{item.status_swap == "available"? (
+  <Button variant="destructive" size="sm" >
+    <Trash2 className="mr-1 h-4 w-4" />
+    {dialogDelet}
+  </Button>
+): ''}
+{/*  */}
+                             
                             </div>
                           </div>
                         </div>

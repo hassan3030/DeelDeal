@@ -11,24 +11,30 @@ import { ProductGallery } from "@/components/product-gallery";
 import { useTranslations } from "@/lib/use-translations";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getProductById, getImageProducts } from '@/callAPI/products';
-import { getCookie } from '@/callAPI/utiles';
+import { getCookie , decodedToken } from '@/callAPI/utiles';
 import { getUserByProductId } from '@/callAPI/users';
 import { useToast } from "@/components/ui/use-toast";
 
-export default function ProductPage() {
+export default  function  ProductPage() {
   const { toast } = useToast();
   const [product, setProduct] = useState(null);
   const [images, setImages] = useState([]);
   const [user, setUser] = useState(null);
   const [name, setName] = useState('');
+  const [tokenId, setTokenId] = useState();
   const [avatar, setAvatar] = useState('');
   const { t } = useTranslations();
   const params = useParams();
   const router = useRouter();
   const id = params.id;
-
+  
+  const getToken = async ()=>{
+     const fullToken = await decodedToken();
+     setTokenId(fullToken.id);
+  }
   // Fetch product and related data
   useEffect(() => {
+    getToken()
     const fetchData = async () => {
       try {
         const prod = await getProductById(id);
@@ -164,7 +170,7 @@ export default function ProductPage() {
           {/* Add to Cart Section */}
           <div className="grid gap-4">
             <div className="flex gap-4">
-              {product.status_swap === 'available'?
+              {(product.status_swap === 'available' && product.user_id !== tokenId)?
                  (<Button className="flex-1" onClick={makeSwap}>
                 {t("makeSwap")}
               </Button>):null

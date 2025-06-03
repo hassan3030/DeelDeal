@@ -1,8 +1,5 @@
 
 "use client"
-
-
-
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -12,7 +9,7 @@ import { X, Upload, Info, Loader2 } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
-import { getProductById , getProductImages } from "@/callAPI/products"
+import { getProductById , getImageProducts } from "@/callAPI/products"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -21,41 +18,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { categoriesName , itemsStatus , allowedCategories} from "@/lib/data"
+import { useToast } from "@/components/ui/use-toast"
+import { useTranslations } from "@/lib/use-translations";
+
+
 // import { Category } from "@/components/item-card"
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
 const MAX_IMAGES = 3
-const categories = [
-  "Electronics",
-  "RealEstate",
-  "Vehicles",
-  "Furniture",
-  "Fashion",
-  "Clothing",
-  "Collectibles",
-  "Sports",
-  "Books & Stationery",
-  "Software",
-  "Jewelry & Accessories",
-  "Automotive & Tools",
-  "Electronics & Gadgets",
-  "Home & Kitchen",
-  "Beauty & Personal Care",
-  "Toys & Kids",
-  "Health & Wellness",
-  "All",
-]
+const categories = categoriesName
+
+const conditions = itemsStatus
+const allowedCat = allowedCategories
 
 
-
-const conditions = [
-  { value: "new", label: "New" },
-  { value: "like_new", label: "Like New" },
-  { value: "excellent", label: "Excellent" },
-  { value: "good", label: "Good" },
-  { value: "fair", label: "Fair" },
-]
 
 const formSchema = z.object({
   name: z.string().min(3, "Name must be at least 3 characters").max(100, "Name must be less than 100 characters"),
@@ -65,13 +43,13 @@ const formSchema = z.object({
     .max(2000, "Description must be less than 2000 characters"),
   category: z.enum(categories),
   condition: z.string(),
-  valueEstimate: z.coerce.number().positive("Value must be greater than 0"),
-  allowedCategories: z.array(z.enum(categories)).min(1, "Select at least one category"),
-  location: z.string().min(3, "Location must be at least 3 characters"),
+  value_estimate: z.coerce.number().positive("Value must be greater than 0"),
+  allowedCategories: z.array(z.enum(allowedCat)).min(1, "Select at least one category"),
+  // location: z.string().min(3, "Location must be at least 3 characters"),
   // Images will be handled separately
 })
 
-//  FormValues = z.infer<typeof formSchema>
+
 
 export function ItemListingUpdate({
   id,
@@ -79,36 +57,48 @@ export function ItemListingUpdate({
   description,
   category,
   status_item,
-  valueEstimate,
+value_estimate,
   allowed_categories,
   status_swap ,
   price,
   city,
   country,
   street,
- user_id
+  images
+
 }) {
   
       
   const router = useRouter()
-  const [images, setImages] = useState([])
+  const [imagesFile, setImagesFile] = useState([])
   const [imageUrls, setImageUrls] = useState([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [aiPriceEstimation, setAiPriceEstimation] = useState(null)
   const [isEstimating, setIsEstimating] = useState(false)
   const [product, setProduct] = useState(name)
+const [bigImage , setBigImage] =  useState('')
+const { toast } = useToast()
+  const { t } = useTranslations();
+  // -------------------- get images 
 
-// const getProduct = async () => {
-//   const data =   await getProductById(itemId)
-//   // await getProductImages(data.images)
-//   setProduct(data)
-//   console.log("productproductproductproductproductproductproductproduct", name)
-//   return data
-// }
-// useEffect(() => {
-//   setProduct(getProduct)
-//   console.log("productproductproductproductproductproductproductproduct", product)
-// }, [])
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      if (!images || images.length === 0) return;
+      try {
+        const fetchedImages = await getImageProducts(images);
+        if (fetchedImages && fetchedImages.length > 0) {
+          setBigImage(fetchedImages[0].directus_files_id);
+          const urls = fetchedImages.map(img => `http://localhost:8055/assets/${img.directus_files_id}`);
+          setImageUrls(urls);
+        }
+      } catch (err) {
+        console.error("Failed to fetch images", err);
+      }
+    };
+    fetchImages();
+  }, [images]);
+  //----------------------------
 
   const form = useForm({
     // to check zod validation
@@ -116,18 +106,18 @@ export function ItemListingUpdate({
     // to set default values that will be used in the form by name
     defaultValues: {
     
-      name:'',
-  description: "",
-  category: "",
-  status_item: "excellent",
-  valueEstimate: 0,
-  allowed_categories: "All", // Use an array, not a string
-  status_swap: "available",
-  price: 0,
-  city: "",
-  country: "",
-  street: "",
- user_id: "aaf76619-27d8-40e8-9844-b3c6c9a169f5",
+  name:name,
+  description: description,
+  category:category ,
+  status_item:status_item ,
+  value_estimate: value_estimate || 0,
+  allowed_categories: allowed_categories , // Use an array, not a string
+  status_swap: status_swap,
+  price: price,
+  city: city,
+  country: country,
+  street: street,
+
     },
   })
 
@@ -141,26 +131,42 @@ export function ItemListingUpdate({
     // Validate file size and type
     const validFiles = newFiles.filter((file) => {
       if (file.size > MAX_FILE_SIZE) {
-        alert(`File ${file.name} is too large. Maximum size is 5MB.`)
+toast({
+        title: t("error") || "ERROR ",
+        description:`File ${file.name} is too large. Maximum size is 5MB.`,
+        variant: "destructive",
+      })
+
         return false
       }
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        alert(`File ${file.name} has an unsupported format. Please upload JPEG, PNG, or WebP.`)
+toast({
+        title: t("error") || "ERROR ",
+        description:`File ${file.name} has an unsupported format. Please upload JPEG, PNG, or WebP.`,
+        variant: "destructive",
+      })
+
+        
         return false
       }
       return true
     })
 
     // Check if adding these files would exceed the maximum
-    if (images.length + validFiles.length > MAX_IMAGES) {
-      alert(`You can upload a maximum of ${MAX_IMAGES} images.`)
+    if (imagesFile.length + validFiles.length > MAX_IMAGES) {
+      toast({
+        title: t("error") || "ERROR ",
+        description:`You can upload a maximum of ${MAX_IMAGES} images.`,
+        variant: "destructive",
+      })
+      
       return
     }
 
     // Create URLs for preview
     const newImageUrls = validFiles.map((file) => URL.createObjectURL(file))
 
-    setImages((prev) => [...prev, ...validFiles])
+    setImagesFile((prev) => [...prev, ...validFiles])
     setImageUrls((prev) => [...prev, ...newImageUrls])
   }
 
@@ -168,7 +174,7 @@ export function ItemListingUpdate({
     // Revoke the object URL to avoid memory leaks
     URL.revokeObjectURL(imageUrls[index])
 
-    setImages((prev) => prev.filter((_, i) => i !== index))
+    setImagesFile((prev) => prev.filter((_, i) => i !== index))
     setImageUrls((prev) => prev.filter((_, i) => i !== index))
   }
 
@@ -177,7 +183,12 @@ export function ItemListingUpdate({
 
     // Validate that we have enough information for an estimate
     if (!name || !description || !category || !condition) {
-      alert("Please fill in the item name, description, category, and condition for an AI price estimate.")
+       toast({
+        title: t("error") || "ERROR ",
+        description:"Please fill in the item name, description, category, and condition for an AI price estimate.",
+        variant: "destructive",
+      })
+
       return
     }
 
@@ -193,18 +204,27 @@ export function ItemListingUpdate({
       const mockEstimate = Math.floor(Math.random() * 1000) + 100
 
       setAiPriceEstimation(mockEstimate)
-      form.setValue("valueEstimate", mockEstimate)
+      form.setValue("value_estimate", mockEstimate)
     } catch (error) {
       console.error("Error getting AI price estimate:", error)
-      alert("Failed to get AI price estimate. Please try again or enter your own estimate.")
+      toast({
+        title: t("error") || "ERROR ",
+        description:"Failed to get AI price estimate. Please try again or enter your own estimate.",
+        variant: "destructive",
+      })
+
     } finally {
       setIsEstimating(false)
     }
   }
 
   const onSubmit = async (data) => {
-    if (images.length === 0) {
-      alert("Please upload at least one image of your item.")
+    if (imagesFile.length === 0) {
+       toast({
+        title: t("error") || "ERROR ",
+        description:"Please upload at least one image of your item.",
+        variant: "destructive",
+      })
       return
     }
 
@@ -212,22 +232,20 @@ export function ItemListingUpdate({
 
     try {
     await  handleSubmit()
-      // In a real app, you would:
-      // 1. Upload the images to a storage service
-      // 2. Get the URLs of the uploaded images
-      // 3. Create the item in your database with the image URLs
-
+     
       console.log("Form data:", data)
-      console.log("Images:", images)
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      console.log("Images:", imagesFile)
 
       // Redirect to the marketplace or the new item page
       // router.push("/")
     } catch (error) {
       console.error("Error creating item:", error)
-      alert("Failed to create item. Please try again.")
+      toast({
+        title: t("error") || "ERROR ",
+        description:"Failed to create item. Please try again.",
+        variant: "destructive",
+      })
+     
     } finally {
       setIsSubmitting(false)
     }
@@ -311,13 +329,18 @@ export function ItemListingUpdate({
 //   }
 // }
 const handleSubmit = async () => {
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0NzIxMjExMCwiZXhwIjoxNzQ3ODE2OTEwLCJpc3MiOiJkaXJlY3R1cyJ9.mJMvxflc9BHev0QLxJuTmP2ThN1kL84MMlfgMl52GCg"; // Replace with your actual token
+  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0ODg4NjQwMSwiZXhwIjoxNzQ5NDkxMjAxLCJpc3MiOiJkaXJlY3R1cyJ9.xVvqMIqFcmEgaJny0QI0IDKUYruhBiKQxRLpYNGlNH4"; // Replace with your actual token
   const apiBase = "http://localhost:8055";
 
-  const files = images; // Use the images array for file uploads
+  const files = imagesFile; // Use the images array for file uploads
 
   if (files.length === 0) {
-    alert("Please fill all fields and select at least one image.");
+     toast({
+        title: t("error") || "ERROR ",
+        description:"Please fill all fields and select at least one image.",
+        variant: "destructive",
+      })
+   
     return;
   }
 
@@ -327,8 +350,8 @@ const handleSubmit = async () => {
      // Ensure the id field is not included
     console.log("Payload:", payload);
 
-    const itemRes = await fetch(`http://localhost:8055/items/Items`, {
-      method: "POST",
+    const itemRes = await fetch(`http://localhost:8055/items/Items/${id}`, {
+      method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -348,7 +371,26 @@ const handleSubmit = async () => {
       throw new Error("Failed to retrieve item ID from the response.");
     }
 
-    // 2. Upload each image and link to item
+    // 2- Delete existing images linked to this item before uploading new ones
+    const existingImagesRes = await fetch(`${apiBase}/items/Items_files?filter[Items_id][_eq]=${itemId}`, {
+      headers: {
+      Authorization: `Bearer ${token}`,
+      },
+    });
+    const existingImagesData = await existingImagesRes.json();
+    if (existingImagesData?.data?.length > 0) {
+      for (const img of existingImagesData.data) {
+      await fetch(`${apiBase}/items/Items_files/${img.id}`, {
+        method: "DELETE",
+        headers: {
+        Authorization: `Bearer ${token}`,
+        },
+      });
+      }
+    }
+    
+
+    // 3. Upload each image and link to item
     for (const file of files) {
       const formData = new FormData();
       formData.append("file", file);
@@ -387,17 +429,25 @@ const handleSubmit = async () => {
         }),
       });
     }
-
-    alert("Item added successfully with images!");
+  toast({
+        title: t("error") || "ERROR ",
+        description:"Item added successfully with images!",
+      })
+ 
   } catch (err) {
     console.error(err);
-    alert(err.message || "Error adding item.");
+    toast({
+        title: t("error") || "ERROR ",
+        description: `${err.message}` || "Error adding item.",
+      })
+  
   }
 };
+
   return (
+   <>
     <Form {...form}>
-      <h1>{name}</h1>
-      <h1>{product}</h1>
+      
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid gap-8 md:grid-cols-2">
           {/* Left column - Basic details */}
@@ -409,7 +459,7 @@ const handleSubmit = async () => {
               </p>
             </div>
   <div className="grid gap-4 sm:grid-cols-2">
-    <Button onClick={()=>{  handleSubmit()}}>handleSubmit</Button>
+    <Button onClick={()=>{  handleSubmit()}}>Update</Button>
 {/* name */}
             <FormField
               control={form.control}
@@ -555,7 +605,7 @@ const handleSubmit = async () => {
 
               <FormField
                 control={form.control}
-                name="condition"
+                name="status_item"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Condition</FormLabel>
@@ -567,8 +617,8 @@ const handleSubmit = async () => {
                       </FormControl>
                       <SelectContent>
                         {conditions.map((condition) => (
-                          <SelectItem key={condition.value} value={condition.value}>
-                            {condition.label}
+                          <SelectItem key={condition} value={condition}>
+                            {condition}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -615,7 +665,7 @@ const handleSubmit = async () => {
                   </Card>
                 ))}
 
-                {images.length < MAX_IMAGES && (
+                {imagesFile.length < MAX_IMAGES && (
                   <Card className="flex aspect-square items-center justify-center">
                     <CardContent className="flex h-full w-full flex-col items-center justify-center p-4">
                       <label htmlFor="image-upload" className="cursor-pointer text-center">
@@ -644,7 +694,7 @@ const handleSubmit = async () => {
             <div className="space-y-4">
               <FormField
                 control={form.control}
-                name="valueEstimate"
+                name="value_estimate"
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
@@ -707,7 +757,7 @@ const handleSubmit = async () => {
                       </FormDescription>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                      {categories.map((category) => (
+                      {allowedCat.map((category) => (
                         <FormField
                           key={category}
                           control={form.control}
@@ -751,14 +801,14 @@ const handleSubmit = async () => {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating Listing...
+                Update ...
               </>
             ) : (
-              "Create Listing"
+              "Update"
             )}
           </Button>
         </div>
       </form>
-    </Form>
+    </Form></>
   )
 }

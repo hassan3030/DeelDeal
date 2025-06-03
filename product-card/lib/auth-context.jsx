@@ -59,7 +59,6 @@ export function AuthProvider({ children }) {
   const loginWithGoogle = async () => {
     setLoading(true)
     setError(null)
-
     try {
       const response = await authAPI.loginWithGoogle()
       setUser(response.user)

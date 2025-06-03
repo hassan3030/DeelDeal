@@ -1,5 +1,28 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+
+  // ---------------------
+auth: {
+    providers: [
+      {
+        provider: 'google',
+        driver: 'oauth2',
+        icon: 'google',
+        name: 'Google',
+        enabled: true,
+        settings: {
+          authorize_url: 'https://accounts.google.com/o/oauth2/v2/auth',
+          access_url: 'https://oauth2.googleapis.com/token',
+          profile_url: 'https://www.googleapis.com/oauth2/v2/userinfo',
+          profile_emails_key: 'email',
+          scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+          id: '602047752247-39qmihl9qoh15v24vr6ojptd5g60i9pr.apps.googleusercontent.com',
+          secret:'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',
+        },
+      },
+    ],
+  },
+  //------------------
   reactStrictMode: true,
   swcMinify: true,
 

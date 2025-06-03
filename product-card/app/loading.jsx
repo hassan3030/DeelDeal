@@ -1,13 +1,9 @@
 export default function Loading() {
   return (
     <>
-    
-    
       {/* Header Skeleton */}
       <header className="animate-pulse bg-gray-200 h-16 w-full flex items-center px-8"></header>
-
-        <div className="h-8 w-32 bg-gray-300 rounded" />
-
+      <div className="h-8 w-32 bg-gray-300 rounded" />
       {/* Main Content Skeleton */}
       <main className="flex-1 flex flex-col items-center justify-center py-8">
         <div className="animate-pulse flex flex-col space-y-4 p-4 border rounded-lg shadow-md max-w-xs w-full">
@@ -25,8 +21,6 @@ export default function Loading() {
       <footer className="animate-pulse bg-gray-200 h-16 w-full flex items-center px-8 mt-auto">
         <div className="h-6 w-24 bg-gray-300 rounded" />
       </footer>
-
     </>
-  
-)
+  );
 }

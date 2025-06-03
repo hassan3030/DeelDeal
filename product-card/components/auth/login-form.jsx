@@ -231,8 +231,16 @@ export function LoginForm() {
     }
   }
 
+// const loginWithGoogle = () => {
+//   window.location.href = 'http://localhost:8055/auth/login/google';
+// };
+// <button onClick={loginWithGoogle}>loginWithGoogle</button>
+
   return (
     <div className="w-full">
+
+ 
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-2">
           <label htmlFor="email" className="text-sm font-medium">

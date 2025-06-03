@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ChevronLeft, User, Bell, Globe, Shield, CreditCard, Upload } from "lucide-react"
-import { editeProfile , getUserById } from "@/callAPI/users"
+import { editeProfile , getUserById , resetPassword } from "@/callAPI/users"
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { decodedToken, getCookie } from "@/callAPI/utiles"
@@ -32,81 +32,135 @@ export default function ProfileSettingsPage() {
   //   variant: "success", // Assuming your toast supports variants like 'success', 'error', etc.
   // })
 
-const [currentPassword , setCurrentPassword] = useState('')
+const [currentEmail , setCurrentEmail] = useState('')
 const [newPassword , setNewPassword] = useState('')
 const [confirmPassword , setConfirmPassword] = useState('')
 
 // ...existing code...
 
+// const updatePassword = async () => {
+//   if (!currentPassword || !newPassword || !confirmPassword) {
+//     toast({
+//       title: t("faileChangePassword") || "Failed Change Password",
+//       description: "Please fill in all password fields.",
+//       variant: "destructive",
+//     })
+//     return;
+//   }
+//   if (newPassword !== confirmPassword) {
+//     toast({
+//       title: t("notMach") || "Failed Change Password",
+//       description: "New passwords do not match.",
+//       variant: "destructive",
+//     })
+//     return;
+//   }
+//   try {
+//     const token = await getCookie();
+//     if (!token) {
+//       toast({
+//         title: t("notAuth") || "Failed Change Password",
+//         description: "Not authenticated.",
+//         variant: "destructive",
+//       })
+//       return;
+//     }
+//     const { id } = await decodedToken(token);
+
+//     // Fetch user to get hashed password
+//     const userData = await getUserById(id);
+//     const hashedPassword = userData.password;
+//     console.log("hashedPassword" , hashedPassword)
+
+//     // Compare current password with hashed password
+//     const isMatch = await bcrypt.compare(currentPassword, hashedPassword);
+//     console.log("isMatch" , isMatch)
+
+//     if (!isMatch) {
+//       toast({
+//         title: t("wrongPassword") || "Failed Change Password",
+//         description: "Current password is incorrect.",
+//         variant: "destructive",
+//       })
+//       return;
+//     }
+
+//     if(hashedPassword == currentPassword){
+//       console.log("okeokeokeokeokeoke ")
+//     }
+//     // Hash the new password
+//     const newHashedPassword = await bcrypt.hash(newPassword, 10);
+//     console.log("newHashedPassword" , newHashedPassword)
+
+//     // Update password in your backend (you need to implement this API)
+//     await editeProfile({ password: newHashedPassword }, id);
+
+//     toast({
+//       title: t("successChangePassword") || "Password Changed",
+//       description: "Your password has been updated successfully.",
+//       variant: "success",
+//     })
+//     setCurrentPassword('');
+//     setNewPassword('');
+//     setConfirmPassword('');
+//   } catch (error) {
+//     alert("Error updating password.");
+//   }
+// };
+
+
+
 const updatePassword = async () => {
-  if (!currentPassword || !newPassword || !confirmPassword) {
+  if (!newPassword || !confirmPassword) {
     toast({
       title: t("faileChangePassword") || "Failed Change Password",
       description: "Please fill in all password fields.",
       variant: "destructive",
     })
-    return;
   }
-  if (newPassword !== confirmPassword) {
+  else if (newPassword !== confirmPassword) {
     toast({
       title: t("notMach") || "Failed Change Password",
       description: "New passwords do not match.",
       variant: "destructive",
     })
-    return;
   }
-  try {
-    const token = await getCookie();
-    if (!token) {
-      toast({
-        title: t("notAuth") || "Failed Change Password",
-        description: "Not authenticated.",
-        variant: "destructive",
-      })
-      return;
-    }
-    const { id } = await decodedToken(token);
+  else if (newPassword === confirmPassword) {
 
-    // Fetch user to get hashed password
-    const userData = await getUserById(id);
-    const hashedPassword = userData.password;
-    console.log("hashedPassword" , hashedPassword)
-
-    // Compare current password with hashed password
-    const isMatch = await bcrypt.compare(currentPassword, hashedPassword);
-    console.log("isMatch" , isMatch)
-
-    if (!isMatch) {
-      toast({
-        title: t("wrongPassword") || "Failed Change Password",
-        description: "Current password is incorrect.",
-        variant: "destructive",
-      })
-      return;
-    }
-
-    if(hashedPassword == currentPassword){
-      console.log("okeokeokeokeokeoke ")
-    }
-    // Hash the new password
-    const newHashedPassword = await bcrypt.hash(newPassword, 10);
-    console.log("newHashedPassword" , newHashedPassword)
-
-    // Update password in your backend (you need to implement this API)
-    await editeProfile({ password: newHashedPassword }, id);
-
-    toast({
+ try {
+  const Password =  await resetPassword(newPassword ,currentEmail)
+  if(Password){
+toast({
       title: t("successChangePassword") || "Password Changed",
       description: "Your password has been updated successfully.",
       variant: "success",
     })
-    setCurrentPassword('');
+    setCurrentEmail('');
     setNewPassword('');
     setConfirmPassword('');
-  } catch (error) {
-    alert("Error updating password.");
   }
+    
+  } catch (error) {
+     toast({
+      title: t("faildChangePassword") || "Password Error",
+      description: "Error updating password..",
+      variant: "success",
+    })
+   
+  }
+  }
+  else {
+     toast({
+      title: t("faildChangePassword") || "Password Error",
+      description: "SomeThing Error When updating password..",
+      variant: "success",
+    })
+   
+  }
+ 
 };
+
+
   const { theme, toggleTheme } = useTheme()
 
 
@@ -557,10 +611,10 @@ setDescription(user.description || '');
                       <h3 className="font-medium">Change Password</h3>
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="current-password">Current Password</Label>
-                          <Input id="current-password" type="password" 
-                          value={currentPassword}
-                          onChange={(e) =>{setCurrentPassword(e.target.value)}}
+                          <Label htmlFor="current-email">Current Email</Label>
+                          <Input id="current-email" type="email" 
+                          value={currentEmail}
+                          onChange={(e) =>{setCurrentEmail(e.target.value)}}
                           />
                         </div>
                         <div className="space-y-2">

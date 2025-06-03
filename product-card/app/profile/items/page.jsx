@@ -82,7 +82,7 @@ useEffect(()=>{
                 <CardDescription>Manage, edit, and update your listed items.</CardDescription>
               </div>
               <Button asChild>
-                <Link href="/items/new">
+                <Link href="/profile/settings/editItem/new">
                   <Plus className="mr-2 h-4 w-4" />
                   Add New Item
                 </Link>

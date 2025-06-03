@@ -10,6 +10,8 @@ import { z } from "zod"
 import { X, Upload, Info, Loader2 } from "lucide-react"
 import Image from "next/image"
 import {itemsStatus , categoriesName ,allowedCategories} from "@/lib/data"
+import { useToast } from "@/components/ui/use-toast"
+import { useTranslations } from "@/lib/use-translations";
 
 
 import { Button } from "@/components/ui/button"
@@ -21,6 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { decodedToken } from "@/callAPI/utiles"
 // import { Category } from "@/components/item-card"
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -72,7 +75,7 @@ const formSchema = z.object({
   // Images will be handled separately
 })
 
-//  FormValues = z.infer<typeof formSchema>
+
 
 export function ItemListingForm() {
 
@@ -82,7 +85,8 @@ export function ItemListingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [aiPriceEstimation, setAiPriceEstimation] = useState(null)
   const [isEstimating, setIsEstimating] = useState(false)
-
+    const { toast } = useToast()
+  const { t } = useTranslations();
   const form = useForm({
     // to check zod validation
     resolver: zodResolver(formSchema),
@@ -116,11 +120,21 @@ export function ItemListingForm() {
     // Validate file size and type
     const validFiles = newFiles.filter((file) => {
       if (file.size > MAX_FILE_SIZE) {
-        alert(`File ${file.name} is too large. Maximum size is 5MB.`)
+        toast({
+        title: t("error") || "ERROR ",
+        description:`File ${file.name} is too large. Maximum size is 5MB.`,
+        variant: "destructive",
+      })
+       
         return false
       }
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        alert(`File ${file.name} has an unsupported format. Please upload JPEG, PNG, or WebP.`)
+         toast({
+        title: t("error") || "ERROR ",
+        description:`File ${file.name} has an unsupported format. Please upload JPEG, PNG, or WebP.`,
+        variant: "destructive",
+      })
+
         return false
       }
       return true
@@ -128,7 +142,11 @@ export function ItemListingForm() {
 
     // Check if adding these files would exceed the maximum
     if (images.length + validFiles.length > MAX_IMAGES) {
-      alert(`You can upload a maximum of ${MAX_IMAGES} images.`)
+       toast({
+        title: t("error") || "ERROR ",
+        description:`You can upload a maximum of ${MAX_IMAGES} images.`,
+        variant: "destructive",
+      })
       return
     }
 
@@ -152,7 +170,12 @@ export function ItemListingForm() {
 
     // Validate that we have enough information for an estimate
     if (!name || !description || !category || !condition) {
-      alert("Please fill in the item name, description, category, and condition for an AI price estimate.")
+       toast({
+        title: t("error") || "ERROR ",
+        description:"Please fill in the item name, description, category, and condition for an AI price estimate.",
+        variant: "destructive",
+      })
+
       return
     }
 
@@ -171,7 +194,12 @@ export function ItemListingForm() {
       form.setValue("valueEstimate", mockEstimate)
     } catch (error) {
       console.error("Error getting AI price estimate:", error)
-      alert("Failed to get AI price estimate. Please try again or enter your own estimate.")
+        toast({
+        title: t("error") || "ERROR ",
+        description:"Failed to get AI price estimate. Please try again or enter your own estimate.",
+        variant: "destructive",
+      })
+      
     } finally {
       setIsEstimating(false)
     }
@@ -179,7 +207,12 @@ export function ItemListingForm() {
 
   const onSubmit = async (data) => {
     if (images.length === 0) {
-      alert("Please upload at least one image of your item.")
+      toast({
+        title: t("error") || "ERROR ",
+        description:"Please upload at least one image of your item.",
+        variant: "destructive",
+      })
+
       return
     }
 
@@ -187,11 +220,6 @@ export function ItemListingForm() {
 
     try {
     await  handleSubmit()
-      // In a real app, you would:
-      // 1. Upload the images to a storage service
-      // 2. Get the URLs of the uploaded images
-      // 3. Create the item in your database with the image URLs
-
       console.log("Form data:", data)
       console.log("Images:", images)
 
@@ -202,7 +230,13 @@ export function ItemListingForm() {
       router.push("/")
     } catch (error) {
       console.error("Error creating item:", error)
-      alert("Failed to create item. Please try again.")
+       toast({
+        title: t("error") || "ERROR ",
+        description:"Failed to create item. Please try again.",
+        variant: "destructive",
+      })
+
+
     } finally {
       setIsSubmitting(false)
     }
@@ -286,13 +320,18 @@ export function ItemListingForm() {
 //   }
 // }
 const handleSubmit = async () => {
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0ODQ0MzA5NSwiZXhwIjoxNzQ5MDQ3ODk1LCJpc3MiOiJkaXJlY3R1cyJ9.oY-hUrj2AFzULfOD9GzKqaAFDqF8vOVLpo4kaPjTR-A"; // Replace with your actual token
+  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0ODcwMjU1MiwiZXhwIjoxNzQ5MzA3MzUyLCJpc3MiOiJkaXJlY3R1cyJ9.NP_dnYKOe1naUoJRJhptH_LpTqSXbKZ8T1zTWuVk_jI"; // Replace with your actual token
   const apiBase = "http://localhost:8055";
-
+ const {id} = await decodedToken()
   const files = images; // Use the images array for file uploads
 
   if (files.length === 0) {
-    alert("Please fill all fields and select at least one image.");
+
+     toast({
+        title: t("error") || "ERROR ",
+        description:"Please fill all fields and select at least one image.",
+        variant: "destructive",
+      })
     return;
   }
 
@@ -308,7 +347,7 @@ const handleSubmit = async () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(payload),
+    body: JSON.stringify({...payload , user_id:id}) ,
     });
 
     const itemData = await itemRes.json();
@@ -362,11 +401,25 @@ const handleSubmit = async () => {
         }),
       });
     }
+    
+  toast({
+          title: t("successfully") ,
+          description:  "Item added successfully with images!",
+        })
+         // Clear all fields and images
+  form.reset();
+  setImages([]);
+  setImageUrls([]);
 
-    alert("Item added successfully with images!");
   } catch (err) {
     console.error(err);
-    alert(err.message || "Error adding item.");
+    
+     toast({
+        title: t("error") || "ERROR ",
+        description:err.message || "Error adding item.",
+        variant: "destructive",
+      })
+
   }
 };
   return (
@@ -737,7 +790,7 @@ const handleSubmit = async () => {
             Cancel
           </Button>
           <Button type="submit" className="bg-[#49c5b6] hover:bg-[#3db6a7]" disabled={isSubmitting}
-          onClick={handleSubmit}
+          onClick={()=>{handleSubmit()}}
           >
             {isSubmitting ? (
               <>

@@ -1,7 +1,8 @@
 "use client"
 import  { useState , useEffect } from 'react';
 import Image from 'next/image';
-import { getOfferById, getOfferItemsById, getOfferItemsByOfferId, getProductById , deleteOfferById, deleteOfferItemsById, getImageProducts } from "@/callAPI/products";
+import {  getProductById , getImageProducts } from "@/callAPI/products";
+import { getOfferById, getOfferItemsById, getOfferItemsByOfferId , deleteOfferById, deleteOfferItemsById } from "@/callAPI/swap";
 import { getUserById, getUserByProductId } from "@/callAPI/users";
 import { getCookie , decodedToken } from "@/callAPI/utiles";
 import { useRouter } from "next/navigation";

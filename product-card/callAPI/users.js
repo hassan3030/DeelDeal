@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import { baseURL , getCookie , setCookie , decodedToken , baseItemsURL } from './utiles';
+import { env } from 'process';
 // // show all users
 // export const getAllUsers = async () => {
 //     try {
@@ -259,6 +260,46 @@ export const editeProfile = async (userData ,authId , avatar) => {
 }
 
 
+
+
+// reset pass
+export const resetPassword = async (newPassword , email) => {
+
+    try {
+      const {id} = await decodedToken()
+
+      
+    
+       if(id){
+const user = await getUserById(id)
+if(user.email === email ){
+  const response = await axios.patch(`${baseURL}/users/${id}`,
+              {
+               "password": newPassword
+              }
+            ,
+            {
+              headers: {
+                'Authorization': `Bearer ${'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0ODcyNzU1MywiZXhwIjoxNzQ5MzMyMzUzLCJpc3MiOiJkaXJlY3R1cyJ9.qe92ZWahzineAgfmeS3slHSTipz6mOZ_ZMcoVvI2iic'}`,
+                'Content-Type': 'application/json',
+                },
+            }
+          );
+          console.log('reset password' , response.data.data)
+          return response.data.data ;   
+
+}
+
+        
+       }
+
+      } catch (err) {
+        console.error('Failed to reset password:', err)
+        // throw new Error('The API register is not responding')
+      }
+  
+}
+
 // // delete all user
 // export const deleteAllUsers = async () => {
 //     try {
@@ -300,301 +341,4 @@ export const editeProfile = async (userData ,authId , avatar) => {
   
 // }
 
-
-
-/**
- * Get user profile
- * @returns {Promise<Object>} User profile data
- */
-export const getUserProfile = async () => {
-  try {
-    // In a real app, this would be a real API call
-    // const response = await api.get('/users/profile');
-    // return response.data;
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("deeldeal_user")
-
-      if (storedUser) {
-        return JSON.parse(storedUser)
-      }
-    }
-
-    throw new Error("User not authenticated")
-  } catch (error) {
-    console.error("Get user profile error:", error)
-    throw error
-  }
-}
-
-/**
- * Update user profile
- * @param {Object} userData - Updated user data
- * @returns {Promise<Object>} Updated user profile
- */
-export const updateUserProfile = async (userData) => {
-  try {
-    // In a real app, this would be a real API call
-    // const response = await api.put('/users/profile', userData);
-    // return response.data;
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("deeldeal_user")
-
-      if (storedUser) {
-        const currentUser = JSON.parse(storedUser)
-        const updatedUser = {
-          ...currentUser,
-          ...userData,
-          id: currentUser.id, // Ensure ID doesn't change
-        }
-
-        localStorage.setItem("deeldeal_user", JSON.stringify(updatedUser))
-        return updatedUser
-      }
-    }
-
-    throw new Error("User not authenticated")
-  } catch (error) {
-    console.error("Update user profile error:", error)
-    throw error
-  }
-}
-
-/**
- * Change password
- * @param {string} currentPassword - Current password
- * @param {string} newPassword - New password
- * @returns {Promise<boolean>} Success status
- */
-export const changePassword = async (currentPassword, newPassword) => {
-  try {
-    // In a real app, this would be a real API call
-    // await api.post('/users/change-password', { currentPassword, newPassword });
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    // Simulate password validation
-    if (currentPassword === "Password123") {
-      return true
-    } else {
-      throw new Error("Current password is incorrect")
-    }
-  } catch (error) {
-    console.error("Change password error:", error)
-    throw error
-  }
-}
-
-/**
- * Get user orders
- * @param {Object} params - Query parameters
- * @returns {Promise<Array>} User orders
- */
-export const getUserOrders = async (params = {}) => {
-  try {
-    // In a real app, this would be a real API call
-    // const response = await api.get('/users/orders', { params });
-    // return response.data;
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    // Mock orders data
-    const orders = [
-      {
-        id: "order1",
-        orderNumber: "ORD-12345",
-        date: "2023-05-15T10:30:00Z",
-        status: "delivered",
-        total: 1299,
-        items: [
-          {
-            id: "1",
-            name: "Apple iPhone 14 Pro Max (256GB) - Deep Purple",
-            price: 1299,
-            quantity: 1,
-            imageSrc: "/placeholder.svg?height=100&width=100&text=iPhone",
-          },
-        ],
-        shippingAddress: {
-          name: "Demo User",
-          street: "123 Main St",
-          city: "San Francisco",
-          state: "CA",
-          zipCode: "94105",
-          country: "USA",
-        },
-        paymentMethod: "Credit Card",
-        deliveryDate: "2023-05-18T14:20:00Z",
-      },
-      {
-        id: "order2",
-        orderNumber: "ORD-12346",
-        date: "2023-04-20T15:45:00Z",
-        status: "delivered",
-        total: 1199,
-        items: [
-          {
-            id: "2",
-            name: "Samsung Galaxy S23 Ultra - Phantom Black",
-            price: 1199,
-            quantity: 1,
-            imageSrc: "/placeholder.svg?height=100&width=100&text=Samsung",
-          },
-        ],
-        shippingAddress: {
-          name: "Demo User",
-          street: "123 Main St",
-          city: "San Francisco",
-          state: "CA",
-          zipCode: "94105",
-          country: "USA",
-        },
-        paymentMethod: "PayPal",
-        deliveryDate: "2023-04-23T11:10:00Z",
-      },
-      // Add more mock orders as needed
-    ]
-
-    // Apply filters based on params
-    let filteredOrders = [...orders]
-
-    if (params.status) {
-      filteredOrders = filteredOrders.filter((o) => o.status === params.status)
-    }
-
-    if (params.startDate) {
-      const startDate = new Date(params.startDate)
-      filteredOrders = filteredOrders.filter((o) => new Date(o.date) >= startDate)
-    }
-
-    if (params.endDate) {
-      const endDate = new Date(params.endDate)
-      filteredOrders = filteredOrders.filter((o) => new Date(o.date) <= endDate)
-    }
-
-    // Sort orders
-    if (params.sort) {
-      switch (params.sort) {
-        case "date_desc":
-          filteredOrders.sort((a, b) => new Date(b.date) - new Date(a.date))
-          break
-        case "date_asc":
-          filteredOrders.sort((a, b) => new Date(a.date) - new Date(b.date))
-          break
-        case "total_desc":
-          filteredOrders.sort((a, b) => b.total - a.total)
-          break
-        case "total_asc":
-          filteredOrders.sort((a, b) => a.total - b.total)
-          break
-        default:
-          break
-      }
-    } else {
-      // Default sort by date (newest first)
-      filteredOrders.sort((a, b) => new Date(b.date) - new Date(a.date))
-    }
-
-    return filteredOrders
-  } catch (error) {
-    console.error("Get user orders error:", error)
-    throw error
-  }
-}
-
-/**
- * Get user wishlist
- * @returns {Promise<Array>} User wishlist
- */
-export const getUserWishlist = async () => {
-  try {
-    // In a real app, this would be a real API call
-    // const response = await api.get('/users/wishlist');
-    // return response.data;
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    // Mock wishlist data
-    const wishlist = [
-      {
-        id: "1",
-        name: "Apple iPhone 14 Pro Max (256GB) - Deep Purple",
-        price: 1299,
-        originalPrice: 1399,
-        rating: 4.8,
-        reviewCount: 1245,
-        imageSrc: "/placeholder.svg?height=300&width=300&text=iPhone",
-        isExpress: true,
-        isBestSeller: true,
-        addedAt: "2023-05-10T08:15:00Z",
-      },
-      {
-        id: "3",
-        name: "Sony WH-1000XM5 Wireless Noise Cancelling Headphones",
-        price: 349,
-        originalPrice: 399,
-        rating: 4.9,
-        reviewCount: 2341,
-        imageSrc: "/placeholder.svg?height=300&width=300&text=Sony",
-        isBestSeller: true,
-        addedAt: "2023-05-05T14:30:00Z",
-      },
-      // Add more mock wishlist items as needed
-    ]
-
-    return wishlist
-  } catch (error) {
-    console.error("Get user wishlist error:", error)
-    throw error
-  }
-}
-
-/**
- * Add product to wishlist
- * @param {string} productId - Product ID
- * @returns {Promise<boolean>} Success status
- */
-export const addToWishlist = async (productId) => {
-  try {
-    // In a real app, this would be a real API call
-    // await api.post('/users/wishlist', { productId });
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    return true
-  } catch (error) {
-    console.error(`Add to wishlist error for product ${productId}:`, error)
-    throw error
-  }
-}
-
-/**
- * Remove product from wishlist
- * @param {string} productId - Product ID
- * @returns {Promise<boolean>} Success status
- */
-export const removeFromWishlist = async (productId) => {
-  try {
-    // In a real app, this would be a real API call
-    // await api.delete(`/users/wishlist/${productId}`);
-
-    // Mock implementation
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    return true
-  } catch (error) {
-    console.error(`Remove from wishlist error for product ${productId}:`, error)
-    throw error
-  }
-}
+ 

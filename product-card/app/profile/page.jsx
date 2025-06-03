@@ -16,7 +16,8 @@ import { getUserById, getUserByProductId } from "@/callAPI/users";
 
 import { DeelProductCard } from "@/components/deel-product-card"
 import { SmallCard } from "@/components/small-card"
-import { getOfferById, getProductByUserId , getOfferItemsById, getOfferItemsByOfferId, getProductById , deleteOfferById, deleteOfferItemsById, getImageProducts } from "@/callAPI/products";
+import {  getProductByUserId , getProductById  } from "@/callAPI/products";
+import { getOfferById , getOfferItemsById, getOfferItemsByOfferId , deleteOfferById, deleteOfferItemsById } from "@/callAPI/swap";
 
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
@@ -280,7 +281,7 @@ useEffect(() => {
               </div>
             
               
-              <ItemsList items={myAvailableItems} showFilters={false} />
+              <ItemsList items={myAvailableItems} showFilters={false}  showbtn={false}/>
             </TabsContent>
 
             <TabsContent value="offers" className="mt-6">
@@ -306,7 +307,7 @@ useEffect(() => {
                         <CardTitle className="text-lg">Offer #{index}</CardTitle>
                         <CardDescription>
                           {formatDate(offer.date_created)} • Status:{" "}
-                          <span className="font-medium text-amber-500">{offer.status}</span>
+                          <span className="font-medium text-amber-500">{offer.status_offer}</span>
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
@@ -459,7 +460,6 @@ id,
 
    const { toast } = useToast();
     const [bigImage , setBigImage] =  useState('')
-
        const getDataImage = async () => {
         const images2 = await getImageProducts(images)
         // setImages(images)

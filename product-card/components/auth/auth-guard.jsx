@@ -21,7 +21,7 @@ export function AuthGuard({ children }) {
 
   // Show nothing while checking authentication
   if (isLoading) {
-    return null
+    // return null
   }
 
   // If on an auth page or authenticated, show the children
@@ -30,5 +30,5 @@ export function AuthGuard({ children }) {
   }
 
   // Otherwise show nothing (will redirect)
-  return null
+  // return null
 }

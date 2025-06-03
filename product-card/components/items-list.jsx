@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Search } from "lucide-react"
 import { ItemCardProfile } from "./item-card-profile"
-import { Pagination } from "@/components/ui/pagination"
 import { categoriesName } from "@/lib/data"
+import { DeelProductCard } from "./deel-product-card"
 
-export function ItemsList({ items = [], showFilters = true }) {
+export function ItemsList({ items , showFilters = true  , showCategoriesFilter = true ,  showbtn=true}) {
   const [displayedItems, setDisplayedItems] = useState(items)
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -51,10 +51,10 @@ export function ItemsList({ items = [], showFilters = true }) {
     setPage(1)
   }
   const handlePageChange = (newPage) => {
-    setPage(newPage)
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
+  if (newPage < 1 || newPage > totalPages) return;
+  setPage(newPage);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
   return (
     <div className="space-y-6">
       {showFilters && (
@@ -71,7 +71,7 @@ export function ItemsList({ items = [], showFilters = true }) {
               <Search className="h-4 w-4" />
             </Button>
           </div>
-          <Select value={category} onValueChange={handleCategoryChange}>
+          {showCategoriesFilter&& ( <Select value={category} onValueChange={handleCategoryChange}>
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
@@ -88,7 +88,8 @@ export function ItemsList({ items = [], showFilters = true }) {
 }
               
             </SelectContent>
-          </Select>
+          </Select>)}
+         
         </div>
       )}
 
@@ -110,14 +111,62 @@ export function ItemsList({ items = [], showFilters = true }) {
         <>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {paginatedItems.map((item) => (
-              <ItemCardProfile key={item.id} {...item} />
+              <ItemCardProfile key={item.id} {...item} showbtn={showbtn} />
             ))}
           </div>
-          {totalPages > 1 && (
-            <Pagination currentPage={page} totalPages={totalPages} onPageChange={handlePageChange} />
-          )}
+     <SimplePagination
+    currentPage={page}
+    totalPages={totalPages}
+    onPageChange={handlePageChange}
+  />
+           
         </>
-      )}
+      )} 
+
+
+   
     </div>
+
+
+
+
+
   )
+}
+
+
+// SimplePagination.jsx (or inside your items-list.jsx)
+function SimplePagination({ currentPage, totalPages, onPageChange }) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex justify-center mt-6 gap-2">
+      <button
+        className="px-3 py-1 rounded border bg-white hover:bg-gray-100 disabled:opacity-50"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+      >
+        Prev
+      </button>
+      {[...Array(totalPages)].map((_, idx) => (
+        <button
+          key={idx + 1}
+          className={`px-3 py-1 border rounded ${
+            currentPage === idx + 1
+              ? "bg-primary text-white"
+              : "bg-white hover:bg-gray-100"
+          }`}
+          onClick={() => onPageChange(idx + 1)}
+        >
+          {idx + 1}
+        </button>
+      ))}
+      <button
+        className="px-3 py-1 rounded border bg-white hover:bg-gray-100 disabled:opacity-50"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+      >
+        Next
+      </button>
+    </div>
+  );
 }

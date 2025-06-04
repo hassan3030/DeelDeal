@@ -21,7 +21,6 @@ export default function NewItemPage() {
         <h1 className="text-3xl font-bold">List a New Item</h1>
         <p className="text-muted-foreground">Create a detailed listing to find the perfect swap for your item.</p>
       </div>
-
       <ItemListingForm />
     </div>
   )

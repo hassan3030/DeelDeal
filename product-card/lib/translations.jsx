@@ -2,6 +2,9 @@
 
 export const translations = {
   en: {
+    
+    addanewitem:' Add a new item',
+    notFoundSwaps:' No swaps found',
     // toast 
     successfully:" Successfully",
     error:"Error",
@@ -225,6 +228,9 @@ unavailable: "Unavailable",
    
   },
   ar: {
+    notFoundSwaps:' لم يتم العثور على أي تبديلات',
+
+    addanewitem:' إضافة عنصر جديد',
 // toast 
 successfully:"تمت بنجاح",
 error:"خطأ",

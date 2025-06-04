@@ -10,19 +10,19 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ChevronLeft, User, Bell, Globe, Shield, CreditCard, Upload } from "lucide-react"
+import { ChevronLeft, User, Bell, Globe, Shield, CreditCard, Upload, CirclePlus } from "lucide-react"
 import { editeProfile , getUserById , resetPassword } from "@/callAPI/users"
 import { useParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
 import { decodedToken, getCookie } from "@/callAPI/utiles"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
-import { useLanguage } from "@/lib/language-provider"
 import { useTranslations } from "@/lib/use-translations"
 import { useTheme } from "@/lib/theme-provider"
 import { useToast } from "@/components/ui/use-toast"
-import bcrypt from "bcryptjs"
+import { ItemListingForm } from "@/components/item-listing-form"
+import { z } from "zod";
 
+ 
 export default function ProfileSettingsPage() {
 // -----------------------------------------
  const { toast } = useToast();
@@ -173,6 +173,7 @@ const { t } = useTranslations()
       const router = useRouter()
   const [user, setUser] = useState({})
 
+
   const [ avatar, setAvatar] = useState(null);
   const [products, setProducts] = useState([])
   const [ avatarPath, setAvatarPath] = useState('');
@@ -185,7 +186,7 @@ const { t } = useTranslations()
     const [ city , setCity] = useState('');
     const [ street , setStreet] = useState('');
     const [ post_code,  setPostCode] = useState('');
-    const [status,  setStatus] = useState('active');
+
 const getUser = async ()=>{
    const token = await getCookie()
        if (token) {
@@ -195,18 +196,30 @@ const getUser = async ()=>{
        }
   
 }  
+
+const profileSchema = z.object({
+  phone_number: z
+    .string()
+    .min(8, "Phone number is too short")
+    .max(20, "Phone number is too long")
+    .regex(/^\+?\d{8,20}$/, "Invalid phone number"),
+  // ...other fields...
+});
+
+const result = profileSchema.safeParse({phone_number});
+
+
  let userCollectionData = {};
      if (first_name) userCollectionData.first_name = first_name;
     if (last_name) userCollectionData.last_name = last_name;
     if (description) userCollectionData.description = description;
     if (avatar) userCollectionData.avatar = avatar;
-    if (phone_number) userCollectionData. phone_number =  phone_number;
     if (city) userCollectionData.city = city;
     if (country) userCollectionData.country = country;
     if (street) userCollectionData.street = street;
     if (post_code) userCollectionData.post_code = post_code;
-    if (status) userCollectionData.status = status;
     if (gender) userCollectionData.gender = gender;
+    if (phone_number) userCollectionData. phone_number =  phone_number;
 
      
   
@@ -234,7 +247,7 @@ setDescription(user.description || '');
  setCity(user?.city || '');
     setStreet(user?.street || '');
   setPostCode(user?.post_code || '');
-  setStatus(user.status||'active')
+
 }, [user])
 // -----------------------------------------
 
@@ -248,7 +261,6 @@ setDescription(user.description || '');
     country,
     street,
     post_code,
-    status,
     gender,
   })
 // 
@@ -264,12 +276,34 @@ setDescription(user.description || '');
   const handleSubmit = async (e) => {
     e.preventDefault()
     if(!userCollectionData){
-       alert("No Change To saved ")
+      
+       toast({
+    title: "Wornning",
+    description: "No Change To saved",
+     variant: "destructive"
+  })
+
     }
   else{
-     await editeProfile(userCollectionData , user.id , avatar)
+    
+if (!result.success) {
+ toast({
+    title: "Wornning",
+    description: "Phone number not validate",
+     variant: "destructive",  // Assuming your toast supports variants like 'success', 'error', etc.
+  })
+
+}
+     else{
+      await editeProfile(userCollectionData , user.id , avatar)
        router.refresh();
-    alert("Settings saved successfully!")
+   
+     toast({
+    title: t('successfully'),
+    description: "Settings saved successfully!", // Assuming your toast supports variants like 'success', 'error', etc.
+  })
+
+     }
   }
   }
 
@@ -307,6 +341,11 @@ setDescription(user.description || '');
                 <Shield className="mr-2 h-4 w-4" />
                 Security
               </TabsTrigger>
+
+               <TabsTrigger value="add" className="w-full justify-start text-left">
+  <CirclePlus className="mr-2 h-4 w-4" />
+  Add Item
+</TabsTrigger>
               {/* <TabsTrigger value="payment" className="w-full justify-start text-left">
                 <CreditCard className="mr-2 h-4 w-4" />
                 Payment Methods
@@ -418,23 +457,6 @@ setDescription(user.description || '');
                 />
         </div>
                      */}
-
-<div className="space-y-2">
-                          <Label htmlFor="status">Status</Label>
-                          <Select
-                            value={status}
-                           onValueChange={(value) => setStatus(value)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="ative">Active</SelectItem>
-                              <SelectItem value="archived">Archived</SelectItem>
-                    
-                            </SelectContent>
-                          </Select>
-                        </div>
 
     
                           <div className="space-y-2">
@@ -652,6 +674,23 @@ setDescription(user.description || '');
                 </CardContent>
               </Card>
             </TabsContent>
+            <TabsContent value="add">
+           <Card>
+                <CardHeader>
+                  <CardTitle>Add Item</CardTitle>
+                  <CardDescription>
+                    Add your items to swap
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                <ItemListingForm/>
+                </CardContent>
+             
+              </Card>
+
+            </TabsContent>
+
+          
 {/* in the future we can add more tabs here */}
             {/* <TabsContent value="payment">
               <Card>

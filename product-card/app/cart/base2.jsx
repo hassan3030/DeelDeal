@@ -21,7 +21,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import Link from 'next/link';
 
 const Cart = () => {
  
@@ -57,10 +56,9 @@ const Cart = () => {
 
   // ----------------------------------------------------//
   
-    const [offers, setOffers] = useState([])
     const [swapItems, setSwapItems] = useState([])
     const [userSwaps, setUserSwaps] = useState([])
-    const [itemsOffer, setItemsOffer] = useState([])
+    const [offers, setOffers] = useState([])
     const router = useRouter();
     const { t } = useTranslations()
 
@@ -93,30 +91,15 @@ const Cart = () => {
           usersSwaper.push({ ...user });
         }   
      
-   const uniqueUsers = Array.from(
-  new Map(usersSwaper.map(user => [user.id, user])).values()
-);
-
-  //       const uniqueUsers = usersSwaper.filter(
-  //   (obj, index, self) =>
-  //     index === self.findIndex((t) => t.id === obj.id)
-  // );
-
-const mergedItems = items.map(item => {
-  // Find the offerItem that matches this product
-  const offerItem = offerItems.find(oi => oi.item_id === item.id);
-  return {
-    ...item,
-    offered_by: offerItem ? offerItem.offered_by : null,
-    offer_id: offerItem ? offerItem.offer_id : null, // optional, if you want offer_id too
-  };
-});
+        const uniqueUsers = usersSwaper.filter(
+    (obj, index, self) =>
+      index === self.findIndex((t) => t.id === obj.id)
+  );
 
   setOffers(offers)
   setUserSwaps(uniqueUsers)
-  setSwapItems(mergedItems)
-  setItemsOffer(offerItems)
-  console.log("swapItems", mergedItems); // Check what is returned
+  setSwapItems(items)
+  
   console.log("offers", offers); // Check what is returned
   console.log("offerItems", offerItems); // Check what is returned
   console.log("items", items); // Check what is returned
@@ -130,9 +113,7 @@ const mergedItems = items.map(item => {
    
     const handleDeleteSwap = async(swapId) => {
    await  deleteOfferById(swapId)
-    alert("Swap deleted successfully");
-    router.refresh()
-    
+    toast.success("Swap deleted successfully");//------------
     };
   
   
@@ -178,126 +159,112 @@ const mergedItems = items.map(item => {
         </div>
 
         {/* Swaps List */}
-        
-{offers.map((offer, index) => (
-  <Card key={offer.id} className="overflow-hidden">
-    <CardHeader>
-      <div className="flex justify-between items-start">
-        <div>
-          <CardTitle className="text-xl">Swap: {index + 1}</CardTitle>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <Badge
-              variant="outline"
-              className={`${getStatusColor(offer.status_offer)}`}
-            >
-              {offer.status_offer}
-            </Badge>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-sm text-muted-foreground">
-            My items: {itemsOffer.filter(u => u.offered_by === offer.from_user_id && u.offer_id === offer.id).length}{" "}
-            | Their items: {itemsOffer.filter(u => u.offered_by !== offer.from_user_id && u.offer_id === offer.id).length}
-          </div>
-        </div>
-      </div>
-    </CardHeader>
+        <div className="space-y-6">
+       {offers.map((offer , index) => (
+            <Card key={offer.id} className="overflow-hidden">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl">Swap: {index + 1}</CardTitle>
+                    <div className="flex flex-wrap gap-2 mt-3">
+                    
+                      <Badge 
+                        variant="outline" 
+                        className={`${getStatusColor(offer.status_offer)}`}
+                      >
+                        {offer.status_offer}
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-muted-foreground">
+                      My items: {swapItems.filter(u => u.user_id === offer.from_user_id).length} {"    "}
+                      Thier items: {swapItems.filter(u => u.user_id === offer.to_user_id).length} {"    "}
+                    </div>
+                  </div>
+                </div>
+
+              </CardHeader>
+              
+              <CardContent>
+                {/* Items Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              {
+                          
+                         swapItems.filter(u => u.user_id === offer.from_user_id)?.map((item)=>(
+                           <CardItemSwap key={item.id} {...item}/>
+                          ))
+                         }
 
 
-    <CardContent>
-      {/* My Items */}
-      <div>
-        <h4 className="font-semibold mb-2">My Items</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-         {
-          swapItems.filter(u => u.offered_by === offer.from_user_id && u.offer_id === offer.id).map(item => (
-              <CardItemSwap key={item.id} {...item} />
-            ))
-         }
-         
-          {/* {swapItems
-            .filter((u) =>{ u.user_id === offer.from_user_id && u.user_id } )
-            .map(item => (
-              <CardItemSwap key={item.id} {...item} />
-            ))} */}
-        </div>
-      </div>
+                   
+               
+                </div>
 
-      {/* Their Items */}
-        <div>
-          <h4 className="font-semibold mb-2">Their Items</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            {
-          swapItems
-            .filter(u => u.offered_by !== offer.from_user_id && u.offer_id === offer.id)
-            .map(item => (
-              <CardItemSwap key={item.id} {...item} />
-            ))
-            }
-          </div>
-        </div>
+                <Separator className="my-4" />
 
-        <Separator className="my-4" />
+                {/* Swap Details */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="flex items-center text-sm">
+                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                    <span className="text-muted-foreground">Created:</span>
+                    <span className="ml-1">{new Date(offer.date_created).toISOString().split("T")[0]}</span>
+                  </div>
+                 
+                 
+                
 
-        {/* Swap Details */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="flex items-center text-sm">
-          <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-          <span className="text-muted-foreground">Created:</span>
-          <span className="ml-1">
-            {new Date(offer.date_created).toISOString().split("T")[0]}
-          </span>
-        </div>
-        <div className="flex items-center text-sm">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
-            <Avatar className="h-12 w-12">
-              <AvatarImage
-                src={
-                  `http://localhost:8055/assets/${userSwaps.find(u => u.id === offer.to_user_id)?.avatar}` ||
-                  "/placeholder.svg"
-                }
-                alt={
-                  userSwaps.find(u => u.id === offer.to_user_id)?.first_name ||
-                  t("account") || "Unknowen"
-                }
-              />
-              <AvatarFallback>
-                {userSwaps.find(u => u.id === offer.to_user_id)?.first_name?.charAt(0)}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-               <div className="flex flex-col ml-2">
-                <span className=' px-1 text-gray-400'>{userSwaps.find(u => u.id === offer.to_user_id).first_name || ''}</span>
-               <span className='px-1 text-gray-400'>{userSwaps.find(u => u.id === offer.to_user_id).email || ''}</span>
+                  <div className="flex items-center text-sm">
 
-               </div>
+                     <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                                  {/* <img
+                                        src={`http://localhost:8055/assets/${userSwaps.find(u => u.id === offer.from_user_id)?.avatar}` || "/placeholder.svg"}
+                                        alt={userSwaps.find(u => u.id === offer.from_user_id)?.first_name || t("account")}
+                                       className="w-full h-full object-cover"
+                                      
+                                      /> */}
+                                          <Avatar className="h-12 w-12">
+                                            <AvatarImage src={`http://localhost:8055/assets/${userSwaps.find(u => u.id === offer.to_user_id)?.avatar}` || "/placeholder.svg"}
+                                            alt={userSwaps.find(u => u.id === offer.from_user_id)?.first_name || t("account")}/>
+                                            <AvatarFallback>{userSwaps.find(u => u.id === offer.from_user_id)?.first_name.charAt(0)}</AvatarFallback>
+                                          </Avatar>
+                                          
+
+
+                                    <div className="w-full h-full flex items-center justify-center" style={{display: 'none'}}>
+                                      <User className="h-6 w-6 text-gray-500" />
+                          
+                                        <span className="text-base"> {userSwaps.find(u => u.id === offer.to_user_id)?.first_name || "Unknown"}</span>
+                                    </div>
+                                  </div>
+                
+                  </div>
+                  <div className="flex items-center text-sm ">
+                   
+                    <span className="text-muted-foreground text-red-600  hover:scale-110 cursor-pointer"
+                    onClick={() => handleDeleteSwap(offer.id)}
+                    >
+                       <Trash2 className="inline h-4 w-4 mr-2 text-muted-foreground text-red-600 hover:scale-110 cursor-pointer" />
+                      Delete Swap</span>
+                 
+                  </div>
+                 
+                 
+                
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        
-        <div className="flex items-center text-sm ">
-          <span
-            className="text-muted-foreground text-red-600 hover:scale-110 cursor-pointer"
-            onClick={() => handleDeleteSwap(offer.id)}
-          >
-            <Trash2 className="inline h-4 w-4 mr-2 text-muted-foreground text-red-600 hover:scale-110 cursor-pointer" />
-            Delete Swap
-          </span>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-))}
-        {offers.length === 0 && (
+        {userSwaps.length === 0 && (
           <Card className="p-12 text-center">
             <ShoppingCart className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h3 className="text-xl font-semibold mb-2">No swaps yet</h3>
             <p className="text-muted-foreground mb-4">
               Start by creating your first swap listing
             </p>
-            <Link href={'/products'}>
-            
             <Button>Create New Swap</Button>
-            </Link>
           </Card>
         )}
       </div>

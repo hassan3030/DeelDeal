@@ -14,6 +14,8 @@ import {
   Sun,
   Settings,
   LogOut,
+  CirclePlus,
+  HandPlatter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,7 +83,7 @@ export function Header() {
   const getOffers = async () => {
     const token = await getCookie();
     if (token) {
-      const { id } = await decodedToken(token);
+      const { id } = await decodedToken();
       const offers = await getOfferById(id);
       console.log("offers", offers); // Check what is returned
       setCartLength(Array.isArray(offers) ? offers.length : 0);
@@ -90,7 +92,7 @@ export function Header() {
   const getNotifications = async () => {
     const token = await getCookie();
     if (token) {
-      const { id } = await decodedToken(token);
+      const { id } = await decodedToken();
       const notifications = await getOffersNotifications(id);
       console.log("notifications", notifications);
       setNotificationsLength(
@@ -310,9 +312,12 @@ export function Header() {
                     className="relative hover:text-primary"
                   >
                     <Bell className="h-5 w-5" />
-                    <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                      {
+                      notificationsLength? (<span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                       {notificationsLength}
-                    </span>
+                    </span>):null
+                    
+                      }
                     <span className="sr-only">{t("notifications")}</span>
                   </Button>
                 </Link>
@@ -324,12 +329,29 @@ export function Header() {
                     className="relative hover:text-primary"
                   >
                     <ShoppingCart className="h-5 w-5" />
-                    <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                    {cartLength && (
+                      <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                       {cartLength}
                     </span>
-                    <span className="sr-only">{t("cart")}</span>
+                    )}
+                    
+                    <span className="sr-only">{t("cart") || "fbdhbskvn "}</span>
                   </Button>
                 </Link>
+
+{/* add items */}
+              <Link href="/profile/settings/editItem/new" className="relative">
+  <Button
+    variant="ghost"
+    size="icon"
+    className="relative hover:text-primary group" // <-- add group here
+  >
+    <CirclePlus className="h-8 w-8" />
+    <span className="pointer-events-none absolute -top-8 right-0 z-10 hidden rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
+    {t('addanewitem') || "  Add a new item"}
+    </span>
+  </Button>
+</Link>
               </>
             ) : null}
           </div>
@@ -439,7 +461,8 @@ export function Header() {
                 >
                   <Bell className="h-4 w-4" />
                   <span>
-                    {`${t("notifications")} ${notificationsLength} `}{" "}
+                    {`${t("notifications")} `}
+                    { `${notificationsLength? notificationsLength : ''}`}
                   </span>
                 </Link>
                 <Link
@@ -447,15 +470,31 @@ export function Header() {
                   className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10"
                 >
                   <ShoppingCart className="h-4 w-4" />
-                  <span>{`${t("cart")} ${cartLength} `}</span>
+              
+                  <span>{`${t("cart")} ${cartLength? cartLength : ''} `}</span>
                 </Link>
+{/* add items */}
+
+              <Link
+                 href="/profile/settings/editItem/new"
+                  className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10"
+                >
+                  <CirclePlus className="h-4 w-4" />
+                  <span>{t("addanewitem") || "Add a new item"}</span>
+                </Link>
+             
+
                 <Link
                   href="/customerService"
                   className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10"
                 >
+                  <HandPlatter  className="h-4 w-4" />
+
                   <span>{t("customerService")}</span>
                 </Link>
 
+             
+             
                 <Link
                   href="/"
                   className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10"

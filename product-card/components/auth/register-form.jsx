@@ -75,7 +75,7 @@ export function RegisterForm() {
         description: "Your account has been created. Welcome to DeelDeal!",
       })
         console.log("id" , id)
-        // router.push(`/profile`)
+        router.push(`/profile/settings/editItem/new`)
         // router.push(`/profile/${id}`)
       } 
       else {

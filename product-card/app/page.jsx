@@ -56,6 +56,7 @@ export default function Home() {
   return (
     <>
       <main className="min-h-screen">
+
         {/* Hero Section */}
         <section className="container py-6">
           <HeroSlider />
@@ -88,7 +89,7 @@ export default function Home() {
               <Button
                 className="bg-white text-deep-orange hover:bg-gray-100"
                 onClick={() => {
-                  router.push("products");
+                  router.push("/products");
                 }}
               >
                 {t("swapNow")}
@@ -115,51 +116,13 @@ export default function Home() {
           <ProductCarousel
             title={t("topDeals")}
             viewAllHref="/deals"
-            viewAllLabel={t("")}
+            viewAllLabel={t("viewAll")}
           >
             {topPrice.map((product) => (
               <DeelProductCard key={product.id} {...product} />
             ))}
           </ProductCarousel>
         </section>
-
-        {/* App Download Section in Th future  */}
-        {/* <section className="container py-8">
-        <div className="overflow-hidden rounded-lg bg-gradient-to-r from-accent-orange to-deep-orange">
-          <div className="container relative flex flex-col items-center justify-between gap-8 py-8 md:flex-row md:py-12">
-            <div className="text-center text-white md:text-left">
-              <h2 className="mb-2 text-2xl font-bold md:text-3xl">{t("downloadApp")}</h2>
-              <p className="mb-6">{t("betterExperience")}</p>
-              <div className="flex flex-wrap justify-center gap-4 md:justify-start">
-                <Link href="#">
-                  <Image
-                    src="/placeholder.svg?height=40&width=120&text=App+Store"
-                    alt="App Store"
-                    width={120}
-                    height={40}
-                  />
-                </Link>
-                <Link href="#">
-                  <Image
-                    src="/placeholder.svg?height=40&width=120&text=Google+Play"
-                    alt="Google Play"
-                    width={120}
-                    height={40}
-                  />
-                </Link>
-              </div>
-            </div>
-            <div className="relative h-[200px] w-[200px] md:h-[300px] md:w-[300px]">
-              <Image
-                src="/placeholder.svg?height=300&width=300&text=App+Screenshot"
-                alt="App Screenshot"
-                fill
-                className="object-contain"
-              />
-            </div>
-          </div>
-        </div>
-      </section> */}
       </main>
     </>
   );

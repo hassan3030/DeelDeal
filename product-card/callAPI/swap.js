@@ -113,7 +113,7 @@ export const getOffersNotifications = async (id) => {
    
      
   } catch (err) {
-    console.error('Failed to fetch Offers:', err)
+    console.error('Failed to fetch Offers Notifications:', err)
     throw new Error('The API is not responding')
   }
 
@@ -145,20 +145,29 @@ export const getItemsByOfferId = async (id) => {
 export const deleteOfferById = async (id) => {
   try {
     const items = await getItemsByOfferId(id)
+
+    console.log('getItemsByOfferId' , items)
   if(items){
    for (const item of items) {
-      await axios.patch(`http://localhost:8055/items/Items/${item.id}`, {
-        "status_swap": "available"               
-      });
+      await axios.patch(`http://localhost:8055/items/Items/${item.item_id}`, {
+        "status_swap": "available" ,       
+      },
+    );
     }
-     await axios.patch(`http://localhost:8055/items/Offers/${item.id}`, {
-        "status_offer": "rejected"               
-      });
 
+}
+ 
 
+const chat = await axios.get(`http://localhost:8055/items/Chat?filter[offer_id][_eq]=${id}`);
+
+if(chat){
+  await axios.delete(`http://localhost:8055/items/Chat?filter[offer_id][_eq]=${id}`);
 }
 
 
+await axios.patch(`http://localhost:8055/items/Offers/${id}`, {
+        "status_offer": "rejected"  ,
+      });
  
   } catch (error) {
     console.error(`Delete Offer ${id} error:`, error)

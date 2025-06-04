@@ -25,6 +25,7 @@ export function ItemCardProfile({
   description,
   images,
   status_item,
+  status_swap,
   category,
   showbtn
 }) {
@@ -119,7 +120,7 @@ export function ItemCardProfile({
       </CardContent>
 
       {/* Swap button */}
-      {status_item == "available"? (
+      {status_swap == "available" && showbtn ? (
            <Button
             className="mt-auto w-full bg-primary-yellow text-gray-800 hover:bg-primary-orange hover:text-white"
             size="sm"

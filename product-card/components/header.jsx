@@ -1,5 +1,6 @@
 "use client";
-
+import { MessageCircle } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -30,6 +31,9 @@ import { removeCookie, getCookie, decodedToken } from "@/callAPI/utiles";
 import {
   getOfferById,
   getOffersNotifications,
+  getWishList ,
+  getMessage
+
 } from "@/callAPI/swap";
 
 
@@ -54,6 +58,22 @@ export function Header() {
   const [filter, serFilter] = useState("");
   const [cartLength, setCartLength] = useState(0);
   const [notificationsLength, setNotificationsLength] = useState(0);
+  const [wishlistLength, setWishlistLength] = useState(0);
+  const [chatLength, setChatLength] = useState(0);
+
+  const getWishlist = async () => {
+    const { id } = await decodedToken(token);
+    const wishList = await getWishList(id);
+    console.log("wishlist", wishList); // Check what is returned
+    setWishlistLength(Array.isArray(wishList) ? wishList.length : 0);
+  };
+
+   const getChat = async () => {
+    const { id } = await decodedToken(token);
+    const chat = await getMessage(id);
+    console.log("chat", chat); // Check what is returned
+    setChatLength(Array.isArray(chat) ? chat.length : 0);
+  };
 
   const router = useRouter();
   const { isRTL, toggleLanguage } = useLanguage();
@@ -111,6 +131,8 @@ export function Header() {
     getUser();
     getOffers();
     getNotifications();
+    getWishlist();
+    getChat();
 
     //  router.refresh();
   }, []);
@@ -339,6 +361,43 @@ export function Header() {
                   </Button>
                 </Link>
 
+ <Link href="/wishList" className="relative">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="relative hover:text-primary"
+                  >
+                    <Heart className="h-5 w-5" />
+                    {wishlistLength && (
+                      <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                      {wishlistLength}
+                    </span>
+                    )}
+                    
+                    <span className="sr-only">{t("wishlistLength") || "wishlistLength"}</span>
+                  </Button>
+                </Link>
+
+
+<Link href="/chat" className="relative">
+  <Button
+    variant="ghost"
+    size="icon"
+    className="relative hover:text-primary group" // <-- add group here
+  >
+                        <MessageCircle className="h-5 w-5" />
+  {chatLength && (
+                      <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                      {wishlistLength}
+                    </span>
+                    )}
+    <span className="pointer-events-none absolute -top-8 right-0 z-10 hidden rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
+   {t("message") || "Message"}
+    </span>
+  </Button>
+</Link>
+
+
 {/* add items */}
               <Link href="/profile/settings/editItem/new" className="relative">
   <Button
@@ -352,6 +411,8 @@ export function Header() {
     </span>
   </Button>
 </Link>
+
+
               </>
             ) : null}
           </div>
@@ -470,8 +531,29 @@ export function Header() {
                   className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10"
                 >
                   <ShoppingCart className="h-4 w-4" />
-              
                   <span>{`${t("cart")} ${cartLength? cartLength : ''} `}</span>
+                </Link>
+
+                    <Link
+                  href="/chat"
+                  className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  <span>{`${t("chat")} ${chatLength? chatLength : ''} `}</span>
+
+                  <span>
+                    {`${t("chat")} `}
+                   
+                  </span>
+                </Link>
+
+                  <Link
+                  href="/wishList"
+                  className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10"
+                >
+                  <Heart className="h-4 w-4" />
+              
+                  <span>{`${t("wishList")} ${wishlistLength? wishlistLength : ''} `}</span>
                 </Link>
 {/* add items */}
 

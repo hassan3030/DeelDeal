@@ -10,7 +10,7 @@ export function Footer() {
   const { t } = useTranslations()
 
   return (
-    <footer className="border-t bg-background">
+    <footer className="border-t bg-background my-3">
       <div className="container py-12">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
           <div>

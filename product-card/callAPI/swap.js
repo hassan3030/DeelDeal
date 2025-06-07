@@ -1,12 +1,10 @@
 // ------------- offers and transactions -------------------//
 
 import axios from 'axios';
-const baseURLAssets = 'http://localhost:3000/api/product/1';
-export const baseItemsURL = 'http://localhost:8055/items';
-export const baseURL = 'http://localhost:8055';
 import {  getCookie , setCookie , decodedToken } from './utiles';
 import { getUserByProductId } from './users';
-import {  } from './products';
+const baseItemsURL = 'http://localhost:8055/items';
+const baseURL = 'http://localhost:8055';
 
 
 
@@ -60,310 +58,233 @@ import {  } from './products';
 
 // ************************** offer ***************************//
 
+// ----------- Offers API -----------
 
-/**
-//  * Get All Offers
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offers list
-//  */
-
+// Get all offers
 export const getAllOffers = async () => {
   try {
     const response = await axios.get(`${baseItemsURL}/Offers`);
-    console.log(response.data.data.id) 
-    return response.data.data ;
-     
+    return response.data.data;
   } catch (err) {
-    console.error('Failed to fetch Offers:', err)
-    throw new Error('The API is not responding')
+    console.error('Failed to fetch Offers:', err);
+    throw new Error('The API is not responding');
   }
+};
 
-}
-
-/**
-//  * Get  Offers by id user_from in cart
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offers list
-//  */
-
+// Get offers by from_user_id
 export const getOfferById = async (id) => {
+  if (!id) throw new Error("User ID is required");
   try {
     const response = await axios.get(`${baseItemsURL}/Offers?filter[from_user_id][_eq]=${id}`);
-    console.log(response.data.data.id) 
     return response.data.data;
-   
-     
   } catch (err) {
-    console.error('Failed to fetch Offers:', err)
-    throw new Error('The API is not responding')
+    console.error('Failed to fetch Offers:', err);
+    throw new Error('The API is not responding');
   }
+};
 
-}
-
-/**
-//  * Get  Offers by id user_to in cart
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offers list
-//  */
+// Get offers by to_user_id (notifications)
 export const getOffersNotifications = async (id) => {
+  if (!id) throw new Error("User ID is required");
   try {
     const response = await axios.get(`${baseItemsURL}/Offers?filter[to_user_id][_eq]=${id}`);
-    console.log(response.data.data.id) 
     return response.data.data;
-   
-     
   } catch (err) {
-    console.error('Failed to fetch Offers Notifications:', err)
-    throw new Error('The API is not responding')
+    console.error('Failed to fetch Offers Notifications:', err);
+    throw new Error('The API is not responding');
   }
+};
 
-}
-
-/**
-//  * GET items by Offers id 
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offer 
-//  */
- 
+// Get Offer_Items by offer_id
 export const getItemsByOfferId = async (id) => {
+  if (!id) throw new Error("Offer ID is required");
   try {
-  const items = await axios.get(`${baseItemsURL}/Offer_Items?filter[offer_id][_eq]=${id}`); 
-    return items.data.data ;
+    const items = await axios.get(`${baseItemsURL}/Offer_Items?filter[offer_id][_eq]=${id}`);
+    return items.data.data;
   } catch (error) {
-    console.error(`Failed to get items from this Offer :`, error)
-    throw error
+    console.error(`Failed to get items from this Offer:`, error);
+    throw error;
   }
-}
+};
 
-
-/**
-//  * delete (rejected) One  Offers by id 
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offer 
-//  */
- 
+// Delete (reject) an offer by id
 export const deleteOfferById = async (id) => {
   try {
-    const items = await getItemsByOfferId(id)
+    if (!id) throw new Error("Offer ID is required");
 
-    console.log('getItemsByOfferId' , items)
-  if(items){
-   for (const item of items) {
-      await axios.patch(`http://localhost:8055/items/Items/${item.item_id}`, {
-        "status_swap": "available" ,       
-      },
-    );
-    }
+    // 1. Get all Offer_Items for this offer
+    const items = await getItemsByOfferId(id);
+    if (!Array.isArray(items)) throw new Error("Failed to fetch Offer_Items");
 
-}
- 
-
-const chat = await axios.get(`http://localhost:8055/items/Chat?filter[offer_id][_eq]=${id}`);
-
-if(chat){
-  await axios.delete(`http://localhost:8055/items/Chat?filter[offer_id][_eq]=${id}`);
-}
-
-
-await axios.patch(`http://localhost:8055/items/Offers/${id}`, {
-        "status_offer": "rejected"  ,
+    // 2. For each item, set status_swap to 'available' and delete Offer_Item
+    for (const item of items) {
+      if (!item.item_id || !item.id) {
+        console.warn("Invalid Offer_Item object:", item);
+        continue;
+      }
+      await axios.patch(`${baseItemsURL}/Items/${item.item_id}`, {
+        status_swap: "available",
       });
- 
-  } catch (error) {
-    console.error(`Delete Offer ${id} error:`, error)
-    throw error
-  }
-}
+      await axios.delete(`${baseItemsURL}/Offer_Items/${item.id}`);
+    }
 
-/**
-//  * accepted One  Offers by id 
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offer 
-//  */
- 
+    // 3. Delete related chats
+    const chatRes = await axios.get(`${baseItemsURL}/Chat?filter[offer_id][_eq]=${id}`);
+    const chats = chatRes.data?.data || [];
+    for (const chat of chats) {
+      if (chat.id) {
+        await axios.delete(`${baseItemsURL}/Chat/${chat.id}`);
+      }
+    }
+
+    // 4. Set offer status to 'rejected'
+    await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+      status_offer: "rejected",
+    });
+
+    return true;
+  } catch (error) {
+    console.error(`Delete Offer ${id} error:`, error?.response?.data || error.message || error);
+    throw error;
+  }
+};
+
+// Accept an offer by id
 export const acceptedOffer = async (id) => {
+  if (!id) throw new Error("Offer ID is required");
   try {
-  const response = await axios.patch(`${baseItemsURL}/Offers/${id}`,{
-    "status_offer": "accepted"
-  });
-    return response.data.data ;
- 
+    const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+      status_offer: "accepted"
+    });
+    return response.data.data;
   } catch (error) {
-    console.error(`accepted Offer ${id} error:`, error)
-    throw error
+    console.error(`accepted Offer ${id} error:`, error);
+    throw error;
   }
-}
+};
 
-// complete swap then add to transaction
-/**
-//  * complete One  Offers by id 
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offer 
-//  */
- 
+// Complete an offer (and delete related items)
 export const completeOffer = async (id) => {
+  if (!id) throw new Error("Offer ID is required");
   try {
-  const response = await axios.patch(`${baseItemsURL}/Offers/${id}`,{
-    "status_offer": "completed"
-  });
-const items = await getItemsByOfferId(id)
-if(items){
-   for (const item of items) {
-      await axios.delete(`http://localhost:8055/items/Items/${item.id}`);
+    const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+      status_offer: "completed"
+    });
+    const items = await getItemsByOfferId(id);
+    if (Array.isArray(items)) {
+      for (const item of items) {
+        if (item.id) {
+          await axios.delete(`${baseItemsURL}/Items/${item.id}`);
+        }
+      }
+      // Delete all Offer_Items for this offer
+      for (const item of items) {
+        if (item.id) {
+          await axios.delete(`${baseItemsURL}/Offer_Items/${item.id}`);
+        }
+      }
     }
-     await axios.delete(`${baseItemsURL}/Offer_Items?filter[offer_id][_eq]=${items.id}`);
-}
-    return response.data.data ;
+    return response.data.data;
   } catch (error) {
-    console.error(`completed Offer ${id} error:`, error)
-    throw error
+    console.error(`completed Offer ${id} error:`, error);
+    throw error;
   }
-}
+};
 
-
-
-
-/**
-//  * Updated One  Offers by id 
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offer 
-//  */
- 
-export const updateOfferById = async (id , cash_adjustment) => {
+// Update offer by id (cash adjustment)
+export const updateOfferById = async (id, cash_adjustment) => {
+  if (!id) throw new Error("Offer ID is required");
   try {
-  const response = await axios.patch(`${baseItemsURL}/Offers/${id}`,
-    {
-      cash_adjustment ,
-    }
-  );
-    // console.log(response.data.data) 
-    return response.data.data ;
- 
+    const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+      cash_adjustment,
+    });
+    return response.data.data;
   } catch (error) {
-    console.error(`Delete Offer ${id} error:`, error)
-    throw error
+    console.error(`Update Offer ${id} error:`, error);
+    throw error;
   }
-}
+};
 
-
-/**
-//  * Add Offer
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Products list
-//  */
-export const addOffer = async (to_user_id, cash_adjustment=0, user_prods, owner_prods , message) => {
+// Add a new offer
+export const addOffer = async (to_user_id, cash_adjustment = 0, user_prods, owner_prods, message) => {
+  let offer_id;
   try {
     const token = await getCookie();
-    if (!token) return;
+    if (!token) throw new Error("No token found");
 
     const { id } = await decodedToken();
+    if (!id) throw new Error("Invalid token");
 
     // 1. Add offer to Offers table
-    const offerRes = await axios.post( `${baseURL}/items/Offers`,
-      {
-        from_user_id :id,
-        to_user_id:to_user_id,
-        cash_adjustment:cash_adjustment,
-        status_offer: "pending",
-      }
-    );
-    const offer_id = offerRes.data.data.id;
-    console.log("offer_id",offer_id);
+    const offerRes = await axios.post(`${baseURL}/items/Offers`, {
+      from_user_id: id,
+      to_user_id,
+      cash_adjustment,
+      status_offer: "pending",
+    });
+    offer_id = offerRes.data.data.id;
 
-     const allItems = [
-      ...user_prods,
-      ...owner_prods
-    ];
-    console.log("allItems",allItems);
-
+    const allItems = [...user_prods, ...owner_prods];
     for (const item of allItems) {
-     if (!offer_id || !item ) {
-    console.error("Missing required field:", { offer_id, item });
-    break;
-  }
-  const ownerPrducts = await getUserByProductId(item)
-  await axios.post(`${baseURL}/items/Offer_Items`, {
-    offer_id,
-    item_id: item,
-    offered_by:ownerPrducts.id
-  });
+      if (!offer_id || !item) {
+        console.error("Missing required field:", { offer_id, item });
+        break;
+      }
+      const ownerProduct = await getUserByProductId(item);
+      await axios.post(`${baseURL}/items/Offer_Items`, {
+        offer_id,
+        item_id: item,
+        offered_by: ownerProduct.id
+      });
     }
     // 3. Update items' status_swap to 'unavailable'
     for (const item of allItems) {
-      await axios.patch(`http://localhost:8055/items/Items/${item}`, {
-        "status_swap": "unavailable"
-                        
+      await axios.patch(`${baseItemsURL}/Items/${item}`, {
+        status_swap: "unavailable"
       });
     }
-    if(message){
-      await axios.post(`${baseURL}/items/Chat`, 
-        {
-        from_user_id:id,
-        to_user_id:to_user_id,
-        offer_id: offer_id,
-        message: message
-      }
-      )
+    if (message) {
+      await axios.post(`${baseURL}/items/Chat`, {
+        from_user_id: id,
+        to_user_id,
+        offer_id,
+        message
+      });
     }
     return offer_id;
   } catch (err) {
     console.error('Failed to add offer:', err);
-    await deleteOfferById(offer_id)
+    if (offer_id) await deleteOfferById(offer_id);
     throw err;
   }
 };
 
-/**
-//  * Get all Offers Items 
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offers Items
-//  */
-
+// Get all Offer_Items
 export const getOfferItems = async () => {
   try {
     const response = await axios.get(`${baseItemsURL}/Offer_Items`);
-    console.log(response.data.data.id) 
     return response.data.data;
-   
-     
   } catch (err) {
-    console.error('Failed to fetch Offers:', err)
-    throw new Error('The API is not responding')
+    console.error('Failed to fetch Offer_Items:', err);
+    throw new Error('The API is not responding');
   }
+};
 
-}
-
-
-
-/**
-//  * Get  Offers Items by id
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offers Items
-//  */
-
+// Get Offer_Item by id
 export const getOfferItemsById = async (id) => {
+  if (!id) throw new Error("Offer_Item ID is required");
   try {
     const response = await axios.get(`${baseItemsURL}/Offer_Items/${id}`);
-    console.log(response.data.data.id) 
     return response.data.data;
-   
-     
   } catch (err) {
-    console.error('Failed to fetch Offers:', err)
-    throw new Error('The API is not responding')
+    console.error('Failed to fetch Offer_Item:', err);
+    throw new Error('The API is not responding');
   }
+};
 
-}
-
-
-
-/**
-//  * Get  Offers Items by offers id
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offers Items
-//  */
-
+// Get Offer_Items by offer_id
 export const getOfferItemsByOfferId = async (offer_id) => {
+  if (!offer_id) throw new Error("Offer ID is required");
   try {
     const response = await axios.get(`${baseItemsURL}/Offer_Items?filter[offer_id][_eq]=${offer_id}`);
     return response.data.data;
@@ -371,49 +292,152 @@ export const getOfferItemsByOfferId = async (offer_id) => {
     console.error('Failed to fetch Offer Items:', err);
     throw new Error('The API is not responding');
   }
-}
+};
 
-
-
-/**
-//  * Delete  Offers Items by id
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offers Items
-//  */
-
-export const deleteOfferItemsById = async (id) => {
+// Delete Offer_Item by its ID
+export const deleteOfferItemsById = async (id, idItemItself, cashAdjustment, offer_id) => {
   try {
-    const response = await axios.delete(`${baseItemsURL}/Offer_Items/${id}`);
-    console.log(response.data.data.id) 
-    return response.data.data;
-   
-     
+    if (!id || !idItemItself) throw new Error("Offer_Item ID is required for deletion.");
+    await axios.patch(`${baseItemsURL}/Items/${idItemItself}`, {
+      status_swap: "available"
+    });
+    await axios.delete(`${baseItemsURL}/Offer_Items/${id}`);
+    // Only update cashAdjustment if it's a valid number
+    if (cashAdjustment !== null && cashAdjustment !== undefined && !isNaN(cashAdjustment)) {
+    const patchRes = await axios.patch(`${baseItemsURL}/Offers/${offer_id}`, {
+  cash_adjustment: cashAdjustment
+});
+console.log("PATCH response:", patchRes.data);
+    }
   } catch (err) {
-    console.error('Failed to fetch Offers:', err)
-    throw new Error('The API is not responding')
+    console.error('Failed to delete Offer_Item:', err?.response?.data || err.message || err);
+    throw new Error('Failed to delete Offer_Item');
   }
+};
 
-}
-
-
-
-/**
-//  * Update  Offers Items by id
-//  * @param {Object} params - Query parameters
-//  * @returns {Promise<Array>} Offers Items
-//  */
-
-export const updateOfferItemsById = async (id) => {
+// Update Offer_Item by id (add your update fields as needed)
+export const updateOfferItemsById = async (id, updateData = {}) => {
+  if (!id) throw new Error("Offer_Item ID is required");
   try {
-    // not updates 
-    const response = await axios.patch(`${baseItemsURL}/Offer_Items/${id}`);
-    console.log(response.data.data.id) 
+    const response = await axios.patch(`${baseItemsURL}/Offer_Items/${id}`, updateData);
     return response.data.data;
-   
-     
   } catch (err) {
-    console.error('Failed to fetch Offers:', err)
-    throw new Error('The API is not responding')
+    console.error('Failed to update Offer_Item:', err);
+    throw new Error('The API is not responding');
   }
+};
 
-}
+// Add chat 
+export const addMessage = async (message , to_user_id , offer_id  ) => {
+  if (!message) return null;
+  const {id} = await decodedToken();
+  try {
+    const response = await axios.post(`${baseItemsURL}/Chat`, {
+      from_user_id: id,
+      to_user_id,
+      offer_id,
+      message
+    });
+    return response.data.data;
+  } catch (err) {
+    console.error('Failed to update Message:', err);
+    throw new Error('The API is not responding');
+  }
+};
+
+
+
+
+
+
+// Get chat by id 
+export const getMessage = async (offer_id ) => {
+
+  try {
+    const response = await axios.get(`${baseItemsURL}/Chat?filter[offer_id][_eq]=${offer_id}`);
+    return response.data.data;
+  } catch (err) {
+    console.error('Failed to update Message:', err);
+    throw new Error('The API is not responding');
+  }
+};
+
+
+// Get chat
+export const getAllMessage = async () => {
+  try {
+    const response = await axios.get(`${baseItemsURL}/Chat`);
+    return response.data.data;
+  } catch (err) {
+    console.error('Failed to update Message:', err);
+    throw new Error('The API is not responding');
+  }
+};
+
+
+
+// ---------------Add wishList -------------------------
+
+// Add wishList 
+export const addWishList = async (item_id  , user_id ) => {
+  
+  try {
+    const response = await axios.post(`${baseItemsURL}/WishList`, {
+     item_id,
+      user_id
+    });
+    return response.data.data;
+  } catch (err) {
+    console.error('Failed to update WishList:', err);
+    throw new Error('The API is not responding');
+  }
+};
+
+
+
+
+
+
+// Get wishList by  user_id
+export const getWishList = async (user_id) => {
+
+  try {
+    const response = await axios.get(`${baseItemsURL}/WishList?filter[user_id][_eq]=${user_id}`);
+    if (!response.data || !response.data.data) {
+      return [];
+    }
+    else{
+
+      return response.data.data;
+    }
+  } catch (err) {
+    console.error('Failed to update WishList:', err);
+    throw new Error('The API is not responding');
+  }
+};
+
+
+// Get wishList 
+export const getAllWishList = async () => {
+  try {
+    const response = await axios.get(`${baseItemsURL}/WishList`);
+    return response.data.data;
+  } catch (err) {
+    console.error('Failed to update WishList:', err);
+    throw new Error('The API is not responding');
+  }
+};
+
+
+
+
+// Delete wishList by id
+export const deleteWishList = async (id) => {
+
+  try {
+     await axios.delete(`${baseItemsURL}/WishList/${id}`);
+  } catch (err) {
+    console.error('Failed to update WishList:', err);
+    throw new Error('The API is not responding');
+  }
+};

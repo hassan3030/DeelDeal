@@ -2,7 +2,9 @@
 
 export const translations = {
   en: {
-    
+    successAddWishDesc: "Item added to wishlist successfully.",
+    successAddWish: "Success",
+    deletedWishDesc: "Deleted wishlist",
     addanewitem:' Add a new item',
     notFoundSwaps:' No swaps found',
     // toast 
@@ -228,6 +230,10 @@ unavailable: "Unavailable",
    
   },
   ar: {
+     successAddWishDesc: "تمت إضافة العنصر إلى قائمة الرغبات بنجاح.",
+    successAddWish: "نجاح",
+    deletedWishDesc: " تم حذف قائمة الرغبات",
+
     notFoundSwaps:' لم يتم العثور على أي تبديلات',
 
     addanewitem:' إضافة عنصر جديد',

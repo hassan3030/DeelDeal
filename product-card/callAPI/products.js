@@ -311,9 +311,9 @@ export const addProduct = async (productCollectionData , authId , images) => {
 export const deleteProduct = async (id) => {
   try {
     await new Promise((resolve) => setTimeout(resolve, 800))
-  const response = await axios.delete(`${baseItemsURL}/Items/${id}`);
+ await axios.delete(`${baseItemsURL}/Items/${id}`);
     // console.log(response.data.data) 
-    return response.data.data ;
+   
  
   } catch (error) {
     console.error(`Delete product ${id} error:`, error)

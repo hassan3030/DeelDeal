@@ -9,7 +9,7 @@ const ProductsPage = async() => {
   return (
     <div className='mt-1 mx-4'>
     <HeaderComp/>
-        <ItemsList items={products} showbtn={true}/>
+        <ItemsList items={products} showbtn={true} showWishList={true}/>
     </div>
   )
 }

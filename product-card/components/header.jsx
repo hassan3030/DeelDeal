@@ -1,4 +1,7 @@
 "use client";
+
+import { signIn, signOut, useSession } from 'next-auth/react';
+
 import { MessageCircle } from 'lucide-react';
 import { Heart } from 'lucide-react';
 import { useEffect, useState } from "react";
@@ -51,6 +54,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -146,8 +150,28 @@ export function Header() {
     // Do nothing if filter is just whitespace
   }, [filter]);
 
+  
+
+
+
+  // const { data:session } = useSession();
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background shadow-sm">
+    <>
+
+{/* 
+    <div>
+      {session ? (
+        <>
+          <p>Welcome, {session.user.name}</p>
+          <button onClick={() => signOut()}>Sign Out</button>
+        </>
+      ) : (
+        <button onClick={() => signIn('google')}>Sign in with Google</button>
+      )}
+    </div> */}
+
+     <header className="sticky top-0 z-50 w-full border-b bg-background shadow-sm">
       {/* Top bar - hidden on small and medium screens, visible on large screens */}
       <div className="hidden lg:block bg-primary text-primary-foreground px-4 py-1">
         <div className="container flex items-center justify-between">
@@ -311,6 +335,7 @@ export function Header() {
                   asChild
                   className="gap-1 text-sm hover:text-primary"
                 >
+                  
                   <Link href="/auth/login">{t("signIn")}</Link>
                 </Button>
                 <Button
@@ -351,13 +376,13 @@ export function Header() {
                     className="relative hover:text-primary"
                   >
                     <ShoppingCart className="h-5 w-5" />
-                    {cartLength && (
+                    {cartLength ? (
                       <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                       {cartLength}
                     </span>
-                    )}
+                    ):''}
                     
-                    <span className="sr-only">{t("cart") || "fbdhbskvn "}</span>
+                    <span className="sr-only">{t("cart") || "Cart "}</span>
                   </Button>
                 </Link>
 
@@ -368,11 +393,11 @@ export function Header() {
                     className="relative hover:text-primary"
                   >
                     <Heart className="h-5 w-5" />
-                    {wishlistLength && (
-                      <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                    {wishlistLength!=0? (
+                     <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                       {wishlistLength}
                     </span>
-                    )}
+                    ):''}
                     
                     <span className="sr-only">{t("wishlistLength") || "wishlistLength"}</span>
                   </Button>
@@ -386,11 +411,11 @@ export function Header() {
     className="relative hover:text-primary group" // <-- add group here
   >
                         <MessageCircle className="h-5 w-5" />
-  {chatLength && (
+  {chatLength != 0? (
                       <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                       {wishlistLength}
                     </span>
-                    )}
+                    ):''}
     <span className="pointer-events-none absolute -top-8 right-0 z-10 hidden rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
    {t("message") || "Message"}
     </span>
@@ -631,5 +656,7 @@ export function Header() {
         </div>
       </div>
     </header>
+    </>
+   
   );
 }

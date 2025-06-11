@@ -1,9 +1,12 @@
 import Loading from '@/components/Loading'
 
-const LoadingPage = () => {
+const LoadingPage = ({loading}) => {
+  if (!loading) {
+    loading = "All PRODUCTS...";
+  }
   return (
     <div>
-      <Loading pageName ={''}/>
+      <Loading pageName ={loading}/>
     </div>
   );
 };

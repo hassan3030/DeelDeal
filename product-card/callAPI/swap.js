@@ -205,6 +205,44 @@ export const updateOfferById = async (id, cash_adjustment) => {
   }
 };
 
+
+
+
+// accepted  offer by id 
+export const acceptedOfferById = async (id_offer) => {
+  const {id} = await decodedToken();
+  if (!id_offer) throw new Error("Offer ID is required");
+  if (!id) throw new Error("Login is required");
+  try {
+
+    const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+      status_offer: "accepted",
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error(`Update Offer ${id} error:`, error);
+    throw error;
+  }
+};
+
+
+// completed offer by id 
+export const completedOfferById = async (id_offer) => {
+   const {id} = await decodedToken();
+  if (!id_offer) throw new Error("Offer ID is required");
+  if (!id) throw new Error("Login is required");
+  try {
+
+    const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+      status_offer: "completed",
+    });
+    return response.data.data;
+  } catch (error) {
+    console.error(`Update Offer ${id} error:`, error);
+    throw error;
+  }
+};
+
 // Add a new offer
 export const addOffer = async (to_user_id, cash_adjustment = 0, user_prods, owner_prods, message) => {
   let offer_id;
@@ -441,3 +479,6 @@ export const deleteWishList = async (id) => {
     throw new Error('The API is not responding');
   }
 };
+
+
+

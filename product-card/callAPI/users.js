@@ -178,7 +178,7 @@ export const getUserByProductId = async (ProductId) => {
 export const editeProfile = async (userData ,authId , avatar) => {
 
     try {
-      const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0NzEzMDk1NCwiZXhwIjoxNzQ3NzM1NzU0LCJpc3MiOiJkaXJlY3R1cyJ9.xqs_mhQUiDqyrF18Diku7W1UN5Ebmn2pb_amEmanb7c" 
+      // const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0OTU0NTYxMywiZXhwIjoxNzUwMTUwNDEzLCJpc3MiOiJkaXJlY3R1cyJ9.VsIBg7slfZOcEqJ8FPEypSRsZJlelWiD62LI4qG0hh8"
       const {id} = await decodedToken()
       // console.log("token.id" , id)
       // console.log("token" , token)

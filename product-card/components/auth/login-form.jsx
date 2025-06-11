@@ -72,47 +72,48 @@ export function LoginForm() {
   useEffect(() => {
     // Load Google SDK
     // if (environment.enableSocialLogin && environment.googleClientId) {
-    //   const loadGoogleScript = () => {
-    //     const script = document.createElement("script")
-    //     script.src = "https://accounts.google.com/gsi/client"
-    //     script.async = true
-    //     script.defer = true
-    //     document.body.appendChild(script)
-    //     return () => {
-    //       document.body.removeChild(script)
-    //     }
-    //   }
+    if (true) { // Temporarily set to true for testing
+      const loadGoogleScript = () => {
+        const script = document.createElement("script")
+        script.src = "https://accounts.google.com/gsi/client"
+        script.async = true
+        script.defer = true
+        document.body.appendChild(script)
+        return () => {
+          document.body.removeChild(script)
+        }
+      }
 
-    //   // Load Facebook SDK
-    //   const loadFacebookScript = () => {
-    //     const script = document.createElement("script")
-    //     script.src = "https://connect.facebook.net/en_US/sdk.js"
-    //     script.async = true
-    //     script.defer = true
-    //     document.body.appendChild(script)
+      // Load Facebook SDK
+      // const loadFacebookScript = () => {
+      //   const script = document.createElement("script")
+      //   script.src = "https://connect.facebook.net/en_US/sdk.js"
+      //   script.async = true
+      //   script.defer = true
+      //   document.body.appendChild(script)
 
-    //     window.fbAsyncInit = () => {
-    //       window.FB.init({
-    //         appId: environment.facebookAppId,
-    //         cookie: true,
-    //         xfbml: true,
-    //         version: "v16.0",
-    //       })
-    //     }
+      //   window.fbAsyncInit = () => {
+      //     window.FB.init({
+      //       appId: environment.facebookAppId,
+      //       cookie: true,
+      //       xfbml: true,
+      //       version: "v16.0",
+      //     })
+      //   }
 
-    //     return () => {
-    //       document.body.removeChild(script)
-    //     }
-    //   }
+      //   return () => {
+      //     document.body.removeChild(script)
+      //   }
+      // }
 
-    //   const googleCleanup = loadGoogleScript()
-    //   const facebookCleanup = loadFacebookScript()
+      const googleCleanup = loadGoogleScript()
+      // const facebookCleanup = loadFacebookScript()
 
-    //   return () => {
-    //     googleCleanup()
-    //     facebookCleanup()
-    //   }
-    // }
+      return () => {
+        googleCleanup()
+        // facebookCleanup()
+      }
+    }
   }, [])
 
   const validateForm = (data) => {

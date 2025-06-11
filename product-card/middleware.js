@@ -124,18 +124,64 @@
 
 // -----------------------------------------
 
+// middleware.js
+
+import { getCookie } from './callAPI/utiles'; // Adjust the import path as necessary
 import { NextResponse } from 'next/server';
 
-export function middleware(request) {
-  const { pathname } = request.nextUrl;
+export async function middleware(req) {
 
-  // Block direct access to `/admin`
-  // if (pathname.startsWith('/admin')) {
-  //   const token = request.cookies.get('token');
-  //   if (!token) {
-  //     return NextResponse.redirect(new URL('/login', request.url));
-  //   }
-  // }
+  //  const { pathname } = request.nextUrl;
+ 
+  const token = await  getCookie()
+
+  // Protect /admin
+  if (!token && req.nextUrl.pathname.startsWith('/admin')) {
+    return NextResponse.redirect(new URL('/auth/login', req.url));
+  }
+
+  // Protect /cart
+  if (!token && req.nextUrl.pathname.startsWith('/cart')) {
+    return NextResponse.redirect(new URL('/auth/login', req.url));
+  }
+
+  // Protect /chat
+  if (!token && req.nextUrl.pathname.startsWith('/chat')) {
+    return NextResponse.redirect(new URL('/auth/login', req.url));
+  }
+  // Protect /dashboard
+  if (!token && req.nextUrl.pathname.startsWith('/dashboard')) {
+    return NextResponse.redirect(new URL('/auth/login', req.url));
+  }
+  // Protect /notifications
+  if (!token && req.nextUrl.pathname.startsWith('/notifications')) {
+    return NextResponse.redirect(new URL('/auth/login', req.url));
+  }
+  // Protect /profile
+  if (!token && req.nextUrl.pathname.startsWith('/profile')) {
+    return NextResponse.redirect(new URL('/auth/login', req.url));
+  }
+  // Protect /swap
+  if (!token && req.nextUrl.pathname.startsWith('/swap')) {
+    return NextResponse.redirect(new URL('/auth/login', req.url));
+  }
+  // Protect /wishList
+  if (!token && req.nextUrl.pathname.startsWith('/wishList')) {
+    return NextResponse.redirect(new URL('/auth/login', req.url));
+  }
+  
 
   return NextResponse.next();
 }
+
+export const config = {
+  matcher: [
+             '/admin/:path*', 
+            '/cart/:path*',
+             '/chat/:path*',
+             '/notifications/:path*',
+             '/swap/:path*',
+             '/wishList/:path*',
+           
+            ],
+};

@@ -52,7 +52,7 @@ const environment = {
 
   // Social Media
   facebookAppId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "",
-  googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+  googleClientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "602047752247-39qmihl9qoh15v24vr6ojptd5g60i9pr.apps.googleusercontent.com",
   twitterApiKey: process.env.TWITTER_API_KEY || "",
   twitterApiSecret: process.env.TWITTER_API_SECRET || "",
   appleClientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID || "",
@@ -197,6 +197,21 @@ const environment = {
   // Experimental Features
   enableExperimentalFeatures: process.env.NEXT_PUBLIC_ENABLE_EXPERIMENTAL === "true",
   experimentalFeaturesList: (process.env.NEXT_PUBLIC_EXPERIMENTAL_FEATURES || "").split(","),
+
+
+ NEXT_PUBLIC_ENABLE_SOCIAL_LOGIN:true,
+NEXT_PUBLIC_ENABLE_CHAT:true,
+NEXT_PUBLIC_ENABLE_NOTIFICATIONS:true,
+AUTH_GOOGLE_CLIENT_ID:'602047752247-39qmihl9qoh15v24vr6ojptd5g60i9pr.apps.googleusercontent.com',
+AUTH_GOOGLE_CLIENT_SECRET:'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',
+AUTH_GOOGLE_AUTH_URL:'https://accounts.google.com/o/oauth2/auth',
+AUTH_GOOGLE_TOKEN_URL:'https://oauth2.googleapis.com/token',
+AUTH_GOOGLE_USER_URL:'https://www.googleapis.com/oauth2/v3/userinfo',
+AUTH_GOOGLE_SCOPE:'openid email profile',
+AUTH_GOOGLE_ALLOW_PUBLIC_REGISTRATION:true,
+AUTH_GOOGLE_IDENTIFIER_KEY:'email',
+NEXTAUTH_URL:'http://localhost:3000'
+
 }
 
 export default environment

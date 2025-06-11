@@ -9,7 +9,7 @@ import { Heart, ArrowLeft } from "lucide-react";
 import { getWishList, deleteWishList } from "@/callAPI/swap";
 import { getProductById , getImageProducts} from "@/callAPI/products";
 import { decodedToken } from "@/callAPI/utiles";
-        import  LoadingPage  from "./loading";
+import  LoadingPage  from "./loading";
 
 
 

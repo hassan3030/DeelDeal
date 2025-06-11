@@ -1,3 +1,4 @@
+
 import { Inter } from "next/font/google"
 // import { AuthProvider } from "@/lib/auth-context"
 // import { AuthGuard } from "@/components/auth/auth-guard"
@@ -7,7 +8,9 @@ import { Footer } from "@/components/footer"
 import { ThemeProvider } from "@/lib/theme-provider"
 import { LanguageProvider } from "@/lib/language-provider"
 import "./globals.css"
-
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth'; // We’ll define this below
+import { SessionProvider } from 'next-auth/react';
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
@@ -20,16 +23,23 @@ export const metadata = {
   },
 }
 
-export default function RootLayout({ children }) {
+export default async function  RootLayout({ children }) {
+  //   const session = await getServerSession(authOptions);
+
+  // if (!session) {
+  //   return <p>⛔ Access Denied: You must be logged in.</p>;
+  // }
   return (
     <html lang="en">
+    
       <body className={inter.className}>
         <ThemeProvider>
           <LanguageProvider>
             {/* <AuthProvider> */}
               {/* <AuthGuard> */}
                 <div className="flex min-h-screen flex-col">
-                  {/* <Header /> */}
+                  <Header />
+           
                   <div className="flex-1">{children}</div>
                   <Footer />
                 </div>

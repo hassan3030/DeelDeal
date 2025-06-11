@@ -6,10 +6,13 @@ import { Button } from "@/components/ui/button";
 import { DeelProductCard } from "@/components/deel-product-card";
 import { CategoryCard } from "@/components/category-card";
 import { ProductCarousel } from "@/components/product-carousel";
+import { DeelProductCardSkeleton } from "@/components/DeelProductCardSkeleton";
 import { HeroSlider } from "@/components/hero-slider";
 import { useLanguage } from "@/lib/language-provider";
 import { useTranslations } from "@/lib/use-translations";
 import { categories } from "@/lib/data";
+
+
 // import { getProducts , getProductSearchFilter  , getAllImageProducts} from '@/callAPI/products'
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -24,6 +27,8 @@ export default function Home() {
   const { t } = useTranslations();
   const [items, setItems] = useState([]);
   const [topPrice, setTopPrice] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingCat, setIsLoadingCat] = useState(true);
   // const [filter, setFilter] = useState('')
   // const [images, setImages] = useState([])
   const router = useRouter();
@@ -46,15 +51,34 @@ export default function Home() {
   //   setItems(data)
   // }
 
+
   useEffect(() => {
-    getData();
-  }, []);
-  useEffect(() => {
-    getData();
-  }, [items, topPrice]);
+   
+setIsLoading(true);
+setIsLoadingCat(true);
+
+try{
+    getData().then(() => {
+      setIsLoading(false);
+    });
+setIsLoadingCat(false);
+
+  }
+  catch (error) {
+    console.error("Error fetching data:", error);
+    setIsLoading(false);
+setIsLoadingCat(false);
+
+  }
+}
+
+  , []);
 
   return (
     <>
+
+
+  
       <main className="min-h-screen">
 
         {/* Hero Section */}
@@ -75,10 +99,20 @@ export default function Home() {
             </Link>
           </div>
 
+
           <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6  ">
-            {categories.slice(0, 5).map((category) => (
-              <CategoryCard key={category.name} {...category} />
+           {isLoadingCat
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <DeelProductCardSkeleton key={i} />
+                ))
+              : categories.slice(0, 5).map((category) => (
+        
+                <CategoryCard key={category.name} {...category} />
+            
+             
             ))}
+          
+          
           </div>
         </section>
 
@@ -105,9 +139,15 @@ export default function Home() {
             viewAllHref="/products"
             viewAllLabel={t("viewAll")}
           >
-            {items.map((product) => (
+{isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <DeelProductCardSkeleton key={i} />
+                ))
+              : items.map((product) => (
               <DeelProductCard key={product.id} {...product} />
             ))}
+
+   
           </ProductCarousel>
         </section>
 
@@ -118,9 +158,19 @@ export default function Home() {
             viewAllHref="/deals"
             viewAllLabel={t("viewAll")}
           >
-            {topPrice.map((product) => (
+
+{isLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <DeelProductCardSkeleton key={i} />
+                ))
+              : topPrice.map((product) => (
               <DeelProductCard key={product.id} {...product} />
             ))}
+
+
+
+
+         
           </ProductCarousel>
         </section>
       </main>

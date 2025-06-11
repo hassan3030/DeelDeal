@@ -14,6 +14,7 @@ import { getProductById, getImageProducts } from '@/callAPI/products';
 import { getCookie , decodedToken } from '@/callAPI/utiles';
 import { getUserByProductId } from '@/callAPI/users';
 import { useToast } from "@/components/ui/use-toast";
+import LoadinpPage  from "../loading";
 
 export default  function  ProductPage() {
   const { toast } = useToast();
@@ -85,8 +86,8 @@ export default  function  ProductPage() {
     }
   };
 
-  if (product === null) {
-    return <div>Loading...</div>;
+  if (!product) {
+    return <LoadinpPage loadin={'LOADING.....'} />;
   }
 
   return (

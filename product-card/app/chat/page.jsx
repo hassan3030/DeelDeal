@@ -5,9 +5,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Send, Search, MessageCircle, ArrowLeft } from "lucide-react";
+import { useTranslations } from "@/lib/use-translations";
+
+import {
+  Send,
+  Search,
+  MessageCircle,
+  ArrowLeft,
+  ShoppingCart,
+  Bell,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   getOfferById,
   getOffersNotifications,
@@ -18,6 +28,7 @@ import { getUserById } from "@/callAPI/users";
 import { getCookie, decodedToken } from "@/callAPI/utiles";
 
 const Messages = () => {
+  const router = useRouter();
   const [offers, setOffers] = useState([]);
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [partner, setPartner] = useState(null);
@@ -25,6 +36,7 @@ const Messages = () => {
   const [message, setMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [myUserId, setMyUserId] = useState(null);
+  const { t } = useTranslations();
 
   // Fetch my offers (sent and received) on mount
   useEffect(() => {
@@ -97,6 +109,7 @@ const Messages = () => {
     setMessage("");
   };
 
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -152,7 +165,6 @@ const Messages = () => {
                   >
                     <CardContent className="p-4">
                       <div className="flex items-start space-x-3">
-                       
                         <div className="flex items-center text-sm">
                           <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
                             <Avatar className="h-12 w-12">
@@ -164,15 +176,15 @@ const Messages = () => {
                                 alt={offer.partner_name || "Unknown"}
                               />
                               <AvatarFallback>
-                                {offer.partner_name || "Unknown"}
+                                {offer.partner_name?.[0] || "U"}
                               </AvatarFallback>
                             </Avatar>
                           </div>
                           <div className="flex flex-col ml-2">
-                            <span className="px-1 text-gray-400">
+                            <span className="px-1 text-gray-400 capitalize">
                               {offer.partner_name || ""}
                             </span>
-                            <span className="px-1 text-gray-400">
+                            <span className="px-1 text-gray-400 ">
                               {offer.last_message || ""}
                             </span>
                           </div>
@@ -206,19 +218,57 @@ const Messages = () => {
                     <ArrowLeft className="h-5 w-5" />
                   </Button>
                   <div className="relative">
-                    <img
-                    
-                                 
-                      src={ `http://localhost:8055/assets/${partner.avatar}`  || "/placeholder.svg"}
-                      alt={partner.first_name}
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
+                    <Avatar className="h-10 w-10 border">
+                      <AvatarImage
+                        src={
+                          `http://localhost:8055/assets/${partner.avatar}` ||
+                          "/placeholder.svg"
+                        }
+                        alt={partner.first_name || "User"}
+                      />
+                      <AvatarFallback>
+                        {partner.first_name?.[0] || "U"}
+                      </AvatarFallback>
+                    </Avatar>
                   </div>
+                
+              
                   <div>
-                    <h3 className="font-semibold">
+                    <h3 className="font-semibold capitalize">
                       {partner.first_name} {partner.last_name}
                     </h3>
                   </div>
+
+                    {myUserId ===  selectedOffer.from_user_id? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="relative hover:text-primary group"
+                      onClick={() => {
+       
+                        router.push(`/cart#${selectedOffer.id}`);
+                      }}
+                    >
+                      <ShoppingCart className="h-8 w-8" />
+                      <span className="pointer-events-none absolute top-8 right-0 z-10 hidden rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
+                        {t("goToCart") || "Go to Cart"}
+                      </span>
+                    </Button>
+                  ) : (
+                  <Button
+                      variant="ghost"
+                      size="icon"
+                      className="relative hover:text-primary group"
+                      onClick={() => {
+                        router.push(`/notifications#${selectedOffer.id}`);
+                      }}
+                    >
+                      <Bell className="h-8 w-8" />
+                      <span className="pointer-events-none absolute top-8 right-0 z-10 hidden rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
+                        {t("goToNotifications") || "Go to Notifications"}
+                      </span>
+                    </Button>
+                  )}
                 </div>
               </div>
 

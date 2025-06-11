@@ -11,6 +11,7 @@ import { getImageProducts } from "@/callAPI/products"
 import { useRouter } from "next/navigation"
 import { getCookie } from "@/callAPI/utiles"
 import { useToast } from "@/components/ui/use-toast"
+import { Skeleton } from "./ui/skeleton"
 
 export function DeelProductCard({
   id,
@@ -48,6 +49,7 @@ toast({
   // const [item , setItem] =  useState(product)
 // const [images1 , setImages] =  useState([])
 const [bigImage , setBigImage] =  useState('')
+ const [loading, setLoading] = useState(true);
 const router = useRouter()
 // console.log("product" , product  )
 
@@ -91,19 +93,24 @@ const router = useRouter()
   }
   )
   return (
-    <Link href={`/products/${id}`}>
+    <>
+     <Link href={`/products/${id}`}>
+      
       <div className="group relative flex w-[220px] flex-col overflow-hidden rounded-md border bg-background transition-all hover:shadow-md">
         {/* Image container */}
         <div className="relative aspect-square overflow-hidden">
           <Image
           // imageSrc
           src={`http://localhost:8055/assets/${bigImage}`}
-                // src={`http://localhost:8055/assets/${images.find(image => image.Items_id === item.id).directus_files_id}`}
-            // src={imageSrc || "/placeholder.svg?height=300&width=300"}
             alt={name}
             fill
             className="object-contain transition-transform duration-300 group-hover:scale-105"
-          />
+             placeholder="blur"
+             blurDataURL={`/placeholder.svg?height=300&width=300`}
+             priority
+             onLoadingComplete={() => setLoading(false)}
+         
+         />
 
           {/* Badges */}
           <div className="absolute left-2 top-2 flex flex-col gap-1">
@@ -172,5 +179,8 @@ const router = useRouter()
         </div>
       </div>
     </Link>
+    </>
+   
   )
 }
+

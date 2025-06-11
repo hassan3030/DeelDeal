@@ -1,7 +1,17 @@
-import React from 'react'
+"use client";
+import {useState , useEffect} from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Users, Award } from "lucide-react";
+import  LoadingPage  from "./loading";
 const AboutPage = () => {
+  const [loading, setLoading] = useState(true);
+ useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loading) return <LoadingPage />;
+
   return (
     <>
 <div className="container mx-auto py-10 px-4 max-w-6xl">

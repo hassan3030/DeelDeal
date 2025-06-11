@@ -9,6 +9,7 @@ import { Loader2, Search } from "lucide-react"
 import { ItemCardProfile } from "./item-card-profile"
 import { categoriesName } from "@/lib/data"
 import { DeelProductCard } from "./deel-product-card"
+import { DeelProductCardSkeleton } from "./DeelProductCardSkeleton"
 
 export function ItemsList({ items , showFilters = true  , showCategoriesFilter = true ,  showbtn=true , showWishList= true}) {
   const [displayedItems, setDisplayedItems] = useState(items)
@@ -56,6 +57,7 @@ export function ItemsList({ items , showFilters = true  , showCategoriesFilter =
   window.scrollTo({ top: 0, behavior: "smooth" });
 };
   return (
+    // <DeelProductCardSkeleton/>
     <div className="space-y-6">
       {showFilters && (
         <div className="flex flex-col gap-4 sm:flex-row">

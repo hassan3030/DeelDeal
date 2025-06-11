@@ -2,6 +2,8 @@
 
 export const translations = {
   en: {
+     goToNotifications: "Go to Notifications",
+    goToCart: "Go to Cart",
     successAddWishDesc: "Item added to wishlist successfully.",
     successAddWish: "Success",
     deletedWishDesc: "Deleted wishlist",
@@ -230,6 +232,8 @@ unavailable: "Unavailable",
    
   },
   ar: {
+    goToNotifications: "الذهاب إلى الإشعارات",
+    goToCart: "الذهاب إلى عربة التسوق",
      successAddWishDesc: "تمت إضافة العنصر إلى قائمة الرغبات بنجاح.",
     successAddWish: "نجاح",
     deletedWishDesc: " تم حذف قائمة الرغبات",

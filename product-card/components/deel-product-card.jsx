@@ -9,9 +9,10 @@ import { useLanguage } from "@/lib/language-provider"
 import { useTranslations } from "@/lib/use-translations"
 import { getImageProducts } from "@/callAPI/products"
 import { useRouter } from "next/navigation"
-import { getCookie } from "@/callAPI/utiles"
 import { useToast } from "@/components/ui/use-toast"
 import { Skeleton } from "./ui/skeleton"
+import { getWishList, deleteWishList, addWishList } from "@/callAPI/swap";
+import { decodedToken, getCookie } from "@/callAPI/utiles";
 
 export function DeelProductCard({
   id,
@@ -22,10 +23,15 @@ export function DeelProductCard({
   images,
   status_item,
   category,
-  location
+  location ,
+  showSwitchHeart= true,
+  // showbtn = true,
 }) {
+  
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [isAddedToCart, setIsAddedToCart] = useState(false)
+    const [switchHeart, setswitchHeart] = useState(false);
+
   const { isRTL } = useLanguage()
   const { t } = useTranslations()
     const { toast } = useToast()
@@ -60,6 +66,39 @@ const router = useRouter()
   console.log('i am in single product ' , images)
 }
 
+ const handleGetWishItem = async () => {
+    const user = await decodedToken();
+    const WishItem = await getWishList(user.id);
+    if (WishItem && user) {
+      const isItem = WishItem.find((i) => i.item_id == id) ? true : false;
+      setswitchHeart(isItem);
+    }
+  };
+
+  const handleAddWishItem = async () => {
+    const user = await decodedToken();
+    const WishItem = await getWishList(user.id);
+    const WishItemId = WishItem.filter((i) => i.item_id == id);
+    if (WishItem && user) {
+      const isItem = WishItem.find((i) => i.item_id == id);
+      if (isItem) {
+        await deleteWishList(WishItemId[0]?.id);
+        setswitchHeart(false);
+        toast({
+          title: t("successAddWish") || "Success",
+          description:  t("successAddWishDesc") || "Item added to wishlist successfully.",
+        });
+      } else {
+        await addWishList(id , user.id);
+        setswitchHeart(true);
+        toast({
+            title: t("successAddWish") || "Success",
+          description: t("deletedWishDesc") || "Deleted wishlist",
+        });
+      }
+    }
+  };
+
   const handleAddToCart = async (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -92,6 +131,9 @@ const router = useRouter()
     getDataImage()
   }
   )
+   useEffect(() => {
+      handleGetWishItem();
+    },[switchHeart]);
   return (
     <>
      <Link href={`/products/${id}`}>
@@ -111,7 +153,25 @@ const router = useRouter()
              onLoadingComplete={() => setLoading(false)}
          
          />
-
+{/* Heart button above photo */}
+       {
+        showSwitchHeart ? (<button
+              type="button"
+              className="absolute top-2 right-2 z-0 bg-transparent rounded-full p-1 hover:scale-110 transition-transform"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleAddWishItem();
+              }}
+            >
+              {switchHeart ? (
+                <Heart className="h-8 w-8 text-red-500 fill-current" />
+              ) : (
+                <Heart className="h-8 w-8 text-muted-foreground" />
+              )}
+            </button>):null
+       }    
+        
           {/* Badges */}
           <div className="absolute left-2 top-2 flex flex-col gap-1">
             <Badge className="bg-accent-orange text-white capitalize">{t(status_item)}</Badge>

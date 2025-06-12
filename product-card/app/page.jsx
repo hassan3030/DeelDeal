@@ -21,6 +21,7 @@ import {
   getProducts,
   getProductTopPrice,
 } from "@/callAPI/products";
+import { getCookie } from "@/callAPI/utiles";
 
 export default function Home() {
   const { isRTL } = useLanguage();
@@ -29,6 +30,14 @@ export default function Home() {
   const [topPrice, setTopPrice] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingCat, setIsLoadingCat] = useState(true);
+  const [showSwitchHeart, setShowSwitchHeart] = useState(false);
+ 
+  const getWishList = async () => {
+     let token = await getCookie();
+  if (token) {
+    setShowSwitchHeart(true);
+  }
+  }
   // const [filter, setFilter] = useState('')
   // const [images, setImages] = useState([])
   const router = useRouter();
@@ -62,7 +71,7 @@ try{
       setIsLoading(false);
     });
 setIsLoadingCat(false);
-
+getWishList()
   }
   catch (error) {
     console.error("Error fetching data:", error);
@@ -144,7 +153,7 @@ setIsLoadingCat(false);
                   <DeelProductCardSkeleton key={i} />
                 ))
               : items.map((product) => (
-              <DeelProductCard key={product.id} {...product} />
+              <DeelProductCard key={product.id} {...product} showSwitchHeart={showSwitchHeart} />
             ))}
 
    
@@ -155,7 +164,7 @@ setIsLoadingCat(false);
         <section className="container py-8">
           <ProductCarousel
             title={t("topDeals")}
-            viewAllHref="/deals"
+            viewAllHref="/products"
             viewAllLabel={t("viewAll")}
           >
 
@@ -164,7 +173,7 @@ setIsLoadingCat(false);
                   <DeelProductCardSkeleton key={i} />
                 ))
               : topPrice.map((product) => (
-              <DeelProductCard key={product.id} {...product} />
+              <DeelProductCard key={product.id} {...product}  showSwitchHeart={showSwitchHeart}/>
             ))}
 
 

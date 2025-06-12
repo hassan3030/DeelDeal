@@ -133,7 +133,7 @@ export async function middleware(req) {
 
   //  const { pathname } = request.nextUrl;
  
-  const token = await  getCookie()
+   const token = req.cookies.get('Token')?.value;
 
   // Protect /admin
   if (!token && req.nextUrl.pathname.startsWith('/admin')) {
@@ -182,6 +182,6 @@ export const config = {
              '/notifications/:path*',
              '/swap/:path*',
              '/wishList/:path*',
-           
+             '/profile/:path*',
             ],
 };

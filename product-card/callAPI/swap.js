@@ -482,3 +482,33 @@ export const deleteWishList = async (id) => {
 
 
 
+
+
+
+
+// ---------------Add wishList -------------------------
+
+// Add wishList 
+export const addReview = async (from_user_id , to_user_id , offer_id , rating , comment) => {
+  if(!comment) comment = "No comment";
+  try {
+    const response = await axios.post(`${baseItemsURL}/Reviews`, {
+  from_user_id , to_user_id , offer_id , rating , comment
+    });
+    return response.data.data;
+  } catch (err) {
+    console.error('Failed to update Reviews:', err);
+    throw new Error('The API is not responding');
+  }
+};
+
+
+export const getReview = async (to_user_id) => {
+  try {
+    const response = await axios.get(`${baseItemsURL}/Reviews/?filter[to_user_id][_eq]=${to_user_id}`)
+    return response.data.data;
+  } catch (err) {
+    console.error('Failed to update Reviews:', err);
+    throw new Error('The API is not responding');
+  }
+};

@@ -30,6 +30,9 @@ import {
   ShieldCheck,
   Loader,
   Eye,
+  Box,
+  CheckCheck,
+  BadgeX,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -282,31 +285,35 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
   {/* --- Swap Summary Stats --- */}
   <div className="mb-6 grid grid-cols-2 md:grid-cols-5 gap-4">
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
-      <span className="text-lg font-bold">{offers.length}</span>
-      <span className="text-xs text-muted-foreground">All Swaps</span>
+      <span className="text-lg font-bold">{offers.length===0?"No":offers.length}</span>
+    <Box className=""/>   <span className="text-xs text-muted-foreground">All Swaps</span>
     </div>
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
       <span className="text-lg font-bold">
-        {offers.filter((o) => o.status_offer === "pending").length}
+        {offers.filter((o) => o.status_offer === "pending").length===0 ?"No" : offers.filter((o) => o.status_offer === "pending").length}
       </span>
+        <Loader />
       <span className="text-xs text-muted-foreground">Pending</span>
     </div>
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
       <span className="text-lg font-bold">
-        {offers.filter((o) => o.status_offer === "accepted").length}
+        {offers.filter((o) => o.status_offer === "accepted").length===0 ?"No" : offers.filter((o) => o.status_offer === "accepted").length}
       </span>
+         <Handshake />
       <span className="text-xs text-muted-foreground">Accepted</span>
     </div>
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
       <span className="text-lg font-bold">
-        {offers.filter((o) => o.status_offer === "completed").length}
+        {offers.filter((o) => o.status_offer === "completed").length===0 ?"No" : offers.filter((o) => o.status_offer === "completed").length}
       </span>
+        <CheckCheck />
       <span className="text-xs text-muted-foreground">Completed</span>
     </div>
     <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
       <span className="text-lg font-bold">
-        {offers.filter((o) => o.status_offer === "rejected").length}
+        {offers.filter((o) => o.status_offer === "rejected").length===0 ?"No" : offers.filter((o) => o.status_offer === "rejected").length}
       </span>
+          <BadgeX />
       <span className="text-xs text-muted-foreground">Rejected</span>
     </div>
   </div>
@@ -350,7 +357,7 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
       </div>
 
 
-        <div className="text-xs text-muted-foreground mt-1 md:mt-0 flex items-center gap-1">
+        <div className="text-sm text-muted-foreground mt-1 md:mt-0 flex items-center gap-1">
         {offer.cash_adjustment
           ? handlePriceDifference( offer.from_user_id  , offer.cash_adjustment)
           : ""}

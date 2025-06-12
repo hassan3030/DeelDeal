@@ -11,7 +11,7 @@ import { categoriesName } from "@/lib/data"
 import { DeelProductCard } from "./deel-product-card"
 import { DeelProductCardSkeleton } from "./DeelProductCardSkeleton"
 
-export function ItemsList({ items , showFilters = true  , showCategoriesFilter = true ,  showbtn=true , showWishList= true}) {
+export function ItemsList({ items , showFilters = true  , showCategoriesFilter = true ,  showbtn=true , showSwitchHeart= true}) {
   const [displayedItems, setDisplayedItems] = useState(items)
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
@@ -113,7 +113,7 @@ export function ItemsList({ items , showFilters = true  , showCategoriesFilter =
         <>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {paginatedItems.map((item) => (
-              <ItemCardProfile key={item.id} {...item} showbtn={showbtn} showWishList={showWishList} />
+              <ItemCardProfile key={item.id} {...item} showbtn={showbtn} showSwitchHeart={showSwitchHeart} />
             ))}
           </div>
      <SimplePagination

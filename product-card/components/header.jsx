@@ -64,20 +64,8 @@ export function Header() {
   const [notificationsLength, setNotificationsLength] = useState(0);
   const [wishlistLength, setWishlistLength] = useState(0);
   const [chatLength, setChatLength] = useState(0);
-
-  const getWishlist = async () => {
-    const { id } = await decodedToken(token);
-    const wishList = await getWishList(id);
-    console.log("wishlist", wishList); // Check what is returned
-    setWishlistLength(Array.isArray(wishList) ? wishList.length : 0);
-  };
-
-   const getChat = async () => {
-    const { id } = await decodedToken(token);
-    const chat = await getMessage(id);
-    console.log("chat", chat); // Check what is returned
-    setChatLength(Array.isArray(chat) ? chat.length : 0);
-  };
+const [hasSearched, setHasSearched] = useState(false);
+ 
 
   const router = useRouter();
   const { isRTL, toggleLanguage } = useLanguage();
@@ -104,6 +92,22 @@ export function Header() {
     }
   };
 
+
+   const getWishlist = async () => {
+    const { id } = await decodedToken();
+    const wishList = await getWishList(id);
+    console.log("wishlist", wishList); // Check what is returned
+    setWishlistLength(Array.isArray(wishList) ? wishList.length : 0);
+  };
+
+   const getChat = async () => {
+    const { id } = await decodedToken();
+    const chat = await getMessage(id);
+    console.log("chat", chat); // Check what is returned
+    setChatLength(Array.isArray(chat) ? chat.length : 0);
+  };
+
+
   const getOffers = async () => {
     const token = await getCookie();
     if (token) {
@@ -128,7 +132,8 @@ export function Header() {
   const logout = async () => {
     await removeCookie();
     setUser(null);
-    router.refresh();
+    // router.refresh();
+     window.location.reload(); 
   };
 
   useEffect(() => {
@@ -141,14 +146,16 @@ export function Header() {
     //  router.refresh();
   }, []);
 
-  useEffect(() => {
-    if (filter === "") {
-      router.push("/");
-    } else if (filter.trim() !== "") {
-      handlegetProductSearchFilter();
-    }
-    // Do nothing if filter is just whitespace
-  }, [filter]);
+  
+useEffect(() => {
+  if (!hasSearched) return; // Don't redirect on initial mount
+  if (filter === "") {
+    router.push("/");
+  } else if (filter.trim() !== "") {
+    handlegetProductSearchFilter();
+  }
+}, [filter, hasSearched]);
+
 
   
 
@@ -244,10 +251,12 @@ export function Header() {
               value={filter}
               onChange={(e) => {
                 serFilter(e.target.value);
+                setHasSearched(true);
               }}
               onKeyUp={(e) => {
                 if (e.key === "Enter") {
                   handlegetProductSearchFilter();
+                  setHasSearched(true);
                 }
               }}
             />
@@ -393,7 +402,7 @@ export function Header() {
                     className="relative hover:text-primary"
                   >
                     <Heart className="h-5 w-5" />
-                    {wishlistLength!=0? (
+                    {wishlistLength!==0? (
                      <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                       {wishlistLength}
                     </span>
@@ -411,9 +420,9 @@ export function Header() {
     className="relative hover:text-primary group" // <-- add group here
   >
                         <MessageCircle className="h-5 w-5" />
-  {chatLength != 0? (
+  {chatLength !== 0? (
                       <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                      {wishlistLength}
+                      {chatLength}
                     </span>
                     ):''}
     <span className="pointer-events-none absolute -top-8 right-0 z-10 hidden rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
@@ -578,7 +587,7 @@ export function Header() {
                 >
                   <Heart className="h-4 w-4" />
               
-                  <span>{`${t("wishList")} ${wishlistLength? wishlistLength : ''} `}</span>
+                  <span>{`${t("wishList")} ${wishlistLength!==0? wishlistLength : ''} `}</span>
                 </Link>
 {/* add items */}
 

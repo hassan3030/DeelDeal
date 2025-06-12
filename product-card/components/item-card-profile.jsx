@@ -29,13 +29,15 @@ export function ItemCardProfile({
   status_swap,
   category,
   showbtn,
+  showSwitchHeart= true,
+
 }) {
   const { t } = useTranslations();
   const { toast } = useToast();
   const router = useRouter();
 
   const [bigImage, setBigImage] = useState("");
-  const [switchHeart, setHswitchHeart] = useState(false);
+  const [switchHeart, setswitchHeart] = useState(false);
   const getDataImage = async () => {
     const images2 = await getImageProducts(images);
     // setImages(images)
@@ -67,7 +69,7 @@ export function ItemCardProfile({
     const WishItem = await getWishList(user.id);
     if (WishItem) {
       const isItem = WishItem.find((i) => i.item_id == id) ? true : false;
-      setHswitchHeart(isItem);
+      setswitchHeart(isItem);
     }
   };
 
@@ -79,14 +81,14 @@ export function ItemCardProfile({
       const isItem = WishItem.find((i) => i.item_id == id);
       if (isItem) {
         await deleteWishList(WishItemId[0]?.id);
-        setHswitchHeart(false);
+        setswitchHeart(false);
         toast({
           title: t("successAddWish") || "Success",
           description:  t("successAddWishDesc") || "Item added to wishlist successfully.",
         });
       } else {
         await addWishList(id , user.id);
-        setHswitchHeart(true);
+        setswitchHeart(true);
         toast({
             title: t("successAddWish") || "Success",
           description: t("deletedWishDesc") || "Deleted wishlist",
@@ -117,9 +119,10 @@ export function ItemCardProfile({
               className="object-cover transition-transform duration-300 hover:scale-105"
             />
             {/* Heart button above photo */}
-            <button
+           {
+showSwitchHeart ?( <button
               type="button"
-              className="absolute top-2 right-2 z-50 bg-transparent rounded-full p-1 hover:scale-110 transition-transform"
+              className="absolute top-2 right-2 z-0 bg-transparent rounded-full p-1 hover:scale-110 transition-transform"
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -131,7 +134,10 @@ export function ItemCardProfile({
               ) : (
                 <Heart className="h-8 w-8 text-muted-foreground" />
               )}
-            </button>
+            </button>):null
+
+           }
+           
           </div>
 
           <Badge className="absolute left-2 top-2 bg-primary text-primary-foreground hover:bg-primary/90 capitalize">

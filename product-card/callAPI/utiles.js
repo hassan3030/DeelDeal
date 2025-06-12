@@ -6,10 +6,21 @@ export const baseURL = 'http://localhost:8055';
 
     // Get a cookie
     export  const getCookie =  async () => {
-      const tokenValue = Cookies.get('Token');
-      console.log('Token in getCookie function:', tokenValue);
+      const tokenValue = await Cookies.get('Token');
+
+      if (!tokenValue) {
+        console.error('Token not found in cookies');
+        return null;
+      }else if (typeof tokenValue !== "string") {
+        console.error('Token is not a string:');
+        return null;
+      }else{
+  console.log('Token in getCookie function:', tokenValue);
       return tokenValue;
+      }
+    
     }
+
      // Remove a cookie
      export  const removeCookie = async () => {
       Cookies.remove('Token');

@@ -196,7 +196,7 @@ export default function ProfileSettingsPage() {
   const [city, setCity] = useState("");
   const [street, setStreet] = useState("");
   const [post_code, setPostCode] = useState("");
-  const [location, setLocation] = useState({});
+  const [geo_location, set_geo_location] = useState({});
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [currentPosition, setCurrentPosition] = useState(null);
   const [selectedPosition, setSelectedPosition] = useState(null);
@@ -234,7 +234,7 @@ export default function ProfileSettingsPage() {
   if (post_code) userCollectionData.post_code = post_code;
   if (gender) userCollectionData.gender = gender;
   if (phone_number) userCollectionData.phone_number = phone_number;
-  if (location) userCollectionData.location = location;
+  if (geo_location) userCollectionData.geo_location = geo_location;
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -259,7 +259,7 @@ export default function ProfileSettingsPage() {
     setCity(user?.city || "");
     setStreet(user?.street || "");
     setPostCode(user?.post_code || "");
-    setLocation(user?.location || {});
+    set_geo_location(user?.geo_location || {});
   }, [user]);
   // -----------------------------------------
 
@@ -273,7 +273,7 @@ export default function ProfileSettingsPage() {
     street,
     post_code,
     gender,
-    location,
+    geo_location,
   });
   //
   const handleChange = (e) => {
@@ -339,7 +339,7 @@ export default function ProfileSettingsPage() {
         setCurrentPosition(pos);
         setSelectedPosition(pos);
 
- setLocation({
+ set_geo_location({
           lat: pos.lat,
           lng: pos.lng,
           accuracy: pos.accuracy,

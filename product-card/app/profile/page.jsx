@@ -98,7 +98,6 @@ for (const value of reviews) {
 }
 console.log('sum', sum);
  return Math.round((sum / reviews.length) * 10) / 10;
- console.log(' Math.round((sum / reviews.length) * 10) / 10' ,  b); 
 }
 
   const handleGetBreviousRating = async (id) =>{
@@ -237,9 +236,9 @@ console.log('sum', sum);
               </div>
 
               <CardDescription>
-                Member since {user?.date_created}
+            
               </CardDescription>
-              {/* {new Date(user2?.date_created)?.toISOString()?.split("T")[0]} */}
+              
             </div>
           </CardHeader>
           <CardContent>
@@ -264,7 +263,7 @@ console.log('sum', sum);
                 <span>
                   {!user?.completedSwaps
                     ? "No completed swaps"
-                    : `${user?.completedSwaps} Completed swaps`}{" "}
+                    : `${user?.completedSwaps==0?'No': user?.completedSwaps} Completed swaps`}{" "}
                 </span>
               </div>
 

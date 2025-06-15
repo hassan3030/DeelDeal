@@ -1,8 +1,5 @@
 import axios from 'axios';
-const baseURLAssets = 'http://localhost:3000/api/product/1';
-export const baseItemsURL = 'http://localhost:8055/items';
-export const baseURL = 'http://localhost:8055';
-import {  getCookie , setCookie , decodedToken } from './utiles';
+import {  getCookie , setCookie , decodedToken , baseItemsURL , baseURL } from './utiles';
 import { getUserByProductId } from './users';
 
 /**
@@ -162,9 +159,10 @@ export const getProductById = async (id) => {
 
 // top price deel 
 export const getProductTopPrice = async () => {
+  const {id} = await decodedToken()
   try {
     // const response = await axios.get(`${baseItemsURL}/Items?sort=-price&limit=5`);
-    const response = await axios.get(`${baseItemsURL}/Items?filter[status_swap][_neq]=unavailable&sort=-price&limit=5`);
+    const response = await axios.get(`${baseItemsURL}/Items?filter[status_swap][_eq]=available&filter[_or][][user_id][_neq]=${id}&sort=-price&limit=5`);
 return response.data.data;
     // console.log(response.data.data) 
   } catch (err) {
@@ -244,64 +242,6 @@ export const getProductsOwnerById = async (idProduct) => {
 
 }
 
-export const addProduct = async (productCollectionData , authId , images) => {
-  try {
-    const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0ODM5Mzc1NSwiZXhwIjoxNzQ4OTk4NTU1LCJpc3MiOiJkaXJlY3R1cyJ9.jhUNKnw0kCPjrhSsmp2KEOpHOHNP1UBDDHBdWjd4E7Q"
-    const {id} = await decodedToken()
-    // console.log("token.id" , id)
-    // console.log("token" , token)
-
-
-    if (id === authId) {
-
-        // remove old avatar from the server
-        // upload avatar to the server and  get the avatar id
-        const formData = new FormData();
-        formData.append('file', avatar);
-       const avatarResponse =  await axios.post(`http://localhost:8055/files`, 
-          formData
-            ,
-            {
-                headers: {
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'multipart/form-data',
-                  },
-              }
-        );
-        // console.log("avatar uploaded" , avatarResponse.data.data)
-        
-        // upload new avatar to user profile
-        const response = await axios.post(`${baseItemsURL}/Items`,
-            {
-             ...userData, 
-             avatar: avatarResponse.data.data.id
-            }
-          ,
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json',
-              },
-          }
-        );
-        // console.log(response.data.data)
-        
- 
-     
-    }
-    else {
-      // console.log("You are not authorized to edit this profile")
-      return null;
-    }
-
-    } catch (err) {
-      // console.error('Failed to edite profile:', err)
-      // throw new Error('The API register is not responding')
-    }
-
-
-}
-
 
 /**
  * Delete a product
@@ -320,3 +260,485 @@ export const deleteProduct = async (id) => {
     throw error
   }
 }
+
+
+
+export const addProduct = async ( payload , files ) => {
+  const token = await getCookie() ; 
+  const { id } = await decodedToken();
+ 
+  try {
+    // 1. Create the item (without images yet)
+    const itemRes = await axios.post(
+      `${baseItemsURL}/Items`,
+      { ...payload, user_id: id },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+// -----------------------------------------
+
+
+    const itemData = itemRes.data;
+    console.log("Response:", itemData);
+
+    const itemId = itemData?.data?.id;
+    if (!itemId) {
+      throw new Error("Failed to retrieve item ID from the response.");
+    }
+    // 2. Upload each image and link to item
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+      // Upload file to /files
+      const fileRes = await axios.post(`${baseURL}/files`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const fileData = fileRes.data;
+      console.log("File Response:", fileData);
+
+      const fileId = fileData?.data?.id;
+      if (!fileId) {
+        throw new Error("Failed to retrieve file ID from the response.");
+      }
+
+      // Link the uploaded image to the item
+      await axios.post(
+        `${baseItemsURL}/Items_files`,
+        {
+          Items_id: itemId,
+          directus_files_id: fileId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    }
+  } catch (err) {
+    console.error(err);
+
+   
+  }
+
+
+};
+
+
+export const updateProduct = async ( payload , files , idItemPage) => {
+// Convert all fetch calls to axios
+ const token = await getCookie() ; 
+
+
+  try {
+    // 1. Update the item (PATCH)
+    const itemRes = await axios.patch(
+      `${baseItemsURL}/Items/${idItemPage}`,
+      payload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const itemData = itemRes.data;
+    console.log("Response:", itemData);
+
+    const itemId = itemData?.data?.id;
+    if (!itemId) {
+      throw new Error("Failed to retrieve item ID from the response.");
+    }
+
+    // 2. Delete existing images linked to this item before uploading new ones
+    const existingImagesRes = await axios.get(
+      `${baseItemsURL}/Items_files?filter[Items_id][_eq]=${itemId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const existingImagesData = existingImagesRes.data;
+    if (existingImagesData?.data?.length > 0) {
+      for (const img of existingImagesData.data) {
+        await axios.delete(`${baseItemsURL}/Items_files/${img.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+    }
+
+    // 3. Upload each image and link to item
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("file", file);
+      // Upload file to /files
+      const fileRes = await axios.post(`${baseURL}/files`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const fileData = fileRes.data;
+      console.log("File Response:", fileData);
+      const fileId = fileData?.data?.id;
+      if (!fileId) {
+        throw new Error("Failed to retrieve file ID from the response.");
+      }
+
+      // Link the uploaded image to the item
+      await axios.post(
+        `${baseItemsURL}/Items_files`,
+        {
+          Items_id: itemId,
+          directus_files_id: fileId,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+    }
+
+   
+  } catch (err) {
+    console.error(err);
+    
+  }
+};
+
+
+// used if error 
+// add items with fetch
+// const handleSubmit = async () => {
+//   const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFhZjc2NjE5LTI3ZDgtNDBlOC05ODQ0LWIzYzZjOWExNjlmNSIsInJvbGUiOm51bGwsImFwcF9hY2Nlc3MiOmZhbHNlLCJhZG1pbl9hY2Nlc3MiOmZhbHNlLCJpYXQiOjE3NDk3ODE2NTQsImV4cCI6MTc1MDM4NjQ1NCwiaXNzIjoiZGlyZWN0dXMifQ.gIGdvRMACpw9J6PS2IFEGCP9bqZyLz-Uo3fxljK9-5s"; // Replace with your actual token
+//   const apiBase = "http://localhost:8055";
+//  const {id} = await decodedToken()
+//   const files = images; // Use the images array for file uploads
+
+//   if (files.length === 0) {
+
+//      toast({
+//         title: t("error") || "ERROR ",
+//         description:"Please fill all fields and select at least one image.",
+//         variant: "destructive",
+//       })
+//     return;
+//   }
+
+//   try {
+//     // 1. Create the item (without images yet)
+//     const payload = { ...form.getValues() };
+//      // Ensure the id field is not included
+//     console.log("Payload:", payload);
+
+//     const itemRes = await fetch(`http://localhost:8055/items/Items`, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//     body: JSON.stringify({...payload , user_id:id}) ,
+//     });
+
+//     const itemData = await itemRes.json();
+//     console.log("Response:", itemData);
+
+//     if (!itemRes.ok) {
+//       throw new Error(itemData.errors || "Failed to create item");
+//     }
+
+//     const itemId = itemData?.data?.id;
+//     if (!itemId) {
+//       throw new Error("Failed to retrieve item ID from the response.");
+//     }
+
+//     // 2. Upload each image and link to item
+//     for (const file of files) {
+//       const formData = new FormData();
+//       formData.append("file", file);
+
+//       // Upload file to /files
+//       const fileRes = await fetch(`${apiBase}/files`, {
+//         method: "POST",
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: formData,
+//       });
+
+//       const fileData = await fileRes.json();
+//       console.log("File Response:", fileData);
+
+//       if (!fileRes.ok) {
+//         throw new Error(fileData.errors || "Failed to upload file");
+//       }
+
+//       const fileId = fileData?.data?.id;
+//       if (!fileId) {
+//         throw new Error("Failed to retrieve file ID from the response.");
+//       }
+
+//       // Link the uploaded image to the item
+//       await fetch(`${apiBase}/items/Items_files`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({
+//           Items_id: itemId,
+//           directus_files_id: fileId,
+//         }),
+//       });
+//     }
+    
+//   toast({
+//           title: t("successfully") ,
+//           description:  "Item added successfully with images!",
+//         })
+//          // Clear all fields and images
+//   form.reset();
+//   setImages([]);
+//   setImageUrls([]);
+//   router.refresh()
+
+//   } catch (err) {
+//     console.error(err);
+    
+//      toast({
+//         title: t("error") || "ERROR ",
+//         description:err.message || "Error adding item.",
+//         variant: "destructive",
+//       })
+
+//   }
+// };
+
+
+
+// with axios
+// const handleSubmit = async () => {
+//   const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFhZjc2NjE5LTI3ZDgtNDBlOC05ODQ0LWIzYzZjOWExNjlmNSIsInJvbGUiOm51bGwsImFwcF9hY2Nlc3MiOmZhbHNlLCJhZG1pbl9hY2Nlc3MiOmZhbHNlLCJpYXQiOjE3NDk3ODE2NTQsImV4cCI6MTc1MDM4NjQ1NCwiaXNzIjoiZGlyZWN0dXMifQ.gIGdvRMACpw9J6PS2IFEGCP9bqZyLz-Uo3fxljK9-5s"; // Replace with your actual token
+//   const apiBase = "http://localhost:8055";
+//   const { id } = await decodedToken();
+//   const files = images;
+
+//   if (files.length === 0) {
+//     toast({
+//       title: t("error") || "ERROR ",
+//       description: "Please fill all fields and select at least one image.",
+//       variant: "destructive",
+//     });
+//     return;
+//   }
+
+//   try {
+//     // 1. Create the item (without images yet)
+//     const payload = { ...form.getValues() };
+//     console.log("Payload:", payload);
+
+//     const itemRes = await axios.post(
+//       `${apiBase}/items/Items`,
+//       { ...payload, user_id: id },
+//       {
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//       }
+//     );
+
+//     const itemData = itemRes.data;
+//     console.log("Response:", itemData);
+
+//     const itemId = itemData?.data?.id;
+//     if (!itemId) {
+//       throw new Error("Failed to retrieve item ID from the response.");
+//     }
+
+//     // 2. Upload each image and link to item
+//     for (const file of files) {
+//       const formData = new FormData();
+//       formData.append("file", file);
+
+//       // Upload file to /files
+//       const fileRes = await axios.post(`${apiBase}/files`, formData, {
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//       });
+
+//       const fileData = fileRes.data;
+//       console.log("File Response:", fileData);
+
+//       const fileId = fileData?.data?.id;
+//       if (!fileId) {
+//         throw new Error("Failed to retrieve file ID from the response.");
+//       }
+
+//       // Link the uploaded image to the item
+//       await axios.post(
+//         `${apiBase}/items/Items_files`,
+//         {
+//           Items_id: itemId,
+//           directus_files_id: fileId,
+//         },
+//         {
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${token}`,
+//           },
+//         }
+//       );
+//     }
+
+//     toast({
+//       title: t("successfully"),
+//       description: "Item added successfully with images!",
+//     });
+//     // Clear all fields and images
+//     form.reset();
+//     setImages([]);
+//     setImageUrls([]);
+//     router.refresh();
+//   } catch (err) {
+//     console.error(err);
+
+//     toast({
+//       title: t("error") || "ERROR ",
+//       description: err.message || "Error adding item.",
+//       variant: "destructive",
+//     });
+//   }
+// };
+
+//  update with fetch
+// const handleSubmit = async () => {
+//   const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0ODg4NjQwMSwiZXhwIjoxNzQ5NDkxMjAxLCJpc3MiOiJkaXJlY3R1cyJ9.xVvqMIqFcmEgaJny0QI0IDKUYruhBiKQxRLpYNGlNH4"; // Replace with your actual token
+//   const apiBase = "http://localhost:8055";
+
+//   const files = imagesFile; // Use the images array for file uploads
+
+//   if (files.length === 0) {
+//      toast({
+//         title: t("error") || "ERROR ",
+//         description:"Please fill all fields and select at least one image.",
+//         variant: "destructive",
+//       })
+   
+//     return;
+//   }
+
+//   try {
+//     // 1. Create the item (without images yet)
+//     const payload = { ...form.getValues() };
+//      // Ensure the id field is not included
+//     console.log("Payload:", payload);
+
+//     const itemRes = await fetch(`http://localhost:8055/items/Items/${id}`, {
+//       method: "PATCH",
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//       body: JSON.stringify(payload),
+//     });
+
+//     const itemData = await itemRes.json();
+//     console.log("Response:", itemData);
+
+//     if (!itemRes.ok) {
+//       throw new Error(itemData.errors || "Failed to create item");
+//     }
+
+//     const itemId = itemData?.data?.id;
+//     if (!itemId) {
+//       throw new Error("Failed to retrieve item ID from the response.");
+//     }
+
+//     // 2- Delete existing images linked to this item before uploading new ones
+//     const existingImagesRes = await fetch(`${apiBase}/items/Items_files?filter[Items_id][_eq]=${itemId}`, {
+//       headers: {
+//       Authorization: `Bearer ${token}`,
+//       },
+//     });
+//     const existingImagesData = await existingImagesRes.json();
+//     if (existingImagesData?.data?.length > 0) {
+//       for (const img of existingImagesData.data) {
+//       await fetch(`${apiBase}/items/Items_files/${img.id}`, {
+//         method: "DELETE",
+//         headers: {
+//         Authorization: `Bearer ${token}`,
+//         },
+//       });
+//       }
+//     }
+    
+
+//     // 3. Upload each image and link to item
+//     for (const file of files) {
+//       const formData = new FormData();
+//       formData.append("file", file);
+
+//       // Upload file to /files
+//       const fileRes = await fetch(`${apiBase}/files`, {
+//         method: "POST",
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: formData,
+//       });
+
+//       const fileData = await fileRes.json();
+//       console.log("File Response:", fileData);
+
+//       if (!fileRes.ok) {
+//         throw new Error(fileData.errors || "Failed to upload file");
+//       }
+
+//       const fileId = fileData?.data?.id;
+//       if (!fileId) {
+//         throw new Error("Failed to retrieve file ID from the response.");
+//       }
+
+//       // Link the uploaded image to the item
+//       await fetch(`${apiBase}/items/Items_files`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({
+//           Items_id: itemId,
+//           directus_files_id: fileId,
+//         }),
+//       });
+//     }
+//   toast({
+//         title: t("error") || "ERROR ",
+//         description:"Item added successfully with images!",
+//       })
+ 
+//   } catch (err) {
+//     console.error(err);
+//     toast({
+//         title: t("error") || "ERROR ",
+//         description: `${err.message}` || "Error adding item.",
+//       })
+  
+//   }
+// };

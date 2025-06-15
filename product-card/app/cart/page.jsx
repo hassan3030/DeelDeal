@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -16,6 +11,7 @@ import {
   getOfferItemsByOfferId,
   deleteOfferById,
   deleteOfferItemsById,
+  completedOfferById,
 } from "@/callAPI/swap";
 import { getUserById } from "@/callAPI/users";
 import { getCookie, decodedToken } from "@/callAPI/utiles";
@@ -33,6 +29,8 @@ import {
   Box,
   CheckCheck,
   BadgeX,
+  Scale,
+  CircleDot,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -47,6 +45,7 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
+import SwapRating from "@/components/reviews";
 
 const Cart = () => {
   const [offers, setOffers] = useState([]);
@@ -54,15 +53,21 @@ const Cart = () => {
   const [userSwaps, setUserSwaps] = useState([]);
   const [itemsOffer, setItemsOffer] = useState([]);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [cashAdjustment, setCashAdjustment] = useState(null);                         
-  const [totalCash, setTotalCash] = useState('');                         
+  const [cashAdjustment, setCashAdjustment] = useState(null);
+  const [totalCash, setTotalCash] = useState("");
+  const [showComleteDialog, setShowComleteDialog] = useState(false);
+  const [myUserId, setMyUserId] = useState();
+
   const [pendingDelete, setPendingDelete] = useState({
     idItem: null,
     idOffer: null,
     owner: null,
     itemIdItslfe: null,
   });
-
+  const [pendingCompleted, setPendingCompleted] = useState({
+    idOffer: null,
+    owner: null,
+  });
   const router = useRouter();
   const { t } = useTranslations();
 
@@ -102,9 +107,10 @@ const Cart = () => {
 
     for (const item of offerItems) {
       const product = await getProductById(item.item_id);
-      items.push({ ...product , 
+      items.push({
+        ...product,
         offer_item_id: item.id,
-         offered_by: item.offered_by ,
+        offered_by: item.offered_by,
         offer_id: item.offer_id,
       });
     }
@@ -126,10 +132,9 @@ const Cart = () => {
     setOffers(offers);
     setUserSwaps(uniqueUsers);
     setSwapItems(items);
-     console.log('swapItems' , items)
+    console.log("swapItems", items);
     setItemsOffer(offerItems);
   }, []);
-
 
   // const handleDeleteSwap = async (swapId) => {
   //   try {
@@ -150,24 +155,34 @@ const Cart = () => {
   // }
   // };
 
-const updateCashAdjustmentAfterRemove = (offerId) => {
-  // Find all items for this offer
-  const offerItems = swapItems.filter(item => item.offer_id === offerId);
+  const updateCashAdjustmentAfterRemove = (offerId) => {
+    // Find all items for this offer
+    const offerItems = swapItems.filter((item) => item.offer_id === offerId);
 
-  // Calculate total price for my items and their items
-  const offer = offers.find(o => o.id === offerId);
-  if (!offer) return;
+    // Calculate total price for my items and their items
+    const offer = offers.find((o) => o.id === offerId);
+    if (!offer) return;
 
-  const myItems = offerItems.filter(item => item.offered_by === offer.from_user_id);
-  const theirItems = offerItems.filter(item => item.offered_by !== offer.from_user_id);
-  
-  const myTotal = myItems.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
-  const theirTotal = theirItems.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0);
-  // Update cashAdjustment state (if you want to keep it per-offer, use an object)
-  setCashAdjustment(myTotal - theirTotal);
-};
+    const myItems = offerItems.filter(
+      (item) => item.offered_by === offer.from_user_id
+    );
+    const theirItems = offerItems.filter(
+      (item) => item.offered_by !== offer.from_user_id
+    );
 
- const handlePriceDifference = (userId, cash) => {
+    const myTotal = myItems.reduce(
+      (sum, item) => sum + (parseFloat(item.price) || 0),
+      0
+    );
+    const theirTotal = theirItems.reduce(
+      (sum, item) => sum + (parseFloat(item.price) || 0),
+      0
+    );
+    // Update cashAdjustment state (if you want to keep it per-offer, use an object)
+    setCashAdjustment(myTotal - theirTotal);
+  };
+
+  const handlePriceDifference = (userId, cash) => {
     const { id } = decodedToken();
     if (userId === id) {
       if (cash > 0) return `You pay: ${Math.abs(Math.ceil(cash))} LE`;
@@ -180,49 +195,64 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
     }
   };
 
- 
+  const handleDeleteItem = async (offerItemId, itemId) => {
+    // Find the offer for this item
+    const item = swapItems.find((itm) => itm.id === itemId);
+    if (!item) return;
 
- const handleDeleteItem = async (offerItemId, itemId) => {
-  // Find the offer for this item
-  const item = swapItems.find((itm) => itm.id === itemId);
-  if (!item) return;
+    // Count my items in this offer
+    const myItems = swapItems.filter(
+      (itm) =>
+        itm.offer_id === item.offer_id && itm.offered_by === item.offered_by // your user id
+    );
 
-  // Count my items in this offer
-  const myItems = swapItems.filter(
-    (itm) =>
-      itm.offer_id === item.offer_id &&
-      itm.offered_by === item.offered_by // your user id
-  );
-
-  if (myItems.length > 1) {
-    // Delete only the item
-    try {
-      await deleteOfferItemsById(offerItemId, itemId);
-      toast({
-        title: t("successfully") || "Successfully",
-        description: "Item deleted from swap successfully",
+    if (myItems.length > 1) {
+      // Delete only the item
+      try {
+        await deleteOfferItemsById(offerItemId, itemId);
+        toast({
+          title: t("successfully") || "Successfully",
+          description: "Item deleted from swap successfully",
+        });
+        getOffers();
+      } catch (err) {
+        toast({
+          title: t("error") || "Error",
+          description: "Failed to delete item",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Only one item left, ask to delete the whole swap
+      setPendingDelete({
+        idItem: offerItemId,
+        idOffer: item.offer_id,
+        owner: item.offered_by,
+        itemIdItslfe: itemId,
       });
-      getOffers();
-    } catch (err) {
+      setShowDeleteDialog(true);
+    }
+  };
+
+  //  completed swap
+  const getCompleteSwap = async (offerId) => {
+    const completeSwap = await completedOfferById(offerId);
+    if (!completeSwap) {
       toast({
         title: t("error") || "Error",
-        description: "Failed to delete item",
+        description: "Failed to complete swap",
         variant: "destructive",
       });
+    } else {
+      toast({
+        title: t("successfully") || "Successfully",
+        description: "Swap completed successfully",
+      });
+      router.refresh();
     }
-  } else {
-    // Only one item left, ask to delete the whole swap
-    setPendingDelete({
-      idItem: offerItemId,
-      idOffer: item.offer_id,
-      owner: item.offered_by,
-      itemIdItslfe: itemId,
-    });
-    setShowDeleteDialog(true);
-  }
-};
- 
- const handleDeleteSwap = async (swapId) => {
+  };
+
+  const handleDeleteSwap = async (swapId) => {
     try {
       await deleteOfferById(swapId);
       toast({
@@ -240,11 +270,16 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
       });
     }
   };
-
+const fetchUserId = async () => {
+          const { id } = await decodedToken();
+          setMyUserId(id);
+        };
+        
   useEffect(() => {
+     fetchUserId()
     getOffers();
-    updateCashAdjustmentAfterRemove()
-    console.log('swapItems' , swapItems)
+    updateCashAdjustmentAfterRemove();
+    console.log("swapItems", swapItems);
   }, [getOffers]);
 
   return (
@@ -270,7 +305,10 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
               </Button>
             </DialogClose>
             <DialogClose asChild>
-              <Button variant="secondary" onClick={() => setShowDeleteDialog(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowDeleteDialog(false)}
+              >
                 Cancel
               </Button>
             </DialogClose>
@@ -278,59 +316,118 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
         </DialogContent>
       </Dialog>
 
+      {/* Complete Swap Dialog */}
+      <Dialog open={showComleteDialog} onOpenChange={setShowComleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Complete Swap</DialogTitle>
+            <DialogDescription>
+              <ul>
+                <li>Are you sure you want to Complete this swap? </li>
+                <li>
+                  If you complete the swap, you will not be able to undo this
+                  action.
+                </li>
+                <li>Chat will be closed.</li>
+                <li>Items will be removed.</li>
+              </ul>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                variant="secondary"
+                onClick={async () => {
+                  await getCompleteSwap(pendingCompleted.idOffer);
+                  setShowComleteDialog(false);
+                  router.refresh();
+                }}
+              >
+                Complete
+              </Button>
+            </DialogClose>
+            <DialogClose asChild>
+              <Button
+                variant="destructive"
+                onClick={() => setShowComleteDialog(false)}
+              >
+                Cancel
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="min-h-screen bg-background">
         {/* ...header and summary... */}
 
-<div className="max-w-7xl mx-auto px-4 py-3">
-  {/* --- Swap Summary Stats --- */}
-  <div className="mb-6 grid grid-cols-2 md:grid-cols-5 gap-4">
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
-      <span className="text-lg font-bold">{offers.length===0?"No":offers.length}</span>
-    <Box className=""/>   <span className="text-xs text-muted-foreground">All Swaps</span>
-    </div>
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
-      <span className="text-lg font-bold">
-        {offers.filter((o) => o.status_offer === "pending").length===0 ?"No" : offers.filter((o) => o.status_offer === "pending").length}
-      </span>
-        <Loader />
-      <span className="text-xs text-muted-foreground">Pending</span>
-    </div>
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
-      <span className="text-lg font-bold">
-        {offers.filter((o) => o.status_offer === "accepted").length===0 ?"No" : offers.filter((o) => o.status_offer === "accepted").length}
-      </span>
-         <Handshake />
-      <span className="text-xs text-muted-foreground">Accepted</span>
-    </div>
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
-      <span className="text-lg font-bold">
-        {offers.filter((o) => o.status_offer === "completed").length===0 ?"No" : offers.filter((o) => o.status_offer === "completed").length}
-      </span>
-        <CheckCheck />
-      <span className="text-xs text-muted-foreground">Completed</span>
-    </div>
-    <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
-      <span className="text-lg font-bold">
-        {offers.filter((o) => o.status_offer === "rejected").length===0 ?"No" : offers.filter((o) => o.status_offer === "rejected").length}
-      </span>
-          <BadgeX />
-      <span className="text-xs text-muted-foreground">Rejected</span>
-    </div>
-  </div>
-  {/* --- End Swap Summary Stats --- */}
+        <div className="max-w-7xl mx-auto px-4 py-3">
+          {/* --- Swap Summary Stats --- */}
+          <div className="mb-6 grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
+              <span className="text-lg font-bold">
+                {offers.length === 0 ? "No" : offers.length}
+              </span>
+              <Box className="" />{" "}
+              <span className="text-xs text-muted-foreground">All Swaps</span>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
+              <span className="text-lg font-bold">
+                {offers.filter((o) => o.status_offer === "pending").length === 0
+                  ? "No"
+                  : offers.filter((o) => o.status_offer === "pending").length}
+              </span>
+              <Loader />
+              <span className="text-xs text-muted-foreground">Pending</span>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
+              <span className="text-lg font-bold">
+                {offers.filter((o) => o.status_offer === "accepted").length ===
+                0
+                  ? "No"
+                  : offers.filter((o) => o.status_offer === "accepted").length}
+              </span>
+              <Handshake />
+              <span className="text-xs text-muted-foreground">Accepted</span>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
+              <span className="text-lg font-bold">
+                {offers.filter((o) => o.status_offer === "completed").length ===
+                0
+                  ? "No"
+                  : offers.filter((o) => o.status_offer === "completed").length}
+              </span>
+              <CheckCheck />
+              <span className="text-xs text-muted-foreground">Completed</span>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
+              <span className="text-lg font-bold">
+                {offers.filter((o) => o.status_offer === "rejected").length ===
+                0
+                  ? "No"
+                  : offers.filter((o) => o.status_offer === "rejected").length}
+              </span>
+              <BadgeX />
+              <span className="text-xs text-muted-foreground">Rejected</span>
+            </div>
+          </div>
+          {/* --- End Swap Summary Stats --- */}
 
-  {/* ...existing code for offers list... */}
-</div>
+          {/* ...existing code for offers list... */}
+        </div>
         <div className="max-w-7xl mx-auto px-4 py-">
           {/* ...summary stats... */}
           {[...offers]
             .sort((a, b) => new Date(b.date_created) - new Date(a.date_created))
             .map((offer, index) => (
-              <Card key={offer.id} id={offer.id} className="overflow-hidden my-2">
+              <Card
+                key={offer.id}
+                id={offer.id}
+                className="overflow-hidden my-2"
+              >
                 <CardHeader>
                   {/* ...header content... */}
                   {!["rejected", "completed"].includes(offer.status_offer) && (
-                    <div className="text-right" >
+                    <div className="text-right">
                       <div className="text-sm text-muted-foreground">
                         My items:{" "}
                         {
@@ -349,19 +446,44 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
                           ).length
                         }
                       </div>
-                       <div className="text-xs text-muted-foreground mt-1 md:mt-0 flex items-center gap-1">
-        <Calendar className="w-3 h-3" />
-        {offer.date_created
-          ? new Date(offer.date_created).toLocaleString()
-          : ""}
-      </div>
+                      <div className="text-xs text-muted-foreground mt-1 md:mt-0 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {offer.date_created
+                          ? new Date(offer.date_created).toLocaleString()
+                          : ""}
+                      </div>
 
+                      <div
+                        className={`text-xs mt-1
+          flex items-center gap-1  
+        ${
+          offer.cash_adjustment > 0
+            ? "text-green-500"
+            : offer.cash_adjustment < 0
+            ? "text-red-500"
+            : "text-gray-500"
+        }`}
+                      >
+                        <Scale className="w-3 h-3" />
+                        {offer.cash_adjustment
+                          ? `Cash Adjustment: ${handlePriceDifference(
+                              offer.from_user_id,
+                              offer.cash_adjustment
+                            )}`
+                          : ""}
+                      </div>
 
-        <div className="text-sm text-muted-foreground mt-1 md:mt-0 flex items-center gap-1">
-        {offer.cash_adjustment
-          ? handlePriceDifference( offer.from_user_id  , offer.cash_adjustment)
-          : ""}
-      </div>
+                      <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1 capitalize">
+                        <CircleDot className="w-3 h-3" />
+                        Offer state: {offer.status_offer}
+                      </div>
+                      {offer.name ? (
+                        <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1capitalize">
+                          Offer Name: {offer.name}
+                        </div>
+                      ) : (
+                        ""
+                      )}
                     </div>
                   )}
                 </CardHeader>
@@ -383,10 +505,7 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
                                 key={item.id}
                                 {...item}
                                 deleteItem={() =>
-                                  handleDeleteItem(
-                                    item.offer_item_id,
-                                    item.id
-                                  )
+                                  handleDeleteItem(item.offer_item_id, item.id)
                                 }
                               />
                             ))}
@@ -407,10 +526,7 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
                                 key={item.id}
                                 {...item}
                                 deleteItem={() =>
-                                  handleDeleteItem(
-                                    item.offer_item_id,
-                                    item.id
-                                  )
+                                  handleDeleteItem(item.offer_item_id, item.id)
                                 }
                               />
                             ))}
@@ -426,11 +542,56 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
                       <p className="text-muted-foreground mb-4">
                         Thank you for completing the swap.
                       </p>
+
+                     
+
+                        <p className="text-muted-foreground mb-4">
+  Contact phone:{" "}
+  {(() => {
+    // Find the other user in the swap (not me)
+    const userToContact =
+      userSwaps.find(
+        (u) =>
+          u.id === (myUserId === offer.from_user_id ? offer.to_user_id : offer.from_user_id)
+      ) || {};
+    return userToContact.phone_number || "No phone available";
+  })()}
+</p>
+
+                      {(() => {
+                        // Find the user to rate (the other swap partner)
+                        const userToRate =
+                          userSwaps.find(
+                            (u) =>
+                              u.id ===
+                              (myUserId === offer.from_user_id
+                                ? offer.to_user_id
+                                : offer.from_user_id)
+                          ) || {};
+
+                        return (
+                          <SwapRating
+                            from_user_id={myUserId}
+                            to_user_id={userToRate.id}
+                            offer_id={offer.id}
+                            userName={`${userToRate.first_name || ""} ${
+                              userToRate.last_name || ""
+                            }`}
+                            userAvatar={
+                              userToRate.avatar
+                                ? `http://localhost:8055/assets/${userToRate.avatar}`
+                                : "/placeholder.svg"
+                            }
+                          />
+                        );
+                      })()}
                     </div>
                   ) : (
                     <div className="text-center text-red-600">
                       <Trash2 className="h-8 w-8 mx-auto mb-2" />
-                      <h3 className="text-xl font-semibold mb-2">Swap Rejected</h3>
+                      <h3 className="text-xl font-semibold mb-2">
+                        Swap Rejected
+                      </h3>
                       <p className="text-muted-foreground mb-4">
                         The swap was rejected by you.
                       </p>
@@ -439,77 +600,98 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
                   <Separator className="my-4" />
                   {/* ...swap details... */}
 
-
-                  
-      
-                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-6 border-t pt-4">
-  
-     <div className="flex items-center gap-3 mt-2 md:mt-0">
-                        <Avatar className="h-10 w-10 border">
-                          <AvatarImage
-                            src={  `http://localhost:8055/assets/${userSwaps.find((u) => u.id === offer.to_user_id) ?.avatar}` || "/placeholder.svg"
-                            }
-                            alt={
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-6 border-t pt-4">
+                    <div className="flex items-center gap-3 mt-2 md:mt-0">
+                      <Avatar className="h-10 w-10 border">
+                        <AvatarImage
+                          src={
+                            `http://localhost:8055/assets/${
                               userSwaps.find((u) => u.id === offer.to_user_id)
-                                ?.first_name || "User"
-                            }
-                          />
-                          <AvatarFallback>
-                            {userSwaps.find((u) => u.id === offer.to_user_id)
-                              ?.first_name?.[0] || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-  
-                        
-                                            
-                        
-                        <div>
-                          <div className="font-semibold text-base capitalize">
-                            {userSwaps.find((u) => u.id === offer.to_user_id)
-                              ?.first_name || "User"}
-                          </div>
+                                ?.avatar
+                            }` || "/placeholder.svg"
+                          }
+                          alt={
+                            userSwaps.find((u) => u.id === offer.to_user_id)
+                              ?.first_name || "User"
+                          }
+                        />
+                        <AvatarFallback>
+                          {userSwaps.find((u) => u.id === offer.to_user_id)
+                            ?.first_name?.[0] || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+
+                      <div>
+                        <div className="font-semibold text-base capitalize">
+                          {userSwaps.find((u) => u.id === offer.to_user_id)
+                            ?.first_name || "User"}
                         </div>
                       </div>
+                    </div>
+                    {/*  pending swap  */}
+                    {offer.status_offer === "pending" ? (
+                      <div className="flex items-center text-sm mt-2 md:mt-0">
+                        <span
+                          className="text-muted-foreground text-red-600 hover:scale-110 cursor-pointer flex items-center gap-1"
+                          onClick={() => {
+                            setPendingDelete({
+                              idItem: null,
+                              idOffer: offer.id,
+                              owner: null,
+                            });
+                            setShowDeleteDialog(true);
+                          }}
+                        >
+                          <Trash2 className="inline h-4 w-4 align-middle mr-1" />
+                          Delete Swap
+                        </span>
+                      </div>
+                    ) : null}
 
-  {offer.status_offer === "pending" ? (
-    <div className="flex items-center text-sm mt-2 md:mt-0">
-      <span
-        className="text-muted-foreground text-red-600 hover:scale-110 cursor-pointer flex items-center gap-1"
-        onClick={() => {
-          setPendingDelete({
-            idItem: null,
-            idOffer: offer.id,
-            owner: null,
-          });
-          setShowDeleteDialog(true);
-        }}
-      >
-        <Trash2 className="inline h-4 w-4 align-middle mr-1" />
-        Delete Swap
-      </span>
-    </div>
-  ) : null}
-</div>
-                  {/* --- Add CardHeader user avatar and name in the footer --- */}
-   
-    {/* --- End footer --- */}
+                    {offer.status_offer === "accepted" ? (
+                      <div className="flex items-center text-sm mt-2 md:mt-0">
+                        <Button
+                          // variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setPendingCompleted({
+                              idOffer: offer.id,
+                              owner: null,
+                            });
+                            setShowComleteDialog(true);
+                          }}
+                          className="flex items-center gap-1"
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                          Complete Swap
+                        </Button>
+                      </div>
+                    ) : null}
+                  </div>
+
+                  {/*  pending swap  */}
+
+                  {/* --- End footer --- */}
                 </CardContent>
               </Card>
             ))}
           {/* ...empty state... */}
-           {/* Empty state */}
-                    {offers.length === 0 && (
-                      <Card className="p-12 text-center mt-8">
-                        <h3 className="text-xl font-semibold mb-2">No Cart</h3>
-                        <p className="text-muted-foreground">
-                          You're all caught up! New Add in  cart will appear here.
-                        </p>
-                        <Button
-                          variant="outline"
-                          className="mt-4"
-                          onClick={() => router.push("/products")}>Make Swap</Button>
-                      </Card>
-                    )}
+          {/* Empty state */}
+          {offers.length === 0 && (
+            <Card className="p-12 text-center mt-8">
+              <h3 className="text-xl font-semibold mb-2">No Cart</h3>
+              <p className="text-muted-foreground">
+                You're all caught up! New Add in cart will appear here.
+              </p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => router.push("/products")}
+              >
+                Make Swap
+              </Button>
+            </Card>
+          )}
         </div>
       </div>
     </>
@@ -517,7 +699,6 @@ const updateCashAdjustmentAfterRemove = (offerId) => {
 };
 
 export default Cart;
-
 
 export const CardItemSwap = ({
   id,

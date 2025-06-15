@@ -8,7 +8,6 @@ import {
   getAllMessage,
   addMessage,
   acceptedOfferById ,
-  completedOfferById
 } from "@/callAPI/swap";
 import { getUserById } from "@/callAPI/users";
 import { getCookie, decodedToken } from "@/callAPI/utiles";
@@ -24,7 +23,7 @@ import {
   DialogDescription,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Calendar, Trash2, Eye, ShieldCheck, MessageCircle, Send, MapPin, Star, ArrowRightLeft , Handshake, Scale, BadgeX, CheckCheck, Loader, Box, BellDot   } from "lucide-react";
+import { Calendar, Trash2, Eye, ShieldCheck, MessageCircle, Send, MapPin, Star, ArrowRightLeft , Handshake, Scale, BadgeX, CheckCheck, Loader, Box, BellDot, CircleDot   } from "lucide-react";
 import {  } from 'lucide-react';
 import { toast } from "sonner";
 import { useTranslations } from "@/lib/use-translations";
@@ -42,6 +41,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import SwapRating  from "@/components/reviews";
 
 const Notifications = () => {
   const [offers, setOffers] = useState([]);
@@ -56,10 +56,10 @@ const Notifications = () => {
     owner: null,
     itemIdItslfe: null,
   });
-  const [pendingCompleted, setPendingCompleted] = useState({
-    idOffer: null,
-    owner: null,
-  });
+  // const [pendingCompleted, setPendingCompleted] = useState({
+  //   idOffer: null,
+  //   owner: null,
+  // });
   const [chatMessages, setChatMessages] = useState([]);
   const [message, setMessage] = useState("");
   const [myUserId, setMyUserId] = useState();
@@ -197,36 +197,36 @@ const getAcceptSwap = async (offerId) => {
 }
 
 
-  //  completed swap
-const getCompleteSwap = async (offerId) => {
-  const completeSwap = await  completedOfferById(offerId);
-  if (!completeSwap) {
-    toast({
-      title: t("error") || "Error",
-      description: "Failed to complete swap",
-      variant: "destructive",
-    });
+//   //  completed swap
+// const getCompleteSwap = async (offerId) => {
+//   const completeSwap = await  completedOfferById(offerId);
+//   if (!completeSwap) {
+//     toast({
+//       title: t("error") || "Error",
+//       description: "Failed to complete swap",
+//       variant: "destructive",
+//     });
 
-}else{
- toast({
-                            title: t("successfully") || "Successfully",
-                            description: "Swap completed successfully",
-                          });
-                          router.refresh();
-}
-}
+// }else{
+//  toast({
+//                             title: t("successfully") || "Successfully",
+//                             description: "Swap completed successfully",
+//                           });
+//                           router.refresh();
+// }
+// }
 
-
+ 
 
 const handlePriceDifference = (userId, cash) => {
     const { id } = decodedToken();
     if (userId === id) {
-      if (cash > 0) return `You pay: ${Math.abs(Math.ceil(cash))} LE`;
-      if (cash < 0) return `You get: ${Math.abs(Math.ceil(cash))} LE`;
-      return `The price is equal`;
-    } else {
       if (cash < 0) return `You pay: ${Math.abs(Math.ceil(cash))} LE`;
       if (cash > 0) return `You get: ${Math.abs(Math.ceil(cash))} LE`;
+      return `The price is equal`;
+    } else {
+      if  (cash > 0) return `You pay: ${Math.abs(Math.ceil(cash))} LE`;
+      if (cash < 0) return `You get: ${Math.abs(Math.ceil(cash))} LE`;
       return `The price is equal`;
     }
   };
@@ -244,6 +244,7 @@ const handlePriceDifference = (userId, cash) => {
 
   return (
     <>
+  
       {/* Delete Swap Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
@@ -278,7 +279,7 @@ const handlePriceDifference = (userId, cash) => {
 
 
  {/* Complete Swap Dialog */}
-      <Dialog open={showComleteDialog}  onOpenChange={setShowComleteDialog}> 
+      {/* <Dialog open={showComleteDialog}  onOpenChange={setShowComleteDialog}> 
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Complete Swap</DialogTitle>
@@ -315,7 +316,7 @@ const handlePriceDifference = (userId, cash) => {
             </DialogClose>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
 
 
       <div className="min-h-screen bg-background">
@@ -390,13 +391,25 @@ const handlePriceDifference = (userId, cash) => {
                        <div 
    className={`text-xs mt-1
     flex items-center gap-1  
-    ${offer.cash_adjustment ?  "text-green-500" : "text-red-500"}`}>
+    ${offer.cash_adjustment > 0 ? "text-green-500" : offer.cash_adjustment < 0 ? "text-red-500" : "text-gray-500"}`}>
 
                         <Scale  className="w-3 h-3" />
                         {offer.cash_adjustment
-                          ? `Cash Adjustment: ${handlePriceDifference(offer.to_user_id , offer.cash_adjustment)}`
+                          ? `Cash Adjustment: ${handlePriceDifference(offer.from_user_id , offer.cash_adjustment)}`
                           : ""}
                       </div>
+
+                       <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1 capitalize">
+                        <CircleDot  className="w-3 h-3" />
+                       Offer state: {offer.status_offer}
+                      </div>
+                       {
+                        offer.name?(
+                          <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1capitalize">
+                       Offer Name: {offer.name}
+                      </div>
+                        ):''
+                       }
 
                     </div>
                     <div className="flex items-center gap-3 mt-2 md:mt-0">
@@ -445,18 +458,14 @@ const handlePriceDifference = (userId, cash) => {
                                                   )?.street
                                                 }`}
                                               </span>
+
+
+                                              
                                             </div>
-                                            <div className="flex items-center space-x-1">
-                                              <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                                              <span className="text-sm font-medium">
-                                                {
-                                                  userSwaps.find(
-                                                    (u) => u.id === offer.from_user_id
-                                                  )?.ratings
-                                                }
-                                              </span>
-                                            </div>
+
                                           </div>
+
+                                          
                   </div>
                 </CardHeader>
                 <CardContent  >
@@ -595,7 +604,42 @@ const handlePriceDifference = (userId, cash) => {
                       </h3>
                       <p className="text-muted-foreground mb-4">
                         Thank you for completing the swap.
-                      </p>
+                          </p>
+                          <p className="text-muted-foreground mb-4">
+  Contact phone:{" "}
+  {(() => {
+    // Find the other user in the swap (not me)
+    const userToContact =
+      userSwaps.find(
+        (u) =>
+          u.id === (myUserId === offer.from_user_id ? offer.from_user_id :offer.to_user_id  )
+      ) || {};
+    return userToContact.phone_number || "No phone available";
+  })()}
+</p>
+ {(() => {
+    // Find the user to rate (not me)
+    const userToRate =
+      userSwaps.find(
+        (u) =>
+          u.id === (myUserId === offer.from_user_id ? offer.to_user_id : offer.from_user_id)
+      ) || {};
+
+    return (
+      <SwapRating
+        from_user_id={myUserId}
+        to_user_id={userToRate.id}
+        offer_id={offer.id}
+        userName={`${userToRate.first_name || ""} ${userToRate.last_name || ""}`}
+        userAvatar={
+          userToRate.avatar
+            ? `http://localhost:8055/assets/${userToRate.avatar}`
+            : "/placeholder.svg"
+        }
+      />
+    );
+  })()}
+                          
                     </div>
                   ) : (
                     <div className="text-center text-red-600">
@@ -656,14 +700,14 @@ const handlePriceDifference = (userId, cash) => {
 
                   {offer.status_offer === "accepted" && (
                     <div className="flex justify-around space-x-2 mt-4 ">
-                      
+{/*                       
 <Button
                         // variant="destructive"
                         size="sm"
                         onClick={() => {
                           setPendingCompleted({
                             idOffer: offer.id,
-                            owner: null,
+                            owner: null, 
                           });
                           setShowComleteDialog(true);
                         }}
@@ -671,7 +715,7 @@ const handlePriceDifference = (userId, cash) => {
                       >
                         <ShieldCheck  className="h-4 w-4" />
                         Complete Swap
-                      </Button>
+                      </Button> */}
                       
                       <Button
                         variant="destructive"

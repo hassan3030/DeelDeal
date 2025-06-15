@@ -111,7 +111,7 @@ useEffect(() => {
                               </p>
                             </div>
                           </div>
-                          <p className="text-sm text-muted-foreground line-clamp-1">{item.description}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-1 overflow-hidden">{item.description}</p>
                           <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-4">
                             <div className="flex items-center gap-2">
                               {/* in future */}

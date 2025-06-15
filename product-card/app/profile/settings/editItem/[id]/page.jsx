@@ -18,7 +18,6 @@ export default async function NewItemPage({ params }) {
 
 
      <div className="container py-10">
-      <h1>{id}</h1>
       <div className="mb-6 flex items-center gap-2">
         <Button variant="ghost" size="sm" asChild>
           <Link href="/profile">

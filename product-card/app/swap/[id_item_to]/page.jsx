@@ -47,6 +47,7 @@ export default function SwapPage() {
   const [allowedCategories, setAllowedCategories] = useState([]);
   const [showHint, setShowHint] = useState(false);
   const [message, setMessage] = useState("");
+  const [name, setName] = useState("");
   const [disabledOffer, setDisabledOffer] = useState(false);
 
   const { toast } = useToast();
@@ -172,7 +173,8 @@ export default function SwapPage() {
         priceDifference,
         selectedMyItems,
         selectedOtherItems,
-        message
+        message,
+        name
       );
       toast({
         title: t("successfully") || "Success",
@@ -354,6 +356,17 @@ export default function SwapPage() {
                       )}
                     </div>
                   </div>
+
+{/* Swap name */}
+                    <div className="flex space-x-3 my-2">
+                        <Input
+                          placeholder="Take name for deel is optionally"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+
                   {/* Chat Section */}
                   <Card className="mb-6">
                     <CardHeader>

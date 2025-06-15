@@ -163,34 +163,6 @@ export const acceptedOffer = async (id) => {
   }
 };
 
-// Complete an offer (and delete related items)
-export const completeOffer = async (id) => {
-  if (!id) throw new Error("Offer ID is required");
-  try {
-    const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
-      status_offer: "completed"
-    });
-    const items = await getItemsByOfferId(id);
-    if (Array.isArray(items)) {
-      for (const item of items) {
-        if (item.id) {
-          await axios.delete(`${baseItemsURL}/Items/${item.id}`);
-        }
-      }
-      // Delete all Offer_Items for this offer
-      for (const item of items) {
-        if (item.id) {
-          await axios.delete(`${baseItemsURL}/Offer_Items/${item.id}`);
-        }
-      }
-    }
-    return response.data.data;
-  } catch (error) {
-    console.error(`completed Offer ${id} error:`, error);
-    throw error;
-  }
-};
-
 // Update offer by id (cash adjustment)
 export const updateOfferById = async (id, cash_adjustment) => {
   if (!id) throw new Error("Offer ID is required");
@@ -215,7 +187,7 @@ export const acceptedOfferById = async (id_offer) => {
   if (!id) throw new Error("Login is required");
   try {
 
-    const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+    const response = await axios.patch(`${baseItemsURL}/Offers/${id_offer}`, {
       status_offer: "accepted",
     });
     return response.data.data;
@@ -226,25 +198,39 @@ export const acceptedOfferById = async (id_offer) => {
 };
 
 
-// completed offer by id 
+// Complete an offer (and delete related items)
 export const completedOfferById = async (id_offer) => {
    const {id} = await decodedToken();
   if (!id_offer) throw new Error("Offer ID is required");
   if (!id) throw new Error("Login is required");
   try {
-
-    const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
-      status_offer: "completed",
+    const response = await axios.patch(`${baseItemsURL}/Offers/${id_offer}`, {
+      status_offer: "completed"
     });
+    const items = await getItemsByOfferId(id_offer);
+    if (Array.isArray(items)) {
+      for (const item of items) {
+        if (item.id) {
+          await axios.delete(`${baseItemsURL}/Items/${item.id}`);
+        }
+      }
+      // Delete all Offer_Items for this offer
+      for (const item of items) {
+        if (item.id) {
+          await axios.delete(`${baseItemsURL}/Offer_Items/${item.id}`);
+        }
+      }
+    }
     return response.data.data;
   } catch (error) {
-    console.error(`Update Offer ${id} error:`, error);
+    console.error(`completed Offer ${id_offer} error:`, error);
     throw error;
   }
 };
 
+
 // Add a new offer
-export const addOffer = async (to_user_id, cash_adjustment = 0, user_prods, owner_prods, message) => {
+export const addOffer = async (to_user_id, cash_adjustment = 0, user_prods, owner_prods ,message , name='' ) => {
   let offer_id;
   try {
     const token = await getCookie();
@@ -259,6 +245,7 @@ export const addOffer = async (to_user_id, cash_adjustment = 0, user_prods, owne
       to_user_id,
       cash_adjustment,
       status_offer: "pending",
+      name
     });
     offer_id = offerRes.data.data.id;
 
@@ -510,5 +497,18 @@ export const getReview = async (to_user_id) => {
   } catch (err) {
     console.error('Failed to update Reviews:', err);
     throw new Error('The API is not responding');
+  }
+};
+
+
+export const getReviewConditins = async ( from_user_id , offer_id ) => {
+  try {
+   const response = await axios.get(
+  `${baseItemsURL}/Reviews/?filter[from_user_id][_eq]=${from_user_id}&filter[offer_id][_eq]=${offer_id}`
+);
+    return response.data.data;
+  } catch (err) {
+    console.error('Failed to update Reviews:', err);
+    return null;
   }
 };

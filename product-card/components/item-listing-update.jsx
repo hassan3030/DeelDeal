@@ -9,7 +9,7 @@ import { X, Upload, Info, Loader2 } from "lucide-react"
 import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
-import { getProductById , getImageProducts } from "@/callAPI/products"
+import { getImageProducts } from "@/callAPI/products"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -21,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { categoriesName , itemsStatus , allowedCategories} from "@/lib/data"
 import { useToast } from "@/components/ui/use-toast"
 import { useTranslations } from "@/lib/use-translations";
+import { updateProduct } from "@/callAPI/products";
 
 
 // import { Category } from "@/components/item-card"
@@ -57,14 +58,14 @@ export function ItemListingUpdate({
   description,
   category,
   status_item,
-value_estimate,
+  value_estimate,
   allowed_categories,
   status_swap ,
   price,
   city,
   country,
   street,
-  images
+  images,
 
 }) {
   
@@ -136,7 +137,7 @@ toast({
         description:`File ${file.name} is too large. Maximum size is 5MB.`,
         variant: "destructive",
       })
-
+ 
         return false
       }
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
@@ -328,11 +329,126 @@ toast({
 //     alert("Error adding item.");
 //   }
 // }
-const handleSubmit = async () => {
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0ODg4NjQwMSwiZXhwIjoxNzQ5NDkxMjAxLCJpc3MiOiJkaXJlY3R1cyJ9.xVvqMIqFcmEgaJny0QI0IDKUYruhBiKQxRLpYNGlNH4"; // Replace with your actual token
-  const apiBase = "http://localhost:8055";
+// const handleSubmit = async () => {
+//   const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0ODg4NjQwMSwiZXhwIjoxNzQ5NDkxMjAxLCJpc3MiOiJkaXJlY3R1cyJ9.xVvqMIqFcmEgaJny0QI0IDKUYruhBiKQxRLpYNGlNH4"; // Replace with your actual token
+//   const apiBase = "http://localhost:8055";
 
+//   const files = imagesFile; // Use the images array for file uploads
+
+//   if (files.length === 0) {
+//      toast({
+//         title: t("error") || "ERROR ",
+//         description:"Please fill all fields and select at least one image.",
+//         variant: "destructive",
+//       })
+   
+//     return;
+//   }
+
+//   try {
+//     // 1. Create the item (without images yet)
+//     const payload = { ...form.getValues() };
+//      // Ensure the id field is not included
+//     console.log("Payload:", payload);
+
+//     const itemRes = await fetch(`http://localhost:8055/items/Items/${id}`, {
+//       method: "PATCH",
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//       body: JSON.stringify(payload),
+//     });
+
+//     const itemData = await itemRes.json();
+//     console.log("Response:", itemData);
+
+//     if (!itemRes.ok) {
+//       throw new Error(itemData.errors || "Failed to create item");
+//     }
+
+//     const itemId = itemData?.data?.id;
+//     if (!itemId) {
+//       throw new Error("Failed to retrieve item ID from the response.");
+//     }
+
+//     // 2- Delete existing images linked to this item before uploading new ones
+//     const existingImagesRes = await fetch(`${apiBase}/items/Items_files?filter[Items_id][_eq]=${itemId}`, {
+//       headers: {
+//       Authorization: `Bearer ${token}`,
+//       },
+//     });
+//     const existingImagesData = await existingImagesRes.json();
+//     if (existingImagesData?.data?.length > 0) {
+//       for (const img of existingImagesData.data) {
+//       await fetch(`${apiBase}/items/Items_files/${img.id}`, {
+//         method: "DELETE",
+//         headers: {
+//         Authorization: `Bearer ${token}`,
+//         },
+//       });
+//       }
+//     }
+    
+
+//     // 3. Upload each image and link to item
+//     for (const file of files) {
+//       const formData = new FormData();
+//       formData.append("file", file);
+
+//       // Upload file to /files
+//       const fileRes = await fetch(`${apiBase}/files`, {
+//         method: "POST",
+//         headers: {
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: formData,
+//       });
+
+//       const fileData = await fileRes.json();
+//       console.log("File Response:", fileData);
+
+//       if (!fileRes.ok) {
+//         throw new Error(fileData.errors || "Failed to upload file");
+//       }
+
+//       const fileId = fileData?.data?.id;
+//       if (!fileId) {
+//         throw new Error("Failed to retrieve file ID from the response.");
+//       }
+
+//       // Link the uploaded image to the item
+//       await fetch(`${apiBase}/items/Items_files`, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${token}`,
+//         },
+//         body: JSON.stringify({
+//           Items_id: itemId,
+//           directus_files_id: fileId,
+//         }),
+//       });
+//     }
+//   toast({
+//         title: t("error") || "ERROR ",
+//         description:"Item added successfully with images!",
+//       })
+ 
+//   } catch (err) {
+//     console.error(err);
+//     toast({
+//         title: t("error") || "ERROR ",
+//         description: `${err.message}` || "Error adding item.",
+//       })
+  
+//   }
+// };
+
+const handleSubmit = async () => {
   const files = imagesFile; // Use the images array for file uploads
+   const payload = { ...form.getValues() };
+    console.log("Payload:", payload);
 
   if (files.length === 0) {
      toast({
@@ -345,94 +461,15 @@ const handleSubmit = async () => {
   }
 
   try {
-    // 1. Create the item (without images yet)
-    const payload = { ...form.getValues() };
-     // Ensure the id field is not included
-    console.log("Payload:", payload);
-
-    const itemRes = await fetch(`http://localhost:8055/items/Items/${id}`, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const itemData = await itemRes.json();
-    console.log("Response:", itemData);
-
-    if (!itemRes.ok) {
-      throw new Error(itemData.errors || "Failed to create item");
-    }
-
-    const itemId = itemData?.data?.id;
-    if (!itemId) {
-      throw new Error("Failed to retrieve item ID from the response.");
-    }
-
-    // 2- Delete existing images linked to this item before uploading new ones
-    const existingImagesRes = await fetch(`${apiBase}/items/Items_files?filter[Items_id][_eq]=${itemId}`, {
-      headers: {
-      Authorization: `Bearer ${token}`,
-      },
-    });
-    const existingImagesData = await existingImagesRes.json();
-    if (existingImagesData?.data?.length > 0) {
-      for (const img of existingImagesData.data) {
-      await fetch(`${apiBase}/items/Items_files/${img.id}`, {
-        method: "DELETE",
-        headers: {
-        Authorization: `Bearer ${token}`,
-        },
-      });
-      }
-    }
     
-
-    // 3. Upload each image and link to item
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      // Upload file to /files
-      const fileRes = await fetch(`${apiBase}/files`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-
-      const fileData = await fileRes.json();
-      console.log("File Response:", fileData);
-
-      if (!fileRes.ok) {
-        throw new Error(fileData.errors || "Failed to upload file");
-      }
-
-      const fileId = fileData?.data?.id;
-      if (!fileId) {
-        throw new Error("Failed to retrieve file ID from the response.");
-      }
-
-      // Link the uploaded image to the item
-      await fetch(`${apiBase}/items/Items_files`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          Items_id: itemId,
-          directus_files_id: fileId,
-        }),
-      });
-    }
-  toast({
-        title: t("error") || "ERROR ",
+    const updateItem = await updateProduct(payload , files , id)
+    if(updateItem){
+ toast({
+        title: t("successfully") || "Successfully ",
         description:"Item added successfully with images!",
       })
+    }
+ 
  
   } catch (err) {
     console.error(err);

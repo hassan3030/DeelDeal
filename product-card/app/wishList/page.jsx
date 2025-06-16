@@ -10,12 +10,15 @@ import { getWishList, deleteWishList } from "@/callAPI/swap";
 import { getProductById , getImageProducts} from "@/callAPI/products";
 import { decodedToken } from "@/callAPI/utiles";
 import  LoadingPage  from "./loading";
+import { useTranslations } from "@/lib/use-translations";
+
 
 
 
 const Wishlist = () => {
   const [wishlistItems, setWishlistItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { t } = useTranslations();
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -65,9 +68,9 @@ const Wishlist = () => {
             </Link>
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">My Wishlist</h1>
+            <h1 className="text-3xl font-bold">{t("MyWishlist")||"My Wishlist"}</h1>
             <p className="text-muted-foreground">
-              {wishlistItems.length} {wishlistItems.length === 1 ? "item" : "items"} saved
+              {wishlistItems.length} {wishlistItems.length === 1 ? t("item")|| "item": t("items") || "items"} {t("saved")||"saved"}
             </p>
           </div>
         </div>
@@ -80,12 +83,15 @@ const Wishlist = () => {
       ) : wishlistItems.length === 0 ? (
         <div className="text-center py-16">
           <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-xl font-semibold mb-2">Your wishlist is empty</h3>
+          <h3 className="text-xl font-semibold mb-2"> {t("Yourwishlistisempty")||"Your wishlist is empty"}</h3>
           <p className="text-muted-foreground mb-6">
-            Start browsing and save items you'd like to swap for
+           {t("Startbrowsingandsaveitemsyouliketoswapfor")||" Start browsing and save items you'd like to swap for"}
           </p>
           <Button asChild>
-            <Link href="/products">Browse Products</Link>
+            <Link href="/products">
+           {t("BrowseProducts")||"Browse Products"}
+            
+          </Link>
           </Button>
         </div>
       ) : (
@@ -105,6 +111,7 @@ export default Wishlist;
 
 const  WishlistCard = ({ item, onRemove })=> {
   const [bigImage, setBigImage] = useState("");
+  const { t } = useTranslations();
 const getDataImage = async () => {
     const images2 = await getImageProducts(item.images);
     // setImages(images)
@@ -140,26 +147,35 @@ const getDataImage = async () => {
         <div className="flex items-start justify-between mb-2">
           <CardTitle className="text-lg capitalize">{item.name}</CardTitle>
           <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded capitalize">
-            {item.category}
+           {t(item.category)|| item.category}
+
+           
           </span>
         </div>
         <p className="text-muted-foreground text-sm mb-3 capitalize line-clamp-1">
-          {item.description}
+
+           {item.description}
+
         </p>
         <p className="text-xs text-muted-foreground">
-          Saved: {item.dateAdded}
+          
+         
+        {t("Saved")|| "Saved"}: {item.dateAdded}
         </p>
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <div className="flex gap-2 w-full">
           <Link href={`/products/${item.id}`}>
             <Button variant="outline" className="flex-1">
-              View Details
+               {t("ViewDetails")|| " View Details"}
+             
             </Button>
           </Link>
           <Link href={`/swap/${item.id}`}>
             <Button className="flex-1">
-              Start Swap
+               {t("StartSwap")|| "Start Swap"}
+              
+           
             </Button>
           </Link>
         </div>

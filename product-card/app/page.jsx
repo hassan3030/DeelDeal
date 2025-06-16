@@ -12,7 +12,7 @@ import { useLanguage } from "@/lib/language-provider";
 import { useTranslations } from "@/lib/use-translations";
 import { categories } from "@/lib/data";
 
-
+import { motion } from "framer-motion";
 // import { getProducts , getProductSearchFilter  , getAllImageProducts} from '@/callAPI/products'
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -142,7 +142,11 @@ setIsLoadingCat(false);
         </section>
 
         {/* Products */}
-        <section className="container py-8" id="items">
+        <motion.section className="container py-8" id="items"
+         initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
+        >
           <ProductCarousel
             title={t("allProducts")}
             viewAllHref="/products"
@@ -158,7 +162,7 @@ setIsLoadingCat(false);
 
    
           </ProductCarousel>
-        </section>
+        </motion.section>
 
         {/* Top Deals */}
         <section className="container py-8">

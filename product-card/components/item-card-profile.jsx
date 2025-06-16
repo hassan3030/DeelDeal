@@ -57,7 +57,7 @@ export function ItemCardProfile({
     } else {
       toast({
         title: t("faildSwap") || "Faild Swap",
-        description: "Invalid swap without login. Please try to login.",
+        description: t("DescFaildSwapLogin"),
         variant: "destructive",
       });
       router.push(`/auth/login`);
@@ -83,15 +83,15 @@ export function ItemCardProfile({
         await deleteWishList(WishItemId[0]?.id);
         setswitchHeart(false);
         toast({
-          title: t("successAddWish") || "Success",
-          description:  t("successAddWishDesc") || "Item added to wishlist successfully.",
+            title: t("successAddWish") || "Success",
+          description: t("deletedWishDesc") || "Deleted wishlist",
         });
       } else {
         await addWishList(id , user.id);
         setswitchHeart(true);
         toast({
-            title: t("successAddWish") || "Success",
-          description: t("deletedWishDesc") || "Deleted wishlist",
+          title: t("successAddWish") || "Success",
+          description:  t("successAddWishDesc") || "Item added to wishlist successfully.",
         });
       }
     }
@@ -141,7 +141,7 @@ showSwitchHeart ?( <button
           </div>
 
           <Badge className="absolute left-2 top-2 bg-primary text-primary-foreground hover:bg-primary/90 capitalize">
-            {category}
+            {t(category)}
           </Badge>
         </div>
 
@@ -152,14 +152,16 @@ showSwitchHeart ?( <button
             </h3>
           </div>
           <div className="flex items-center whitespace-nowrap text-sm font-semibold text-foreground text-green-500">
-            AI Expected Price:LE {value_estimate}
+        <span className="px-1">{t("aIExpectedPrice")}: </span> 
+        <span className="px-1"> LE</span> 
+        <span className="px-1"> {value_estimate}</span> 
           </div>
           <p className="mb-3 line-clamp-1 text-sm text-muted-foreground first-letter:capitalize">
             {description}
           </p>
 
           <div className="flex items-center whitespace-nowrap text-sm font-semibold text-foreground text-green-500">
-            Price: {price}LE
+            {t("price")}: {price}LE
           </div>
         </CardContent>
 

@@ -60,89 +60,17 @@ export default function ProfileSettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // ...existing code...
-
-  // const updatePassword = async () => {
-  //   if (!currentPassword || !newPassword || !confirmPassword) {
-  //     toast({
-  //       title: t("faileChangePassword") || "Failed Change Password",
-  //       description: "Please fill in all password fields.",
-  //       variant: "destructive",
-  //     })
-  //     return;
-  //   }
-  //   if (newPassword !== confirmPassword) {
-  //     toast({
-  //       title: t("notMach") || "Failed Change Password",
-  //       description: "New passwords do not match.",
-  //       variant: "destructive",
-  //     })
-  //     return;
-  //   }
-  //   try {
-  //     const token = await getCookie();
-  //     if (!token) {
-  //       toast({
-  //         title: t("notAuth") || "Failed Change Password",
-  //         description: "Not authenticated.",
-  //         variant: "destructive",
-  //       })
-  //       return;
-  //     }
-  //     const { id } = await decodedToken(token);
-
-  //     // Fetch user to get hashed password
-  //     const userData = await getUserById(id);
-  //     const hashedPassword = userData.password;
-  //     console.log("hashedPassword" , hashedPassword)
-
-  //     // Compare current password with hashed password
-  //     const isMatch = await bcrypt.compare(currentPassword, hashedPassword);
-  //     console.log("isMatch" , isMatch)
-
-  //     if (!isMatch) {
-  //       toast({
-  //         title: t("wrongPassword") || "Failed Change Password",
-  //         description: "Current password is incorrect.",
-  //         variant: "destructive",
-  //       })
-  //       return;
-  //     }
-
-  //     if(hashedPassword == currentPassword){
-  //       console.log("okeokeokeokeokeoke ")
-  //     }
-  //     // Hash the new password
-  //     const newHashedPassword = await bcrypt.hash(newPassword, 10);
-  //     console.log("newHashedPassword" , newHashedPassword)
-
-  //     // Update password in your backend (you need to implement this API)
-  //     await editeProfile({ password: newHashedPassword }, id);
-
-  //     toast({
-  //       title: t("successChangePassword") || "Password Changed",
-  //       description: "Your password has been updated successfully.",
-  //       variant: "success",
-  //     })
-  //     setCurrentPassword('');
-  //     setNewPassword('');
-  //     setConfirmPassword('');
-  //   } catch (error) {
-  //     alert("Error updating password.");
-  //   }
-  // };
-
   const updatePassword = async () => {
     if (!newPassword || !confirmPassword) {
       toast({
-        title: t("faileChangePassword") || "Failed Change Password",
-        description: "Please fill in all password fields.",
+        title: t("error") || "Error",
+        description:t("faileChangePassword") || "Please fill in all password fields",
         variant: "destructive",
       });
     } else if (newPassword !== confirmPassword) {
       toast({
-        title: t("notMach") || "Failed Change Password",
-        description: "New passwords do not match.",
+        title:t("error") || "Error",
+        description:  t("notMach") || "New passwords do not match.",
         variant: "destructive",
       });
     } else if (newPassword === confirmPassword) {
@@ -150,8 +78,8 @@ export default function ProfileSettingsPage() {
         const Password = await resetPassword(newPassword, currentEmail);
         if (Password) {
           toast({
-            title: t("successChangePassword") || "Password Changed",
-            description: "Your password has been updated successfully.",
+            title: t("error") || "Error",
+            description:  t("successChangePassword") || "Your password has been updated successfully.",
             variant: "success",
           });
           setCurrentEmail("");
@@ -160,15 +88,15 @@ export default function ProfileSettingsPage() {
         }
       } catch (error) {
         toast({
-          title: t("faildChangePassword") || "Password Error",
-          description: "Error updating password..",
+          title: t("error") || "Error",
+          description:t("faildChangePassword") || "Error updating password..",
           variant: "success",
         });
       }
     } else {
       toast({
-        title: t("faildChangePassword") || "Password Error",
-        description: "SomeThing Error When updating password..",
+        title: t("error") || "Error",
+        description: t("faildChangePassword") ||"SomeThing Error When updating password..",
         variant: "success",
       });
     }
@@ -215,9 +143,9 @@ export default function ProfileSettingsPage() {
   const profileSchema = z.object({
     phone_number: z
       .string()
-      .min(8, "Phone number is too short")
-      .max(20, "Phone number is too long")
-      .regex(/^\+?\d{8,20}$/, "Invalid phone number"),
+      .min(8,t("PhoneIsShort")|| "Phone number is too short")
+      .max(20,t("PhoneIsLong")||"Phone number is too long")
+      .regex(/^\+?\d{8,20}$/, t("invalidNumber")||"Invalid phone number"),
     // ...other fields...
   });
 
@@ -289,15 +217,15 @@ export default function ProfileSettingsPage() {
     e.preventDefault();
     if (!userCollectionData) {
       toast({
-        title: "Wornning",
-        description: "No Change To saved",
+        title: "wornning",
+        description: t("noChangeSaved")||"No Change To saved",
         variant: "destructive",
       });
     } else {
       if (!result.success) {
         toast({
-          title: "Wornning",
-          description: "Phone number not validate",
+          title: "wornning",
+          description: t("phoneNumberNotValidate") || "Phone number not validate",
           variant: "destructive", // Assuming your toast supports variants like 'success', 'error', etc.
         });
       } else {
@@ -306,7 +234,7 @@ export default function ProfileSettingsPage() {
 
         toast({
           title: t("successfully"),
-          description: "Settings saved successfully!", // Assuming your toast supports variants like 'success', 'error', etc.
+          description: t("savedSuccessfully")|| "Settings saved successfully!", // Assuming your toast supports variants like 'success', 'error', etc.
         });
       }
     }
@@ -320,8 +248,8 @@ export default function ProfileSettingsPage() {
 
     if (!navigator.geolocation) {
       toast({
-        title: "Error",
-        description: "Geolocation is not supported by this browser",
+        title:t("error")|| "Error",
+        description: t("geolocationNotSupported") || "Geolocation is not supported by this browser",
         variant: "destructive",
       });
       setIsGettingLocation(false);
@@ -352,25 +280,25 @@ export default function ProfileSettingsPage() {
         setIsGettingLocation(false);
        
         toast({
-          title: "Current location found",
+          title:t("CurrentLocationFound") || "Current location found",
           description: `Lat: ${pos.lat.toFixed(6)}, Lng: ${pos.lng.toFixed(6)}`,
         });
       },
       (error) => {
-        let message = "Unable to retrieve your location";
+        let message = t('Unabletoretrieveyourlocation')||"Unable to retrieve your location";
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            message = "Location access denied by user";
+            message = t('Locationaccessdeniedbyuser')|| "Location access denied by user";
             break;
           case error.POSITION_UNAVAILABLE:
-            message = "Location information is unavailable";
+            message = t('Locationinformationisunavailable')||  "Location information is unavailable";
             break;
           case error.TIMEOUT:
-            message = "Location request timed out";
+            message = t('Locationrequesttimedout')||  "Location request timed out";
             break;
         }
         toast({
-          title: "Location Error",
+          title: message = t('LocationError')||"Location Error",
           description: message,
           variant: "destructive",
         });
@@ -386,15 +314,32 @@ export default function ProfileSettingsPage() {
   
   return (
     <div className="container py-8">
+
+          {/* Go Back Link */}
+            <div className="inline mb-3 ">
+              <Button
+                className="mb-2" 
+                variant="outline"
+                size="sm"
+                onClick={() => router.back()}
+              >
+               <Link href="/profile">
+            <ChevronLeft className="mr-1 h-4 w-4" />
+          </Link>
+              </Button>
+              <h1 className="mx-2 text-3xl font-bold inline">{t("accountSettings")||"Account Settings"}</h1>
+            </div>
+
+{/* 
       <div className="mb-6 flex items-center">
         <Button asChild variant="ghost" size="sm" className="mr-2">
           <Link href="/profile">
             <ChevronLeft className="mr-1 h-4 w-4" />
-            Back to Profile
+            {t("goBack")}
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold">Account Settings</h1>
-      </div>
+        <h1 className="text-2xl font-bold">{t("accountSettings")||"Account Settings"}</h1>
+      </div> */}
 
       <Tabs defaultValue="profile" className="w-full">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
@@ -406,7 +351,7 @@ export default function ProfileSettingsPage() {
                 className="w-full justify-start text-left"
               >
                 <User className="mr-2 h-4 w-4" />
-                Profile
+                {t("profile")||"Profile"}
               </TabsTrigger>
               {/* in the future we can add more tabs here */}
               {/* <TabsTrigger value="notifications" className="w-full justify-start text-left">
@@ -418,14 +363,14 @@ export default function ProfileSettingsPage() {
                 className="w-full justify-start text-left"
               >
                 <Globe className="mr-2 h-4 w-4" />
-                Preferences
+                {t("preferences")||"Preferences"}
               </TabsTrigger>
               <TabsTrigger
                 value="security"
                 className="w-full justify-start text-left"
               >
                 <Shield className="mr-2 h-4 w-4" />
-                Security
+                {t("security")|| "Security"}
               </TabsTrigger>
 
               <TabsTrigger
@@ -433,7 +378,7 @@ export default function ProfileSettingsPage() {
                 className="w-full justify-start text-left"
               >
                 <CirclePlus className="mr-2 h-4 w-4" />
-                Add Item
+               {t("addItem")||"Add Item"}
               </TabsTrigger>
               {/* <TabsTrigger value="payment" className="w-full justify-start text-left">
                 <CreditCard className="mr-2 h-4 w-4" />
@@ -447,10 +392,9 @@ export default function ProfileSettingsPage() {
             <TabsContent value="profile">
               <Card>
                 <CardHeader>
-                  <CardTitle>Profile Information</CardTitle>
+                  <CardTitle>{t("profileInformation")||"Profile Information"}</CardTitle>
                   <CardDescription>
-                    Update your profile information and how others see you on
-                    the platform.
+                   {t("UpdateProfileInformation")||" Update your profile information and how others see you on the platform."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -478,7 +422,7 @@ export default function ProfileSettingsPage() {
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="first_name">First Name</Label>
+                          <Label htmlFor="first_name">{t("firstName")||"First Name"}</Label>
                           <Input
                             id="first_name"
                             name="first_name"
@@ -488,7 +432,7 @@ export default function ProfileSettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="last_name">Last Name</Label>
+                          <Label htmlFor="last_name">{t("LastName")||"Last Name"}</Label>
                           <Input
                             id="last_name"
                             name="last_name"
@@ -498,7 +442,7 @@ export default function ProfileSettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="country">Country</Label>
+                          <Label htmlFor="country">{t("Country")||"Country"}</Label>
                           <Input
                             id="country"
                             name="country"
@@ -507,7 +451,7 @@ export default function ProfileSettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="city">City</Label>
+                          <Label htmlFor="city">{t("City")||"City"}</Label>
                           <Input
                             id="city"
                             name="city"
@@ -516,7 +460,7 @@ export default function ProfileSettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="street">Street</Label>
+                          <Label htmlFor="street">{t("Street")||"Street"}</Label>
                           <Input
                             id="street"
                             name="street"
@@ -533,7 +477,7 @@ export default function ProfileSettingsPage() {
                           <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                               <Navigation className="h-5 w-5" />
-                              Current Position
+                           {t("CurrentPosition")||"Current Position"}
                             </CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-4">
@@ -545,12 +489,13 @@ export default function ProfileSettingsPage() {
                               {isGettingLocation ? (
                                 <>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Getting Location...
+                                 {t("GettingLocation")||" Getting Location..."}
                                 </>
                               ) : (
                                 <>
                                   <MapPin className="mr-2 h-4 w-4" />
-                                  Get Current Location
+                                 
+                                       {t("GetCurrentLocation")||"Get Current Location"}
                                 </>
                               )}
                             </Button>
@@ -561,21 +506,22 @@ export default function ProfileSettingsPage() {
                               <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                   <MapPin className="h-5 w-5" />
-                                  Selected Position
+                            
+                                       {t("SelectedPosition")||"Selected Position"}
                                 </CardTitle>
                               </CardHeader>
                               <CardContent className="space-y-4">
                                 <div className="space-y-2">
                                   <p className="text-sm">
-                                    <strong>Name:</strong>{" "}
+                                    <strong>{t("Name")||"Name"}:</strong>{" "}
                                     {selectedPosition.name}
                                   </p>
                                   <p className="text-sm">
-                                    <strong>Latitude:</strong>{" "}
+                                    <strong>{t("Latitude")||"Latitude"}:</strong>{" "}
                                     {selectedPosition.lat.toFixed(6)}
                                   </p>
                                   <p className="text-sm">
-                                    <strong>Longitude:</strong>{" "}
+                                    <strong>{t("Longitude")||"Longitude"}:</strong>{" "}
                                     {selectedPosition.lng.toFixed(6)}
                                   </p>
                                 </div>
@@ -588,7 +534,7 @@ export default function ProfileSettingsPage() {
 
                         {/* end position map  */}
                         <div className="space-y-2">
-                          <Label htmlFor="post_code">Pstal Code</Label>
+                          <Label htmlFor="post_code">{t("PstalCode")||"Pstal Code"}</Label>
                           <Input
                             id="post_code"
                             name="post_code"
@@ -598,7 +544,7 @@ export default function ProfileSettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="email">Email</Label>
+                          <Label htmlFor="email">{t("email")||"Email"}</Label>
                           <Input
                             disabled
                             id="email"
@@ -611,7 +557,7 @@ export default function ProfileSettingsPage() {
 
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="phone_number">Phone Number</Label>
+                          <Label htmlFor="phone_number">{t("phoneNumber")||"Phone Number"}</Label>
                           <Input
                             id="phone_number"
                             name="phone_number"
@@ -623,7 +569,7 @@ export default function ProfileSettingsPage() {
 
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
-                          <Label htmlFor="avatar">Avatar</Label>
+                          <Label htmlFor="avatar">{t("Avatar")||"Avatar"}</Label>
                           <Input
                             id="avatar"
                             name="avatar"
@@ -645,24 +591,24 @@ export default function ProfileSettingsPage() {
                      */}
 
                       <div className="space-y-2">
-                        <Label htmlFor="gender">Gender</Label>
+                        <Label htmlFor="gender">{t("Gender")||"Gender"}</Label>
                         <Select
                           value={gender}
                           // onValueChange={(value) => handleChange({ target: { status: "gender", value } })}
                           onValueChange={(value) => setGender(value)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select Gender" />
+                            <SelectValue placeholder={t("SelectGender")||"Select Gender"}/>
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
-                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="male">{t("Male")||"Male"}</SelectItem>
+                            <SelectItem value="female">{t("Female")||"Female"}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
+                        <Label htmlFor="description">{t("descriptionProfile")||"Description"}</Label>
                         <Textarea
                           id="description"
                           name="description"
@@ -680,7 +626,7 @@ export default function ProfileSettingsPage() {
                       handleSubmit(e);
                     }}
                   >
-                    Save Changes
+                    {t("SaveChanges")||"Save Changes"}
                   </Button>
                 </CardFooter>
               </Card>
@@ -749,18 +695,18 @@ export default function ProfileSettingsPage() {
             <TabsContent value="preferences">
               <Card>
                 <CardHeader>
-                  <CardTitle>Preferences</CardTitle>
+                  <CardTitle>{t("preferences")||"Preferences"}</CardTitle>
                   <CardDescription>
-                    Customize your experience on the platform.
+                    {t("Customizeyourexperience")||"Customize your experience on the platform."} 
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-medium">Dark Mode</h3>
+                        <h3 className="font-medium">   {t("DarkMode")||"Dark Mode"} </h3>
                         <p className="text-sm text-muted-foreground">
-                          Use dark theme for the application.
+                           {t("Customizeyourexperience")||"Customize your experience on the platform."} 
                         </p>
                       </div>
                       <Switch
@@ -813,7 +759,7 @@ export default function ProfileSettingsPage() {
                   </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                  <Button onClick={handleSubmit}>Save Changes</Button>
+                  <Button onClick={handleSubmit}>   {t("SaveChanges")||"Save Changes"}</Button>
                 </CardFooter>
               </Card>
             </TabsContent>
@@ -821,18 +767,18 @@ export default function ProfileSettingsPage() {
             <TabsContent value="security">
               <Card>
                 <CardHeader>
-                  <CardTitle>Security</CardTitle>
+                  <CardTitle> {t("security")|| "Security"}</CardTitle>
                   <CardDescription>
-                    Manage your account security and privacy settings.
+                 {t("Manageyouraccountsecurityprivacy")|| "Manage your account security and privacy settings."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <h3 className="font-medium">Change Password</h3>
+                      <h3 className="font-medium"> {t("ChangePassword")|| "Change Password"}</h3>
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label htmlFor="current-email">Current Email</Label>
+                          <Label htmlFor="current-email">{t("CurrentEmail")|| "Current Email"}</Label>
                           <Input
                             id="current-email"
                             type="email"
@@ -843,7 +789,7 @@ export default function ProfileSettingsPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="new-password">New Password</Label>
+                          <Label htmlFor="new-password">{t("NewPassword")|| "New Password"}</Label>
                           <Input
                             id="new-password"
                             type="password"
@@ -855,7 +801,7 @@ export default function ProfileSettingsPage() {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="confirm-password">
-                            Confirm New Password
+                        {t("ConfirmPassword")|| "Confirm New Password"}
                           </Label>
                           <Input
                             id="confirm-password"
@@ -871,7 +817,8 @@ export default function ProfileSettingsPage() {
                             updatePassword();
                           }}
                         >
-                          Update Password
+                           {t("UpdatePassword")|| "Update Password"}
+                     
                         </Button>
                       </div>
                     </div>
@@ -883,11 +830,12 @@ export default function ProfileSettingsPage() {
                     </div> */}
 
                     <div className="space-y-2 pt-4">
-                      <h3 className="font-medium">Delete Account</h3>
+                      <h3 className="font-medium"> {t("DeleteAccount")|| "Delete Account"}  </h3>
                       <p className="text-sm text-muted-foreground">
-                        Permanently delete your account and all your data.
+                              {t("Permanentlydeleteyouraccoun")|| "Permanently delete your account and all your data."}
+                
                       </p>
-                      <Button variant="destructive">Delete Account</Button>
+                      <Button variant="destructive">{t("DeleteAccount")|| "Delete Account"}</Button>
                     </div>
                   </div>
                 </CardContent>
@@ -896,8 +844,8 @@ export default function ProfileSettingsPage() {
             <TabsContent value="add">
               <Card>
                 <CardHeader>
-                  <CardTitle>Add Item</CardTitle>
-                  <CardDescription>Add your items to swap</CardDescription>
+                  <CardTitle>{t("addItem")|| "Add Item"}</CardTitle>
+                  <CardDescription>{t("Addyouritemstoswap")|| "Add your items to swap"} </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ItemListingForm />

@@ -41,32 +41,6 @@ import {
 } from "@/components/ui/tooltip";
 import { addProduct } from "@/callAPI/products";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = [
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-];
-const MAX_IMAGES = 3;
-
-const formSchema = z.object({
-  name: z
-    .string()
-    .min(3, "Name must be at least 3 characters")
-    .max(100, "Name must be less than 100 characters"),
-  description: z
-    .string()
-    .min(20, "Description must be at least 20 characters")
-    .max(2000, "Description must be less than 2000 characters"),
-  category: z.enum(categoriesName),
-  condition: z.string(),
-  valueEstimate: z.coerce.number().positive("Value must be greater than 0"),
-  allowedCategories: z
-    .array(z.enum(allowedCategories))
-    .min(1, "Select at least one category"),
-  // Images will be handled separately
-});
 
 export function ItemListingForm() {
   const router = useRouter();
@@ -82,6 +56,34 @@ export function ItemListingForm() {
   const mapInstanceRef = useRef(null);
   const { toast } = useToast();
   const { t } = useTranslations();
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
+const MAX_IMAGES = 3;
+
+const formSchema = z.object({
+  name: z
+    .string()
+    .min(3, t("Namemustbeatleast3characters")||"Name must be at least 3 characters")
+    .max(100, t("Namemustbelessthan100characters")||"Name must be less than 100 characters"),
+  description: z
+    .string()
+    .min(20,t("Descriptiomustbeatleast20characters")|| "Description must be at least 20 characters")
+    .max(2000, t("Descriptionmustbelessthan2000characters")||"Descriptionmustbelessthan2000characters"),
+  category: z.enum(categoriesName),
+  condition: z.string(),
+  valueEstimate: z.coerce.number().positive(t("Valuemustbegreaterthan0")||"Value must be greater than 0"),
+  allowedCategories: z
+    .array(z.enum(allowedCategories))
+    .min(1, t("Selectatleastonecategory")||"Select at least one category"),
+  // Images will be handled separately
+});
+
   const form = useForm({
     // to check zod validation
     resolver: zodResolver(formSchema),
@@ -115,7 +117,7 @@ export function ItemListingForm() {
       if (file.size > MAX_FILE_SIZE) {
         toast({
           title: t("error") || "ERROR ",
-          description: `File ${file.name} is too large. Maximum size is 5MB.`,
+          description: `${t("File")} ${file.name} ${t("istoolargeMaximumsizeis5MB")||"is too large. Maximum size is 5MB."}`,
           variant: "destructive",
         });
 
@@ -124,7 +126,7 @@ export function ItemListingForm() {
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
         toast({
           title: t("error") || "ERROR ",
-          description: `File ${file.name} has an unsupported format. Please upload JPEG, PNG, or WebP.`,
+          description: `${t("File")} ${file.name}  ${t("hasanunsupportedformatPleaseuploadJPEGPNGorWebP")||"has an unsupported format. Please upload JPEG, PNG, or WebP."}`,
           variant: "destructive",
         });
 
@@ -137,7 +139,7 @@ export function ItemListingForm() {
     if (images.length + validFiles.length > MAX_IMAGES) {
       toast({
         title: t("error") || "ERROR ",
-        description: `You can upload a maximum of ${MAX_IMAGES} images.`,
+        description: `${t('Youcanuploadmaximumof')|| "You can upload a maximum of"}You can upload a maximum of ${MAX_IMAGES} ${t('images')|| "images"}.`,
         variant: "destructive",
       });
       return;
@@ -165,8 +167,7 @@ export function ItemListingForm() {
     if (!name || !description || !category || !condition) {
       toast({
         title: t("error") || "ERROR ",
-        description:
-          "Please fill in the item name, description, category, and condition for an AI price estimate.",
+        description:t("PleasedescriptioncategoryconditionAIpriceestimate")||"Please fill in the item name, description, category, and condition for an AI price estimate.",
         variant: "destructive",
       });
 
@@ -190,8 +191,7 @@ export function ItemListingForm() {
       console.error("Error getting AI price estimate:", error);
       toast({
         title: t("error") || "ERROR ",
-        description:
-          "Failed to get AI price estimate. Please try again or enter your own estimate.",
+        description:t("FailedtogetAIpriceestimatePleasetryagainorenteryourownestimate")||"Failed to get AI price estimate. Please try again or enter your own estimate.",          
         variant: "destructive",
       });
     } finally {
@@ -203,7 +203,9 @@ export function ItemListingForm() {
     if (images.length === 0) {
       toast({
         title: t("error") || "ERROR ",
-        description: "Please upload at least one image of your item.",
+        description:t("Pleaseuploaleastimageyouritem")||"Please upload at least one image of your item.",          
+
+      
         variant: "destructive",
       });
 
@@ -240,7 +242,7 @@ export function ItemListingForm() {
     if (!navigator.geolocation) {
       toast({
         title: "Error",
-        description: "Geolocation is not supported by this browser",
+        description: t("geolocationNotSupported")||"Geolocation is not supported by this browser",
         variant: "destructive",
       });
       setIsGettingLocation(false);
@@ -269,27 +271,29 @@ export function ItemListingForm() {
         }
 
         setIsGettingLocation(false);
-       
         toast({
-          title: "Current location found",
-          description: `Lat: ${pos.lat.toFixed(6)}, Lng: ${pos.lng.toFixed(6)}`,
+          title: t("CurrentLocationFound")||"Current location found",
+          description: `${t("Latitude")}: ${pos.lat.toFixed(6)}, ${t("Longitude")}: ${pos.lng.toFixed(6)}`,
         });
       },
+
+
+
       (error) => {
-        let message = "Unable to retrieve your location";
+        let message =t("Unabletoretrieveyourlocation")|| "Unable to retrieve your location";
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            message = "Location access denied by user";
+            message = t("Locationaccessdeniedbyuser")||"Location access denied by user";
             break;
           case error.POSITION_UNAVAILABLE:
-            message = "Location information is unavailable";
+            message =t("Locationinformationisunavailable")|| "Location information is unavailable";
             break;
           case error.TIMEOUT:
-            message = "Location request timed out";
+            message =t("Locationinformationisunavailable")|| "Location request timed out";
             break;
         }
         toast({
-          title: "Location Error",
+          title: t("LocationError")||"Location Error",
           description: message,
           variant: "destructive",
         });
@@ -412,7 +416,7 @@ export function ItemListingForm() {
     if (files.length === 0) {
       toast({
         title: t("error") || "ERROR ",
-        description: "Please fill all fields and select at least one image.",
+        description: t("Pleaseuploaleastimageyouritem")||"Please upload at least one image of your item.",  
         variant: "destructive",
       });
       return;
@@ -429,7 +433,7 @@ export function ItemListingForm() {
 
       toast({
         title: t("successfully"),
-        description: "Item added successfully with images!",
+        description: t("Itemaddedsuccessfullywithimage")||"Item added successfully with images!",
       });
       // Clear all fields and images
       form.reset();
@@ -440,7 +444,7 @@ export function ItemListingForm() {
       console.error(err);
       toast({
         title: t("error") || "ERROR ",
-        description: err.message || "Error adding item.",
+        description: err.message ||  t("Erroraddingitem")||"Error adding item.",
         variant: "destructive",
       });
     }
@@ -458,10 +462,10 @@ export function ItemListingForm() {
           {/* Left column - Basic details */}
           <div className="space-y-6">
             <div className="space-y-2">
-              <h2 className="text-xl font-semibold">Item Details</h2>
+              <h2 className="text-xl font-semibold">{t("ItemDetails")||"Item Details"}</h2>
               <p className="text-sm text-muted-foreground">
-                Provide detailed information about your item to help others
-                understand what you're offering.
+                {t("Providedetailedinformationunderstandoffering")||"Provide detailed information about your item to help others  understand what you're offering."}
+            
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -470,7 +474,8 @@ export function ItemListingForm() {
                   handleSubmit();
                 }}
               >
-                Creating Listing
+                {t("CreateListing")||"Creating new product"}
+             
               </Button>
               {/* name */}
               <FormField
@@ -478,7 +483,7 @@ export function ItemListingForm() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Item Name</FormLabel>
+                    <FormLabel>{t("ItemName")||"Item Name"}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="e.g., MacBook Pro 16-inch 2021"
@@ -486,7 +491,8 @@ export function ItemListingForm() {
                       />
                     </FormControl>
                     <FormDescription>
-                      Be specific about brand, model, and key features.
+                      {t("Bespecificaboutbrandmodelkeyfeatures")||"Be specific about brand, model, and key features."}
+                 
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -510,12 +516,12 @@ export function ItemListingForm() {
                               {isGettingLocation ? (
                                 <>
                                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                  Getting Location...
+                                 {t("GettingLocation")||"Getting Location..."}
                                 </>
                               ) : (
                                 <>
                                   <MapPin className="mr-2 h-4 w-4" />
-                                  Get Current Location
+                                     {t("GetCurrentLocation")||"Get Current Location"}
                                 </>
                               )}
                             </Button>
@@ -526,21 +532,22 @@ export function ItemListingForm() {
                               <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                   <MapPin className="h-5 w-5" />
-                                  Selected Position
+                                  {t("SelectedPosition")||"  Selected Position"}
+                              
                                 </CardTitle>
                               </CardHeader>
                               <CardContent className="space-y-4">
                                 <div className="space-y-2">
                                   <p className="text-sm">
-                                    <strong>Name:</strong>{" "}
+                                    <strong>  {t("Name")||"Name"}:</strong>{" "}
                                     {selectedPosition.name}
                                   </p>
                                   <p className="text-sm">
-                                    <strong>Latitude:</strong>{" "}
+                                    <strong>  {t("Latitude")||"Latitude"}:</strong>{" "}
                                     {selectedPosition.lat.toFixed(6)}
                                   </p>
                                   <p className="text-sm">
-                                    <strong>Longitude:</strong>{" "}
+                                    <strong>  {t("Longitude")||"Longitude"}:</strong>{" "}
                                     {selectedPosition.lng.toFixed(6)}
                                   </p>
                                 </div>
@@ -556,7 +563,7 @@ export function ItemListingForm() {
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price</FormLabel>
+                    <FormLabel> {t("price")||"Price"}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="e.g., San Francisco, CA"
@@ -575,7 +582,7 @@ export function ItemListingForm() {
                 name="country"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Country</FormLabel>
+                    <FormLabel> {t("Country")||"Country"}</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Egypt" {...field} />
                     </FormControl>
@@ -589,9 +596,9 @@ export function ItemListingForm() {
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>City</FormLabel>
+                    <FormLabel> {t("City")||"City"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Sohage" {...field} />
+                      <Input placeholder={t("e.g., Sohage")||"e.g., Sohage"} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -604,9 +611,9 @@ export function ItemListingForm() {
                 name="street"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Street</FormLabel>
+                    <FormLabel>{t("Street")||"Street"}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Omar ebn Elkhtab" {...field} />
+                      <Input placeholder= {t("egOmarebnElkhtab")||"e.g., Omar ebn Elkhtab"} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -619,17 +626,16 @@ export function ItemListingForm() {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Description</FormLabel>
+                  <FormLabel>{t("description")||"Description"}</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Describe your item in detail, including condition, features, and any relevant history."
+                      placeholder=  {t("Describeyouritemndetailincludingconditionfeaturesandanyrelevanthistory")||"Describe your item in detail, including condition, features, and any relevant history."}
                       className="min-h-[120px]"
                       {...field}
                     />
                   </FormControl>
                   <FormDescription>
-                    The more details you provide, the more likely you are to
-                    find a good swap.
+                   {t("detailsprovidethemorelikelyfindgoodswap")||"The more details you provide, the more likely you are to find a good swap."}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -642,20 +648,23 @@ export function ItemListingForm() {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>
+                   {t("category")||"Category"}
+                      
+                      </FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value || ""}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
+                          <SelectValue placeholder={t("Selectacategory")||"Select a category"}  />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {categoriesName.map((category) => (
                           <SelectItem key={category} value={category}>
-                            {category}
+                           {t(category)|| category}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -670,14 +679,14 @@ export function ItemListingForm() {
                 name="condition"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Condition</FormLabel>
+                    <FormLabel>{t("Condition")||"Condition"}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select condition" />
+                          <SelectValue placeholder= {t("SelectCondition")||"Select condition" }/>
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -687,7 +696,7 @@ export function ItemListingForm() {
                             value={condition}
                             className="capitalize"
                           >
-                            {condition}
+                         {t(condition)||condition}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -702,14 +711,14 @@ export function ItemListingForm() {
           {/* Right column - Images and value */}
           <div className="space-y-6">
             <div className="space-y-2">
-              <h2 className="text-xl font-semibold">Images & Value</h2>
+              <h2 className="text-xl font-semibold">{t("ImagesValue")||"Images & Value"}</h2>
               <p className="text-sm text-muted-foreground">
-                Upload clear photos of your item and set its estimated value.
+                         {t("Uploadclearphotosofyouritemandsetitsestimatedvalue")||"Upload clear photos of your item and set its estimated value"}
               </p>
             </div>
 
             <div>
-              <FormLabel>Item Images</FormLabel>
+              <FormLabel>{t("ItemImages")||"Item Images"}</FormLabel>
               <div className="mt-2 grid grid-cols-3 gap-4">
                 {imageUrls.map((url, index) => (
                   <Card key={index} className="relative overflow-hidden">
@@ -744,7 +753,7 @@ export function ItemListingForm() {
                           <Upload className="h-5 w-5 text-muted-foreground" />
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Click to upload
+                          {t("Clicktoupload")||"Click to upload"}
                         </p>
                         <input
                           id="image-upload"
@@ -760,7 +769,7 @@ export function ItemListingForm() {
                 )}
               </div>
               <p className="mt-2 text-xs text-muted-foreground">
-                Upload up to {MAX_IMAGES} images (JPEG, PNG, WebP, max 5MB each)
+                    {t("Uploadupto")||"Upload up to"} {MAX_IMAGES}   {t("images")||"images"} (JPEG, PNG, WebP, max 5MB each)
               </p>
             </div>
 
@@ -771,7 +780,7 @@ export function ItemListingForm() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex items-center justify-between">
-                      <FormLabel>Estimated Value ($)</FormLabel>
+                      <FormLabel> {t("aIExpectedPrice")||"Estimated Value"} ($)</FormLabel>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -787,19 +796,22 @@ export function ItemListingForm() {
                                 <>
                                   <Loader2 className="h-3 w-3 animate-spin" />
                                   Estimating...
+                                  {t("Estimating")||"Estimating..."} 
                                 </>
                               ) : (
                                 <>
                                   <Info className="h-3 w-3" />
-                                  Get AI Estimate
+                                  {t("GetAIEstimate")||"Get AI Estimate"} 
+                                  
+                                 
                                 </>
                               )}
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>
-                              Get an AI-powered price estimate based on your
-                              item details
+                                {t("GetAIpoweredpriceestimatebasedonyouritemdetails")||"Get an AI-powered price estimate based on your item details"} 
+                             
                             </p>
                           </TooltipContent>
                         </Tooltip>
@@ -810,11 +822,12 @@ export function ItemListingForm() {
                     </FormControl>
                     {aiPriceEstimation !== null && (
                       <p className="text-xs text-[#49c5b6]">
-                        AI suggests a value of ${aiPriceEstimation}
+                                  {t("AIsuggestsvalueof")||" AI suggests a value of"} ${aiPriceEstimation}
                       </p>
                     )}
                     <FormDescription>
-                      Set a fair market value to help facilitate balanced swaps.
+                                  {t("Setfairmarketvaluetohelpfacilitatebalancedswaps")||"   Set a fair market value to help facilitate balanced swaps."} 
+
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -832,11 +845,13 @@ export function ItemListingForm() {
                   <FormItem>
                     <div className="mb-4">
                       <FormLabel className="text-base">
-                        What will you accept in return?
+                           {t("Whatwillyouacceptinreturn")||"What will you accept in return?"}
+                    
                       </FormLabel>
                       <FormDescription>
-                        Select the categories of items you're willing to accept
-                        in exchange.
+                           {t("Selectthecategoriesofitemsyourewillingtoacceptinexchange")||"What will you accept in return?"}
+
+                     
                       </FormDescription>
                     </div>
                     <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -882,8 +897,8 @@ export function ItemListingForm() {
                                     }}
                                   />
                                 </FormControl>
-                                <FormLabel className="font-normal capitalize">
-                                  {category}
+                                <FormLabel className="font-normal capitalize px-1">
+                                  {t(category)||category}
                                 </FormLabel>
                               </FormItem>
                             )}
@@ -906,7 +921,8 @@ export function ItemListingForm() {
             variant="outline"
             onClick={() => router.push("/profile")}
           >
-            Cancel
+             {t('Cancel')||"Cancel"}
+            
           </Button>
           <Button
             type="submit"
@@ -918,11 +934,22 @@ export function ItemListingForm() {
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating Listing...
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />.
+                {
+
+                t('CreateListing')||"Create Listing...."
+                }
               </>
             ) : (
-              "Create Listing"
+            <>
+             {
+
+                t('CreateListing')||"Create Listing"
+              }
+            </>
+             
+                
+             
             )}
           </Button>
         </div>

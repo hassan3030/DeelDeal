@@ -251,7 +251,8 @@ const CustomerService = () => {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-gradient-to-r from-accent to-deep-orange dark:from-primary dark:to-accent rounded-xl p-8 text-center">
+        {/* in the future, this will be a carousel of CTAs */}
+        {/* <div className="bg-gradient-to-r from-accent to-deep-orange dark:from-primary dark:to-accent rounded-xl p-8 text-center">
           <h2 className="text-2xl md:text-3xl font-bold text-background mb-4">
             {t("stillNeedHelp")}
           </h2>
@@ -272,7 +273,7 @@ const CustomerService = () => {
               <MessageCircle className="mr-2 h-4 w-4" /> {t("communityForums")}
             </Button>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

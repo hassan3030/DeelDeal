@@ -14,9 +14,10 @@ import { Label } from "@/components/ui/label"
 import  ItemCard  from "./item-card"
 
 import { getUserItems , items } from "@/lib/data"
-import { ChevronLeft, Search, Edit, Trash2, Eye, Plus, AlertCircle, ChevronDownIcon } from "lucide-react"
+import { ChevronLeft, Search, Edit, Trash2, Eye, Plus, AlertCircle, ChevronDownIcon, ArrowLeft } from "lucide-react"
 import { PopoverAnchor } from "@radix-ui/react-popover"
 import { getProductByUserId } from "@/callAPI/products"
+import { useTranslations } from "@/lib/use-translations";
 
 
 export default function ManageItemsPage() {
@@ -25,7 +26,7 @@ export default function ManageItemsPage() {
   const [status, setStatus] = useState("all")
   const [activeTab, setActiveTab] = useState("active")
   const [items, setItems] = useState([])
-
+  const { t } = useTranslations();
   // Get user items
   // const allUserItems = getUserItems("user-1")
 const filteredItems = async ()=>{
@@ -39,38 +40,25 @@ useEffect(()=>{
   filteredItems()
  
 } , [])
-  // Filter items based on search, category, and status
-  // const filteredItems = allUserItems.filter((items) => {
-  //   const matchesSearch =
-  //     searchTerm === "" ||
-  //     items.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     items.description.toLowerCase().includes(searchTerm.toLowerCase())
-
-  //   const matchesCategory = category === "all" || items.category === category
-
-  //   const matchesStatus = status === "all" || items.status === status
-
-  //   const matchesTab =
-  //     (activeTab === "active" && items.status === "Available") ||
-  //     (activeTab === "inactive" && items.status !== "Available")
-
-  //   return matchesSearch && matchesCategory && matchesStatus && matchesTab
-  // })
-
-  
+    
   return (
     <>
 
 
     <div className="container py-8">
-      <div className="mb-6 flex items-center">
-        <Button asChild variant="ghost" size="sm" className="mr-2">
-          <Link href="/profile">
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Back to Profile
-          </Link>
+    
+
+
+<div className="inline mb-3 ">
+        <Button
+          className="mb-2"
+          variant="outline"
+          size="sm"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold">Manage Items</h1>
+        <h1 className="mx-2 text-3xl font-bold inline">{t("manageItems")||"Manage Items"}</h1>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
@@ -78,13 +66,13 @@ useEffect(()=>{
           <CardHeader>
             <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
               <div>
-                <CardTitle>Your Items</CardTitle>
-                <CardDescription>Manage, edit, and update your listed items.</CardDescription>
+                <CardTitle>{t("myItems")||"Your Items"}</CardTitle>
+                <CardDescription>{t("manageEditandupdate") || "Manage, edit, and update your listed items."}</CardDescription>
               </div>
               <Button asChild>
                 <Link href="/profile/settings/editItem/new">
                   <Plus className="mr-2 h-4 w-4" />
-                  Add New Item
+                {t("addNewItem")||"Add New Item"}
                 </Link>
               </Button>
             </div>
@@ -93,7 +81,7 @@ useEffect(()=>{
             <Tabs defaultValue="active" value={activeTab} onValueChange={setActiveTab}>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <TabsList>
-                  <TabsTrigger value="active">Active Items</TabsTrigger>
+                  <TabsTrigger value="active">{t("activeItems")||"Active Items"}</TabsTrigger>
                   {/* <TabsTrigger value="inactive">Inactive Items</TabsTrigger> */}
                 </TabsList>
 
@@ -139,7 +127,7 @@ useEffect(()=>{
                 {items.length === 0 ? (
                   <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
                     <AlertCircle className="mb-2 h-8 w-8 text-muted-foreground" />
-                    <h3 className="text-lg font-medium">No items found</h3>
+                    <h3 className="text-lg font-medium"> {t("noItemsFound")||"No items found"}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {searchTerm || category !== "all" || status !== "all"
                         ? "Try adjusting your search or filters"
@@ -148,7 +136,7 @@ useEffect(()=>{
                     <Button asChild className="mt-4">
                       <Link href="/items/new">
                         <Plus className="mr-2 h-4 w-4" />
-                        Add New Item
+                  {t("addNewItem")||"Add New Item"}
                       </Link>
                     </Button>
                   </div>
@@ -165,8 +153,8 @@ useEffect(()=>{
               <TabsContent value="inactive" className="mt-6">
                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
                   <AlertCircle className="mb-2 h-8 w-8 text-muted-foreground" />
-                  <h3 className="text-lg font-medium">No inactive items</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">You don't have any inactive items.</p>
+                  <h3 className="text-lg font-medium">{t("no") && t("activeItems")}{"inactive items"}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{t()||"You don't have any inactive items."}</p>
                 </div>
               </TabsContent>
             </Tabs>

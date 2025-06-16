@@ -184,14 +184,14 @@ const Cart = () => {
 
   const handlePriceDifference = (userId, cash) => {
     const { id } = decodedToken();
-    if (userId === id) {
-      if (cash > 0) return `You pay: ${Math.abs(Math.ceil(cash))} LE`;
-      if (cash < 0) return `You get: ${Math.abs(Math.ceil(cash))} LE`;
-      return `The price is equal`;
+    if (userId === id) { 
+      if (cash > 0) return `${t("Youpay")||"You pay"}: ${Math.abs(Math.ceil(cash))} ${t("LE")||"LE"}`;
+      if (cash < 0) return   `${t("Youget")||"You get"}: ${Math.abs(Math.ceil(cash))} ${t("LE")||"LE"}`;
+      return `${t("Thepriceisequal")||"The price is equal"}`;
     } else {
-      if (cash < 0) return `You pay: ${Math.abs(Math.ceil(cash))} LE`;
-      if (cash > 0) return `You get: ${Math.abs(Math.ceil(cash))} LE`;
-      return `The price is equal`;
+      if (cash < 0) return `${t("Youpay")||"You pay"}: ${Math.abs(Math.ceil(cash))} ${t("LE")||"LE"}`;
+      if (cash > 0) return `${t("Youget")||"You get"}: ${Math.abs(Math.ceil(cash))} ${t("LE")||"LE"}`;
+      return  `${t("Thepriceisequal")||"The price is equal"}`;
     }
   };
 
@@ -212,13 +212,13 @@ const Cart = () => {
         await deleteOfferItemsById(offerItemId, itemId);
         toast({
           title: t("successfully") || "Successfully",
-          description: "Item deleted from swap successfully",
+          description: t("Itemdeletedfromswapsuccessfully")|| "Item deleted from swap successfully",
         });
         getOffers();
       } catch (err) {
         toast({
           title: t("error") || "Error",
-          description: "Failed to delete item",
+          description: t("Failedtodeleteitem")||"Failed to delete item",
           variant: "destructive",
         });
       }
@@ -240,13 +240,13 @@ const Cart = () => {
     if (!completeSwap) {
       toast({
         title: t("error") || "Error",
-        description: "Failed to complete swap",
+        description:  t("Failedtocompleteswap")|| "Failed to complete swap",
         variant: "destructive",
       });
     } else {
       toast({
         title: t("successfully") || "Successfully",
-        description: "Swap completed successfully",
+        description: t("Swapcompletedsuccessfully")||  "Swap completed successfully",
       });
       router.refresh();
     }
@@ -257,7 +257,7 @@ const Cart = () => {
       await deleteOfferById(swapId);
       toast({
         title: t("successfully") || "Successfully",
-        description: "Swap deleted successfully",
+        description: t("Swapdeletedsuccessfully")||  "Swap deleted successfully",
       });
       setShowDeleteDialog(false);
       getOffers();
@@ -265,7 +265,7 @@ const Cart = () => {
     } catch (err) {
       toast({
         title: t("error") || "Error",
-        description: "Failed to delete swap",
+        description: t("Failedtodeleteswap")|| "Failed to delete swap",
         variant: "destructive",
       });
     }
@@ -288,28 +288,33 @@ const fetchUserId = async () => {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Swap</DialogTitle>
+            <DialogTitle>{t("DeleteSwap")|| "Delete Swap" }</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this swap?
+              {t("Areyousureyouwanttodeletethisswap")|| "  Are you sure you want to delete this swap?" }
+            
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
               <Button
                 variant="destructive"
+                className="mx-2"
                 onClick={async () => {
                   await handleDeleteSwap(pendingDelete.idOffer);
                 }}
               >
-                Delete
+                {t("delete")|| "Delete" }
+                
               </Button>
             </DialogClose>
             <DialogClose asChild>
               <Button
+                 className="mx-2"
                 variant="secondary"
                 onClick={() => setShowDeleteDialog(false)}
               >
-                Cancel
+                  {t("Cancel")|| "Cancel" }
+                
               </Button>
             </DialogClose>
           </DialogFooter>
@@ -320,16 +325,16 @@ const fetchUserId = async () => {
       <Dialog open={showComleteDialog} onOpenChange={setShowComleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Complete Swap</DialogTitle>
+            <DialogTitle>{t("CompleteSwap")|| "Complete Swap" }</DialogTitle>
             <DialogDescription>
               <ul>
-                <li>Are you sure you want to Complete this swap? </li>
                 <li>
-                  If you complete the swap, you will not be able to undo this
-                  action.
+                  {t("AreyousureyouwanttoCompletethisswap")|| "Are you sure you want to Complete this swap?" } </li>
+                <li>
+                 {t("Ifyoucompletetheswapyouwillnotbeabletoundothisaction")|| "If you complete the swap,you will not be able to undo this action." } 
                 </li>
-                <li>Chat will be closed.</li>
-                <li>Items will be removed.</li>
+                <li>{t("Chatwillbeclosed.")|| "Chat will be closed." }</li>
+                <li>{t("Itemswillberemoved")|| "Items will be removed." }</li>
               </ul>
             </DialogDescription>
           </DialogHeader>
@@ -343,7 +348,8 @@ const fetchUserId = async () => {
                   router.refresh();
                 }}
               >
-                Complete
+                {t("Complete")|| "Complete" }
+                
               </Button>
             </DialogClose>
             <DialogClose asChild>
@@ -351,7 +357,7 @@ const fetchUserId = async () => {
                 variant="destructive"
                 onClick={() => setShowComleteDialog(false)}
               >
-                Cancel
+                 {t("Cancel")|| "Cancel" }
               </Button>
             </DialogClose>
           </DialogFooter>
@@ -365,49 +371,49 @@ const fetchUserId = async () => {
           <div className="mb-6 grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
               <span className="text-lg font-bold">
-                {offers.length === 0 ? "No" : offers.length}
+                {offers.length === 0 ?   t("no")|| "No"  : offers.length}
               </span>
               <Box className="" />{" "}
-              <span className="text-xs text-muted-foreground">All Swaps</span>
+              <span className="text-xs text-muted-foreground">{t("AllSwaps")|| "All Swaps" }</span>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
               <span className="text-lg font-bold">
                 {offers.filter((o) => o.status_offer === "pending").length === 0
-                  ? "No"
+                  ? t("no")|| "No" 
                   : offers.filter((o) => o.status_offer === "pending").length}
               </span>
               <Loader />
-              <span className="text-xs text-muted-foreground">Pending</span>
+              <span className="text-xs text-muted-foreground">{t("pending")|| "Pending" }</span>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
               <span className="text-lg font-bold">
                 {offers.filter((o) => o.status_offer === "accepted").length ===
                 0
-                  ? "No"
+                  ? t("no")|| "No" 
                   : offers.filter((o) => o.status_offer === "accepted").length}
               </span>
               <Handshake />
-              <span className="text-xs text-muted-foreground">Accepted</span>
+              <span className="text-xs text-muted-foreground">{t("accepted")|| "Accepted" }</span>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
               <span className="text-lg font-bold">
                 {offers.filter((o) => o.status_offer === "completed").length ===
                 0
-                  ? "No"
+                  ? t("no")|| "No" 
                   : offers.filter((o) => o.status_offer === "completed").length}
               </span>
               <CheckCheck />
-              <span className="text-xs text-muted-foreground">Completed</span>
+              <span className="text-xs text-muted-foreground">{t("completed")|| "Completed" }</span>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
               <span className="text-lg font-bold">
                 {offers.filter((o) => o.status_offer === "rejected").length ===
                 0
-                  ? "No"
+                  ?t("no")|| "No" 
                   : offers.filter((o) => o.status_offer === "rejected").length}
               </span>
               <BadgeX />
-              <span className="text-xs text-muted-foreground">Rejected</span>
+              <span className="text-xs text-muted-foreground">{t("rejected")|| "Rejected" }</span>
             </div>
           </div>
           {/* --- End Swap Summary Stats --- */}
@@ -429,7 +435,7 @@ const fetchUserId = async () => {
                   {!["rejected", "completed"].includes(offer.status_offer) && (
                     <div className="text-right">
                       <div className="text-sm text-muted-foreground">
-                        My items:{" "}
+                       {t("Myitems")|| "My items" } :{" "}
                         {
                           itemsOffer.filter(
                             (u) =>
@@ -437,7 +443,7 @@ const fetchUserId = async () => {
                               u.offer_id === offer.id
                           ).length
                         }{" "}
-                        | Their items:{" "}
+                        |    {t("Theiritems")|| "Their items" }:{" "}
                         {
                           itemsOffer.filter(
                             (u) =>
@@ -466,7 +472,7 @@ const fetchUserId = async () => {
                       >
                         <Scale className="w-3 h-3" />
                         {offer.cash_adjustment
-                          ? `Cash Adjustment: ${handlePriceDifference(
+                          ? `${t("CashAdjustment")|| "Cash Adjustment" }: ${handlePriceDifference(
                               offer.from_user_id,
                               offer.cash_adjustment
                             )}`
@@ -475,11 +481,11 @@ const fetchUserId = async () => {
 
                       <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1 capitalize">
                         <CircleDot className="w-3 h-3" />
-                        Offer state: {offer.status_offer}
+                        {t("Offerstate")|| "Offer statet" } : {t(offer.status_offer)}
                       </div>
                       {offer.name ? (
                         <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1capitalize">
-                          Offer Name: {offer.name}
+                              {t("OfferName")|| "Offer Name" } : {offer.name}
                         </div>
                       ) : (
                         ""
@@ -492,7 +498,7 @@ const fetchUserId = async () => {
                     <>
                       {/* My Items */}
                       <div>
-                        <h4 className="font-semibold mb-2">My Items</h4>
+                        <h4 className="font-semibold mb-2">{t("Myitems")|| "My items" }</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                           {swapItems
                             .filter(
@@ -513,7 +519,7 @@ const fetchUserId = async () => {
                       </div>
                       {/* Their Items */}
                       <div>
-                        <h4 className="font-semibold mb-2">Their Items</h4>
+                        <h4 className="font-semibold mb-2"> {t("Theiritems")|| "Their Items" }</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                           {swapItems
                             .filter(
@@ -537,16 +543,17 @@ const fetchUserId = async () => {
                     <div className="text-center text-green-600">
                       <ShieldCheck className="h-8 w-8 mx-auto mb-2" />
                       <h3 className="text-xl font-semibold mb-2">
-                        Swap Completed Successfully!
+                       {t("SwapCompletedSuccessfully")|| "Swap Completed Successfully!" }
                       </h3>
                       <p className="text-muted-foreground mb-4">
-                        Thank you for completing the swap.
+                          {t("Thankyouforcompletingtheswap")|| " Swap Completed Successfully!" }
+                       
                       </p>
 
                      
 
                         <p className="text-muted-foreground mb-4">
-  Contact phone:{" "}
+{t("Contactphone")|| "Contact phone" }:{" "}
   {(() => {
     // Find the other user in the swap (not me)
     const userToContact =
@@ -554,7 +561,8 @@ const fetchUserId = async () => {
         (u) =>
           u.id === (myUserId === offer.from_user_id ? offer.to_user_id : offer.from_user_id)
       ) || {};
-    return userToContact.phone_number || "No phone available";
+
+    return userToContact.phone_number ||  t("Nophoneavailable")|| "No phone available" ;
   })()}
 </p>
 
@@ -590,10 +598,11 @@ const fetchUserId = async () => {
                     <div className="text-center text-red-600">
                       <Trash2 className="h-8 w-8 mx-auto mb-2" />
                       <h3 className="text-xl font-semibold mb-2">
-                        Swap Rejected
+                        {t("SwapRejected")|| " Swap Rejected" }
+                       
                       </h3>
                       <p className="text-muted-foreground mb-4">
-                        The swap was rejected by you.
+                       {t("Theswapwasrejectedbyyou")|| "The swap was rejected by you." } 
                       </p>
                     </div>
                   )}
@@ -612,7 +621,8 @@ const fetchUserId = async () => {
                           }
                           alt={
                             userSwaps.find((u) => u.id === offer.to_user_id)
-                              ?.first_name || "User"
+                      
+                              ?.first_name ||  t("User")|| "User"
                           }
                         />
                         <AvatarFallback>
@@ -624,7 +634,7 @@ const fetchUserId = async () => {
                       <div>
                         <div className="font-semibold text-base capitalize">
                           {userSwaps.find((u) => u.id === offer.to_user_id)
-                            ?.first_name || "User"}
+                            ?.first_name || t("User")|| "User"}
                         </div>
                       </div>
                     </div>
@@ -643,7 +653,7 @@ const fetchUserId = async () => {
                           }}
                         >
                           <Trash2 className="inline h-4 w-4 align-middle mr-1" />
-                          Delete Swap
+                         {t("DeleteSwap")|| "Delete Swap" }
                         </span>
                       </div>
                     ) : null}
@@ -663,7 +673,7 @@ const fetchUserId = async () => {
                           className="flex items-center gap-1"
                         >
                           <ShieldCheck className="h-4 w-4" />
-                          Complete Swap
+                         {t("CompleteSwap")|| "Complete Swap" }
                         </Button>
                       </div>
                     ) : null}
@@ -679,16 +689,18 @@ const fetchUserId = async () => {
           {/* Empty state */}
           {offers.length === 0 && (
             <Card className="p-12 text-center mt-8">
-              <h3 className="text-xl font-semibold mb-2">No Cart</h3>
+              <h3 className="text-xl font-semibold mb-2">{t("NoCart")|| "No Cart" }</h3>
               <p className="text-muted-foreground">
-                You're all caught up! New Add in cart will appear here.
+                {t("YoureallcaughtupNewAddincartwillappearhere")|| "You're all caught up! New Add in cart will appear here." }
+                
               </p>
               <Button
                 variant="outline"
                 className="mt-4"
                 onClick={() => router.push("/products")}
               >
-                Make Swap
+                    {t("MakeSwap")|| "Make Swap" }
+                
               </Button>
             </Card>
           )}
@@ -711,6 +723,7 @@ export const CardItemSwap = ({
 }) => {
   const router = useRouter();
   const [bigImage, setBigImage] = useState("");
+  const { t } = useTranslations();
 
   useEffect(() => {
     const getDataImage = async () => {
@@ -746,9 +759,9 @@ export const CardItemSwap = ({
         </p>
         <div className="flex justify-between items-center mb-3">
           <Badge variant="outline" className="text-xs">
-            {status_item}
+            {t(status_item) || status_item}
           </Badge>
-          <span className="font-bold text-primary text-sm">{price}</span>
+          <span className="font-bold text-primary text-sm">  {t(price) || price}</span>
         </div>
         <div className="flex gap-2">
           <Button
@@ -758,7 +771,7 @@ export const CardItemSwap = ({
             onClick={() => handleView(id)}
           >
             <Eye className="h-3 w-3 mr-1" />
-            View
+            {t("view") || "View"}
           </Button>
           <Button
             variant="destructive"
@@ -767,7 +780,7 @@ export const CardItemSwap = ({
             onClick={deleteItem}
           >
             <Trash2 className="h-3 w-3 mr-1" />
-            Delete
+                {t("delete") || "Delete"}
           </Button>
         </div>
       </CardContent>

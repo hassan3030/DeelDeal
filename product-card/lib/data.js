@@ -42,11 +42,12 @@ export const categoriesName = [
 "electronics",
  "fashion",
  "home",
- "beauty ",
+ "beauty",
  "toys",
  "sports",
  "health",
- "furniture"
+ "furniture",
+ "pets"
   
 ]
 export const allowedCategories = [ ...categoriesName,"all"]

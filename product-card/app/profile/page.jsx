@@ -206,14 +206,14 @@ console.log('sum', sum);
       {/* Go Back Link */}
       <div className="inline mb-3 ">
         <Button
-          className="mb-2"
+          className="mb-2" 
           variant="outline"
           size="sm"
           onClick={() => router.back()}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
         </Button>
-        <h1 className="mx-2 text-3xl font-bold inline">My Profile</h1>
+        <h1 className="mx-2 text-3xl font-bold inline">{t('myProfile')||"My Profile"}</h1>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -254,8 +254,8 @@ console.log('sum', sum);
                 <Star className="h-4 w-4 text-yellow-400" />
                 <span>
                   {rate
-                    ? `${rate} / 5.0 Rating`
-                    : "No ratings yet"}
+                    ? `${rate} / 5.0 ${t("Rating") || "Rating"}`
+                    : t("noRate")|| "No ratings yet"}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
@@ -263,12 +263,12 @@ console.log('sum', sum);
                 <span>
                   {!user?.completedSwaps
                     ? "No completed swaps"
-                    : `${user?.completedSwaps==0?'No': user?.completedSwaps} Completed swaps`}{" "}
+                    : `${user?.completedSwaps==0? t("no"): user?.completedSwaps} ${t("completedSwaps")||"Completed swaps"}`}{" "}
                 </span>
               </div>
 
               <Button variant="outline" className="w-full" asChild>
-                <Link href={`profile/settings/editProfile`}>Edit Profile</Link>
+                <Link href={`profile/settings/editProfile`}>{t("editProfile")||"Edit Profile"}</Link>
               </Button>
             </div>
           </CardContent>
@@ -285,7 +285,7 @@ console.log('sum', sum);
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="items" className="flex items-center gap-2">
                 <Package className="h-4 w-4" />
-                <span>Available Items</span>
+                <span>{t("yourProducts")}</span>
                 <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs">
                   {myAvailableItems.length}
                 </span>
@@ -296,7 +296,7 @@ console.log('sum', sum);
                 className="flex items-center gap-2"
               >
                 <Star className="h-4 w-4" />
-                <span>Items In Offers </span>
+                <span>{t("itemsInOffers")||"Items In Offers"}</span>
                 <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs">
                   {myUnavailableItems.length}
                 </span>
@@ -304,7 +304,7 @@ console.log('sum', sum);
 
               <TabsTrigger value="offers" className="flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span>Offers</span>
+                <span>{t("offers")||"Offers"}</span>
                 <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs">
                   {userOffers.length}
                 </span>
@@ -314,7 +314,7 @@ console.log('sum', sum);
                 className="flex items-center gap-2"
               >
                 <BellDot className="h-4 w-4" />
-                <span>Notifications</span>
+                <span>{t("notifications")|| "Notifications"} </span>
                 <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs">
                   {notificationsLength}
                 </span>
@@ -323,11 +323,11 @@ console.log('sum', sum);
 
             <TabsContent value="items" className="mt-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">My Items</h2>
+                <h2 className="text-xl font-bold">{t("myItems")||"My Items"}</h2>
                 <Button asChild size="sm">
                   <Link href="/profile/items">
                     <Settings className="mr-2 h-4 w-4" />
-                    Manage Items
+                  {t("manageItems")||"Manage Items"}
                   </Link>
                 </Button>
               </div>
@@ -341,18 +341,18 @@ console.log('sum', sum);
             </TabsContent>
             {/* ---------------------------------------------- */}
             <TabsContent value="offers" className="mt-6">
-              <h2 className="mb-4 text-xl font-bold">My Offers</h2>
+              <h2 className="mb-4 text-xl font-bold">{t("myOffers")||"My Offers"}</h2>
               <Cart />
             </TabsContent>
 
             <TabsContent value="notifications" className="mt-6">
-              <h2 className="mb-4 text-xl font-bold">My Notifications</h2>
+              <h2 className="mb-4 text-xl font-bold">{t("myNotifications")||"My Notifications"}</h2>
               <Notifications />
             </TabsContent>
             {/* ---------------------------------------------- */}
 
             <TabsContent value="unavailableItems" className="mt-6">
-              <h2 className="mb-4 text-xl font-bold">Items On Offers</h2>
+              <h2 className="mb-4 text-xl font-bold">{t("itemsInOffers")||"Items On Offers"}</h2>
               <Card>
                 <CardContent className="p-6">
                   {myUnavailableItems.length > 0 ? (
@@ -365,7 +365,7 @@ console.log('sum', sum);
                     <div className="mt-6">
                       <div className="rounded-lg border p-4">
                         <p className="text-center text-sm text-muted-foreground">
-                          Your have not items to get more visibility and offers.
+                      {t("youHaveNotItem")||"Your have not items to get more visibility and offers."}
                         </p>
                       </div>
                     </div>

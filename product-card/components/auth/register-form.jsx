@@ -13,27 +13,13 @@ import { Input } from "@/components/ui/input"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { useToast } from "@/components/ui/use-toast"
 // import { useAuth } from "@/lib/auth-context"
+import { useTranslations } from "@/lib/use-translations";
+  
 
-import { login , register } from "@/callAPI/users"
+
+import { register } from "@/callAPI/users"
 import { decodedToken, getCookie } from "@/callAPI/utiles"
-import axios from "axios"
-const formSchema = z
-  .object({
-    userName: z.string().min(2, "Name must be at least 2 characters").max(50, "Name must be less than 50 characters"),
-    email: z.string().email("Please enter a valid email address"),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number"),
-    confirmPassword: z.string(),
-    // location: z.string().min(2, "Location must be at least 2 characters").max(100, "Location is too long"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
-  })
+
 
 
 
@@ -44,6 +30,25 @@ export function RegisterForm() {
   const router = useRouter()
   const { toast } = useToast()
   // const { register } = useAuth()
+  const { t } = useTranslations()
+  const formSchema = z
+  .object({
+    userName: z.string().min(2,t( "Namemustbeatleast2characters")|| "Name must be at least 2 characters").max(50, t("Namemustbelessthan50characters")|| "Name must be less than 50 characters"),
+    email: z.string().email(t("Pleaseenteravalidemailaddress")||"Please enter a valid email address"),
+    password: z
+      .string()
+      .min(8, t("Passwordmustbeatleast8characters")|| "Password must be at least 8 characters")
+      .regex(/[A-Z]/, t("Passwordmustcontainatleastoneuppercaseletter")||  "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, t("Passwordmustcontainatleastonelowercaseletter")|| "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, t("Passwordmustcontainatleastonenumber")|| "Password must contain at least one number"),
+    confirmPassword: z.string(),
+    // location: z.string().min(2, "Location must be at least 2 characters").max(100, "Location is too long"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message:t("Passwordsdonotmatch")||"Passwords do not match" ,
+    path: ["confirmPassword"],
+  })
+  
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -71,8 +76,9 @@ export function RegisterForm() {
         const Token = await getCookie('Token')
         const {id} = await decodedToken(Token);
         toast({
-        title: "Registration successful!",
-        description: "Your account has been created. Welcome to DeelDeal!",
+
+        title: t("successfully")||"Successfully",
+        description: t("YouraccounthasbeencreatedWelcometoDeelDeal")||"Your account has been created. Welcome to DeelDeal!",
       })
         console.log("id" , id)
         router.push(`/profile/settings/editItem/new`)
@@ -80,8 +86,8 @@ export function RegisterForm() {
       } 
       else {
        toast({
-        title: "Registration failed",
-        description: "There was a problem creating your account. Please try again.",
+          title:t("error")||"ERROR",
+        description: t("TherewasaproblemcreatingyouraccountPleasetryagain")||"There was a problem creating your account. Please try again.",
         variant: "destructive",
       })
       }
@@ -93,8 +99,8 @@ export function RegisterForm() {
     } catch (error) {
       console.error("Registration error:", error)
       toast({
-        title: "Registration failed",
-        description: "There was a problem creating your account. Please try again.",
+        title:t("error")||"ERROR",
+        description: t("TherewasaproblemcreatingyouraccountPleasetryagain")||"There was a problem creating your account. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -104,42 +110,44 @@ export function RegisterForm() {
 
   return (
     <Form {...form}>
-
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="userName"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Full Name</FormLabel>
+
+              <FormLabel>{t("FullName")||"Full Name"}</FormLabel>
               <FormControl>
                 <Input placeholder="John Doe" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
-        />
+          />
 
         <FormField
           control={form.control}
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Email</FormLabel>
+              <FormLabel> {t("email")||"Email"} </FormLabel>
               <FormControl>
-                <Input type="email" placeholder="you@example.com" {...field} />
+
+                <Input type="email" placeholder= "you@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
-        />
+          />
 
         <FormField
           control={form.control}
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Password</FormLabel>
+              
+              <FormLabel>{t("password")||"Password"}</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
@@ -156,12 +164,13 @@ export function RegisterForm() {
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
-                  </Button>
+                    <span className="sr-only">{showPassword ? t("Hidepassword")||"Hide password"  : t("Showpassword")||"Show password"}</span>
+                  </Button>   
                 </div>
               </FormControl>
               <FormDescription>
-                Password must be at least 8 characters and include uppercase, lowercase, and numbers.
+                {t("Passwordmustbeatleast8charactersandincludeuppercaselowercaseandnumbers")||"Password must be at least 8 characters and include uppercase, lowercase, and numbers."}
+               
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -173,7 +182,7 @@ export function RegisterForm() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm Password</FormLabel>
+              <FormLabel>{t("ConfirmPassword")||"Confirm Password" }</FormLabel>
               <FormControl>
                 <div className="relative">
                   <Input
@@ -190,7 +199,7 @@ export function RegisterForm() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    <span className="sr-only">{showConfirmPassword ? "Hide password" : "Show password"}</span>
+                    <span className="sr-only">{showConfirmPassword ?t("Hidepassword")||"Hide password"  : t("Showpassword")||"Show password"}</span>
                   </Button>
                 </div>
               </FormControl>
@@ -219,17 +228,18 @@ export function RegisterForm() {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Creating Account...
+            { t("CreatingAccount")||"Creating Account..."}
+             
               </>
             ) : (
-              "Create Account"
+              t("CreatingAccount")||"Creating Account..."
             )}
           </Button>
 
           <div className="text-center text-sm">
-            Already have an account?{" "}
+              { t("Alreadyhaveanaccount")||"Already have an account?"}{" "}
             <Link href="/auth/login" className="font-medium text-[#49c5b6] hover:underline">
-              Sign in
+               { t("Signin")||"Sign in"}
             </Link>
           </div>
         </div>

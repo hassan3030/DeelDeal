@@ -322,8 +322,8 @@ export function LoginForm() {
               {t("orContinueWith") || "Or continue with"}
             </span>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
+{/* in the future we can add more social media buttons here */}
+          {/* <div className="grid grid-cols-2 gap-4">
             <Button
               variant="outline"
               type="button"
@@ -352,7 +352,7 @@ export function LoginForm() {
               )}
               {t("facebook") || "Facebook"}
             </Button>
-          </div>
+          </div> */}
 
           <div className="text-center text-sm">
             {t("noAccount") || "Don't have an account?"}{" "}

@@ -3,15 +3,12 @@ import {useState , useEffect} from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Users, Award } from "lucide-react";
 import  LoadingPage  from "./loading";
-import { useTranslations } from "@/lib/use-translations";
-
 const AboutPage = () => {
   const [loading, setLoading] = useState(true);
-  useEffect(() => {
+ useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, []);
-    const { t } = useTranslations();
 
   if (loading) return <LoadingPage />;
 
@@ -19,9 +16,9 @@ const AboutPage = () => {
     <>
 <div className="container mx-auto py-10 px-4 max-w-6xl">
       <header className="mb-12 text-center">
-        <h1 className="text-4xl font-bold mb-4">{t("AboutOurCompany")||"About Our Company"}</h1>
+        <h1 className="text-4xl font-bold mb-4">About Our Company</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-{t("We're dedicated to providing exceptional services and products to our customers around the world")||"          We're dedicated to providing exceptional services and products to our customers around the world."}
+          We're dedicated to providing exceptional services and products to our customers around the world.
         </p>
       </header>
 
@@ -32,13 +29,11 @@ const AboutPage = () => {
               <div className="p-2 bg-primary/10 rounded-full">
                 <Building className="h-6 w-6 text-primary" />
               </div>
-              <CardTitle>{t("OurMission")||"Our Mission"}</CardTitle>
+              <CardTitle>Our Mission</CardTitle>
             </CardHeader>
             <CardContent>
               <p>
-              {t("To deliver innovative solutions that exceed customer expectations while maintaining the highest standards of quality and service.")||"To deliver innovative solutions that exceed customer expectations while maintaining the highest standards of quality and service."}
-
-
+                To deliver innovative solutions that exceed customer expectations while maintaining the highest standards of quality and service.
               </p>
             </CardContent>
           </Card>
@@ -48,15 +43,11 @@ const AboutPage = () => {
               <div className="p-2 bg-primary/10 rounded-full">
                 <Users className="h-6 w-6 text-primary" />
               </div>
-              <CardTitle>
-                {t("OurTeam")||"Our Team"}
-              </CardTitle>
+              <CardTitle>Our Team</CardTitle>
             </CardHeader>
             <CardContent>
               <p>
-                {t("Our diverse team of professionals brings together years of experience and expertise across various industries.")||"Our diverse team of professionals brings together years of experience and expertise across various industries."}
-
-                
+                Our diverse team of professionals brings together years of experience and expertise across various industries.
               </p>
             </CardContent>
           </Card>
@@ -66,15 +57,11 @@ const AboutPage = () => {
               <div className="p-2 bg-primary/10 rounded-full">
                 <Award className="h-6 w-6 text-primary" />
               </div>
-              <CardTitle>
-                  {t("OurValues")||"Our Values"}
-                </CardTitle>
+              <CardTitle>Our Values</CardTitle>
             </CardHeader>
             <CardContent>
               <p>
-                  {t("Integrity, innovation, excellence, and customer satisfaction are the core values that guide everything we do.")|| "Integrity, innovation, excellence, and customer satisfaction are the core values that guide everything we do"}
-
-               
+                Integrity, innovation, excellence, and customer satisfaction are the core values that guide everything we do.
               </p>
             </CardContent>
           </Card>
@@ -82,14 +69,14 @@ const AboutPage = () => {
       </section>
 
       <section className="mb-16">
-        {/* <Card>
+        <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">{t("OurHistory")||"Our History"}</CardTitle>
-            <CardDescription>t{t("The journey that brought us here")||"The journey that brought us here"} </CardDescription>
+            <CardTitle className="text-2xl">Our History</CardTitle>
+            <CardDescription>The journey that brought us here</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h3 className="font-semibold text-lg"> {t("OurHistory")||"2010: The Beginning"} </h3>
+              <h3 className="font-semibold text-lg">2010: The Beginning</h3>
               <p>Our company was founded with a vision to revolutionize the industry with innovative solutions.</p>
             </div>
             <div>
@@ -105,7 +92,7 @@ const AboutPage = () => {
               <p>Continuing our journey of growth and innovation, serving thousands of satisfied customers worldwide.</p>
             </div>
           </CardContent>
-        </Card> */}
+        </Card>
       </section>
 
       <section className="mb-12">
@@ -140,12 +127,7 @@ const AboutPage = () => {
           ))}
         </div>
       </section>
-    </div> 
-
-
- 
-  
-
+    </div>
     </>
  )
 }

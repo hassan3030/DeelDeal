@@ -12,7 +12,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth'; // We’ll define this below
 import { SessionProvider } from 'next-auth/react';
 const inter = Inter({ subsets: ["latin"] })
-
 export const metadata = {
   title: "DeelDeal",
   description: "A marketplace platform where users can swap items across categories",
@@ -32,8 +31,9 @@ export default async function  RootLayout({ children }) {
   return (
     <html lang="en">
     
-      <body className={inter.className}>
-        <ThemeProvider>
+      <body className={inter.className} >
+
+   <ThemeProvider>
           <LanguageProvider>
             {/* <AuthProvider> */}
               {/* <AuthGuard> */}
@@ -48,6 +48,8 @@ export default async function  RootLayout({ children }) {
             {/* </AuthProvider> */}
           </LanguageProvider>
         </ThemeProvider>
+
+     
       </body>
     </html>
   )

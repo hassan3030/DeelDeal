@@ -410,7 +410,7 @@ export function Header() {
                       )}
 
                       <span className="sr-only">
-                        {t("wishlistLength") || "wishlistLength"}
+                        {t("wishlist") || "wishlist"}
                       </span>
                     </Button>
                   </Link>
@@ -430,7 +430,7 @@ export function Header() {
                         ""
                       )}
                       <span className="pointer-events-none absolute -top-8 right-0 z-10 hidden rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100">
-                        {t("message") || "Message"}
+                        {t("messages") || "Messages"}
                       </span>
                     </Button>
                   </Link>
@@ -579,11 +579,11 @@ export function Header() {
                     className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10"
                   >
                     <MessageCircle className="h-4 w-4" />
-                    <span>{`${t("chat")} ${
+                    <span>{`${t("messages")||"Messages"}  ${
                       chatLength ? chatLength : ""
                     } `}</span>
 
-                    <span>{`${t("chat")} `}</span>
+                    <span></span>
                   </Link>
 
                   <Link
@@ -592,7 +592,7 @@ export function Header() {
                   >
                     <Heart className="h-4 w-4" />
 
-                    <span>{`${t("wishList")} ${
+                    <span>{`${t("wishList"||"WishList")} ${
                       wishlistLength !== 0 ? wishlistLength : ""
                     } `}</span>
                   </Link>

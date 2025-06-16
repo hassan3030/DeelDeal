@@ -6,7 +6,7 @@ import {
   deleteOfferItemsById,
   getOffersNotifications,
   getAllMessage,
-  addMessage,
+  addMessage, 
   acceptedOfferById ,
 } from "@/callAPI/swap";
 import { getUserById } from "@/callAPI/users";
@@ -137,13 +137,13 @@ const Notifications = () => {
         await deleteOfferItemsById(offerItemId, itemId);
         toast({
           title: t("successfully") || "Successfully",
-          description: "Item deleted from swap successfully",
+          description: t("Itemdeletedfromswapsuccessfully")|| "Item deleted from swap successfully",
         });
         getNotifications();
       } catch (err) {
         toast({
           title: t("error") || "Error",
-          description: "Failed to delete item",
+          description: t("Failedtodeleteitem")||"Failed to delete item",
           variant: "destructive",
         });
       }
@@ -163,7 +163,7 @@ const Notifications = () => {
       await deleteOfferById(swapId);
       toast({
         title: t("successfully") || "Successfully",
-        description: "Swap deleted successfully",
+        description:  t("Swapcompletedsuccessfully")||  "Swap completed successfully",
       });
       setShowDeleteDialog(false);
       getNotifications();
@@ -171,7 +171,7 @@ const Notifications = () => {
     } catch (err) {
       toast({
         title: t("error") || "Error",
-        description: "Failed to delete swap",
+        description:  t("Failedtodeleteswap")|| "Failed to delete swap",
         variant: "destructive",
       });
     }
@@ -183,14 +183,14 @@ const getAcceptSwap = async (offerId) => {
   if (!acceptSwap) {
     toast({
       title: t("error") || "Error",
-      description: "Failed to accept swap",
+      description: t("Failedtoacceptswap")||"Failed to accept swap",
       variant: "destructive",
     });
 
 }else{
  toast({
                             title: t("successfully") || "Successfully",
-                            description: "Swap accepted successfully",
+                            description: t("Swap accepted successfully")||"Swap accepted successfully",
                           });
                           router.refresh();
 }
@@ -221,13 +221,13 @@ const getAcceptSwap = async (offerId) => {
 const handlePriceDifference = (userId, cash) => {
     const { id } = decodedToken();
     if (userId === id) {
-      if (cash < 0) return `You pay: ${Math.abs(Math.ceil(cash))} LE`;
-      if (cash > 0) return `You get: ${Math.abs(Math.ceil(cash))} LE`;
-      return `The price is equal`;
+      if (cash < 0) return `${t("Youpay")||"You pay"}: ${Math.abs(Math.ceil(cash))} ${t("LE")||"LE"}`;
+      if (cash > 0) return `${t("Youget")||"You get"}: ${Math.abs(Math.ceil(cash))} ${t("LE")||"LE"}`;
+      return `${t("Thepriceisequal")||"The price is equal"}`;
     } else {
-      if  (cash > 0) return `You pay: ${Math.abs(Math.ceil(cash))} LE`;
-      if (cash < 0) return `You get: ${Math.abs(Math.ceil(cash))} LE`;
-      return `The price is equal`;
+      if  (cash > 0) return `${t("Youpay")||"You pay"}: ${Math.abs(Math.ceil(cash))} ${t("LE")||"LE"}`;
+      if (cash < 0) return `${t("Youget")||"You get"}: ${Math.abs(Math.ceil(cash))} ${t("LE")||"LE"}`;
+      return`${t("Thepriceisequal")||"The price is equal"}`;
     }
   };
 
@@ -249,9 +249,9 @@ const handlePriceDifference = (userId, cash) => {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Swap</DialogTitle>
+            <DialogTitle>{t("DeleteSwap")|| "Delete Swap" }</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this swap?
+                        {t("Areyousureyouwanttodeletethisswap")|| "  Are you sure you want to delete this swap?" }
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -262,7 +262,7 @@ const handlePriceDifference = (userId, cash) => {
                   await handleDeleteSwap(pendingDelete.idOffer);
                 }}
               >
-                Delete
+               {t("delete")|| "Delete" }
               </Button>
             </DialogClose>
             <DialogClose asChild>
@@ -270,7 +270,7 @@ const handlePriceDifference = (userId, cash) => {
                 variant="secondary"
                 onClick={() => setShowDeleteDialog(false)}
               >
-                Cancel
+                {t("Cancel")|| "Cancel" }
               </Button>
             </DialogClose>
           </DialogFooter>
@@ -324,33 +324,33 @@ const handlePriceDifference = (userId, cash) => {
           {/* --- Swap Summary Stats --- */}
           <div className="mb-6 grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
-              <span className="text-lg font-bold">{offers.length===0?"No":offers.length}</span>
+              <span className="text-lg font-bold">{offers.length===0? t("no")|| "No":offers.length}</span>
                   <BellDot />
-              <span className="text-xs text-muted-foreground">All Notifications</span>
+              <span className="text-xs text-muted-foreground">{t("AllNotifications")|| "All Notifications" }</span>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
               <span className="text-lg font-bold">
-                {offers.filter((o) => o.status_offer === "pending").length===0 ?"No" : offers.filter((o) => o.status_offer === "pending").length}
+                {offers.filter((o) => o.status_offer === "pending").length===0 ? t("no")|| "No" : offers.filter((o) => o.status_offer === "pending").length}
               </span>   <Loader />
-              <span className="text-xs text-muted-foreground">Pending</span>
+              <span className="text-xs text-muted-foreground">{t("pending")|| "Pending" }</span>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
               <span className="text-lg font-bold">
-                {offers.filter((o) => o.status_offer === "accepted").length===0 ?"No" : offers.filter((o) => o.status_offer === "accepted").length}
+                {offers.filter((o) => o.status_offer === "accepted").length===0 ? t("no")|| "No" : offers.filter((o) => o.status_offer === "accepted").length}
               </span> <Handshake />
-              <span className="text-xs text-muted-foreground">Accepted</span>
+              <span className="text-xs text-muted-foreground">{t("accepted")|| "Accepted" }</span>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
               <span className="text-lg font-bold">
-                {offers.filter((o) => o.status_offer === "completed").length===0 ?"No" : offers.filter((o) => o.status_offer === "completed").length}
+                {offers.filter((o) => o.status_offer === "completed").length===0 ? t("no")|| "No" : offers.filter((o) => o.status_offer === "completed").length}
               </span>  <CheckCheck />
-              <span className="text-xs text-muted-foreground">Completed</span>
+              <span className="text-xs text-muted-foreground">{t("completed")|| "Completed" }</span>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-4 flex flex-col items-center">
               <span className="text-lg font-bold">
-                {offers.filter((o) => o.status_offer === "rejected").length===0 ?"No" : offers.filter((o) => o.status_offer === "rejected").length}
+                {offers.filter((o) => o.status_offer === "rejected").length===0 ? t("no")|| "No" : offers.filter((o) => o.status_offer === "rejected").length}
               </span><BadgeX />
-              <span className="text-xs text-muted-foreground">Rejected</span>
+              <span className="text-xs text-muted-foreground">{t("rejected")|| "Rejected" }</span>
             </div>
           </div>
           {/* --- End Swap Summary Stats --- */}
@@ -364,7 +364,7 @@ const handlePriceDifference = (userId, cash) => {
                   <div className="flex flex-col md:flex-row md:justify-between md:items-center ">
                     <div>
                       <div className="text-sm text-muted-foreground">
-                        My items:{" "}
+                        {t("Myitems")|| "My items" }:{" "}
                         {
                           itemsOffer.filter(
                             (u) =>
@@ -372,7 +372,7 @@ const handlePriceDifference = (userId, cash) => {
                               u.offer_id === offer.id
                           ).length
                         }{" "}
-                        | Their items:{" "}
+                        | {t("Theiritems")|| "Their items" }:{" "}
                         {
                           itemsOffer.filter(
                             (u) =>
@@ -395,18 +395,18 @@ const handlePriceDifference = (userId, cash) => {
 
                         <Scale  className="w-3 h-3" />
                         {offer.cash_adjustment
-                          ? `Cash Adjustment: ${handlePriceDifference(offer.from_user_id , offer.cash_adjustment)}`
+                          ? `${t("CashAdjustment")|| "Cash Adjustment" }: ${handlePriceDifference(offer.from_user_id , offer.cash_adjustment)}`
                           : ""}
                       </div>
 
                        <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1 capitalize">
                         <CircleDot  className="w-3 h-3" />
-                       Offer state: {offer.status_offer}
+                          {t("Offerstate")|| "Offer statet" } : {t(offer.status_offer)}
                       </div>
                        {
                         offer.name?(
                           <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1capitalize">
-                       Offer Name: {offer.name}
+                       {t("OfferName")|| "Offer Name" } : {offer.name}
                       </div>
                         ):''
                        }
@@ -419,12 +419,12 @@ const handlePriceDifference = (userId, cash) => {
                           }
                           alt={
                             userSwaps.find((u) => u.id === offer.from_user_id)
-                              ?.first_name || "User"
+                              ?.first_name ||t("User")|| "User"
                           }
                         />
                         <AvatarFallback>
                           {userSwaps.find((u) => u.id === offer.from_user_id)
-                            ?.first_name?.[0] || "U"}
+                            ?.first_name?.[0] ||t("User")|| "User"}
                         </AvatarFallback>
                       </Avatar>
 
@@ -434,7 +434,7 @@ const handlePriceDifference = (userId, cash) => {
                       <div>
                         <div className="font-semibold text-base">
                           {userSwaps.find((u) => u.id === offer.from_user_id)
-                            ?.first_name || "User"}
+                            ?.first_name ||t("User")|| "User"}
                         </div>
                       </div>
                     </div>
@@ -474,7 +474,7 @@ const handlePriceDifference = (userId, cash) => {
                     <div className="grid bg-muted/50 p-4 grid-cols-1 md:grid-cols-3 lg:grid-cols-3  sm:grid-cols-3 xs:grid-cols-1 gap-4 mb-4 items-center">
  {/* My Items */}
                       <div className=" text-center">
-                        <h4 className="font-semibold mb-2">My Items</h4>
+                        <h4 className="font-semibold mb-2">{t("Myitems")|| "My items" }</h4>
                         <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-4 mb-4">
                           {swapItems
                             .filter(
@@ -498,13 +498,13 @@ const handlePriceDifference = (userId, cash) => {
                                                 <div className="flex flex-col items-center space-y-2">
                                                   <ArrowRightLeft className="h-6 w-6 text-muted-foreground" />
                                                   <span className="text-xs text-muted-foreground">
-                                                    Exchange
+                                                    {t("Exchange")|| "Exchange" }
                                                   </span>
                                                 </div>
                       
                       {/* Their Items */}
                       <div className="text-center">
-                        <h4 className="font-semibold mb-2">Their Items</h4>
+                        <h4 className="font-semibold mb-2">{t("Theiritems")|| "Their Items" }</h4>
                         <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-4 mb-4">
                           {swapItems
                             .filter(
@@ -530,7 +530,7 @@ const handlePriceDifference = (userId, cash) => {
                         <CardHeader>
                           <CardTitle className="flex items-center">
                             <MessageCircle className="h-5 w-5 mr-2" />
-                            Chat with Swap Partner
+                              {t("ChatwithSwapPartner")|| "Chat with Swap Partner" }
                           </CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -600,13 +600,13 @@ const handlePriceDifference = (userId, cash) => {
                     <div className="text-center text-green-600">
                       <ShieldCheck className="h-8 w-8 mx-auto mb-2" />
                       <h3 className="text-xl font-semibold mb-2">
-                        Swap Completed Successfully!
+                        {t("SwapCompletedSuccessfully")|| "Swap Completed Successfully!" }
                       </h3>
                       <p className="text-muted-foreground mb-4">
-                        Thank you for completing the swap.
+                        {t("Thankyouforcompletingtheswap")|| " Swap Completed Successfully!" }
                           </p>
                           <p className="text-muted-foreground mb-4">
-  Contact phone:{" "}
+{t("Contactphone")|| "Contact phone" }:{" "}
   {(() => {
     // Find the other user in the swap (not me)
     const userToContact =
@@ -614,7 +614,7 @@ const handlePriceDifference = (userId, cash) => {
         (u) =>
           u.id === (myUserId === offer.from_user_id ? offer.from_user_id :offer.to_user_id  )
       ) || {};
-    return userToContact.phone_number || "No phone available";
+    return userToContact.phone_number ||  t("Nophoneavailable")|| "No phone available" ;
   })()}
 </p>
  {(() => {
@@ -645,10 +645,10 @@ const handlePriceDifference = (userId, cash) => {
                     <div className="text-center text-red-600">
                       <Trash2 className="h-8 w-8 mx-auto mb-2" />
                       <h3 className="text-xl font-semibold mb-2">
-                        Swap Rejected
+                       {t("SwapRejected")|| " Swap Rejected" }
                       </h3>
                       <p className="text-muted-foreground mb-4">
-                        The swap was rejected.
+                         {t("Theswapwasrejectedbyyou")|| "The swap was rejected by you." } 
                       </p>
                     </div>
                   )}
@@ -668,7 +668,7 @@ const handlePriceDifference = (userId, cash) => {
                         className="flex items-center gap-1"
                       >
                         <Handshake className="h-4 w-4" />
-                        Accept Swap
+                        {t("AcceptSwap")|| "Accept Swap" } 
                       </Button>
 
                       <Button
@@ -685,7 +685,8 @@ const handlePriceDifference = (userId, cash) => {
                         className="flex items-center gap-1"
                       >
                         <Trash2 className="h-4 w-4" />
-                        Reject Swap
+                        
+                        {t("RejectSwap")|| "Reject Swap" }
                       </Button>
 
                     </div>
@@ -731,7 +732,7 @@ const handlePriceDifference = (userId, cash) => {
                         className="flex items-center gap-1"
                       >
                         <Trash2 className="h-4 w-4" />
-                        Reject Swap
+                       {t("RejectSwap")|| "Reject Swap" }
                       </Button>
 
                     </div>
@@ -742,14 +743,15 @@ const handlePriceDifference = (userId, cash) => {
           {/* Empty state */}
           {offers.length === 0 && (
             <Card className="p-12 text-center mt-8">
-              <h3 className="text-xl font-semibold mb-2">No notifications</h3>
+              <h3 className="text-xl font-semibold mb-2">  {t("no")|| "No" }  {t("notifications")|| "notifications" } </h3>
               <p className="text-muted-foreground">
-                You're all caught up! New notifications will appear here.
+                {t("YoureallcaughtupNewnotificationswillappearhere")|| "You're all caught up! New notifications will appear here." }
+                
               </p>
                <Button
                                         variant="outline"
                                         className="mt-4"
-                                        onClick={() => router.push("/products")}>Make Swap</Button>
+                                        onClick={() => router.push("/products")}>  {t("MakeSwap")|| "Make Swap" }</Button>
             </Card>
           )}
         </div>
@@ -808,7 +810,7 @@ const CardItemSwap = ({
         </p>
         <div className="flex justify-between items-center mb-3">
           <Badge variant="outline" className="text-xs">
-            {status_item}
+            {t(status_item) || status_item}
           </Badge>
           <span className="font-bold text-primary text-sm">{price}</span>
         </div>
@@ -820,7 +822,7 @@ const CardItemSwap = ({
             onClick={() => handleView(id)}
           >
             <Eye className="h-3 w-3 mr-1" />
-            View
+           {t("view") || "View"}
           </Button>
           <Button
             variant="destructive"
@@ -829,7 +831,7 @@ const CardItemSwap = ({
             onClick={deleteItem}
           >
             <Trash2 className="h-3 w-3 mr-1" />
-            Delete
+             {t("delete") || "Delete"}
           </Button>
         </div>
       </CardContent>

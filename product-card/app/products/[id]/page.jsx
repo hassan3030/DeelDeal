@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { notFound, useRouter, useParams } from "next/navigation";
-import { ArrowLeft, ArrowLeftRight, Star, Verified } from "lucide-react";
+import { ArrowLeft, ArrowLeftRight, Repeat, Star, Verified } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -79,7 +79,7 @@ export default  function  ProductPage() {
     } else {
       toast({
         title: t("faildSwap") || "Failed Swap",
-        description: "Invalid swap without login. Please try to login.",
+        description: t("DescFaildSwapLogin")|| "Invalid swap without login. Please try to login."  ,
         variant: "destructive",
       });
       router.push(`/auth/login`);
@@ -87,7 +87,7 @@ export default  function  ProductPage() {
   };
 
   if (!product) {
-    return <LoadinpPage loadin={'LOADING.....'} />;
+    return <LoadinpPage loadin={t('loading')} />;
   }
 
   return (
@@ -132,11 +132,11 @@ export default  function  ProductPage() {
               </div>
             </div>
             <div className="text-xs text-[#49c5b6]">
-              Search About Product Or More With The Same Price: LE{product.price}
+              {t('searcAboutProdPrice')||"Search About Product Or More With The Same Price"}: LE{product.price}
             </div>
           </div>
 
-          <p className="text-muted-foreground line-clamp-2">{product.description}</p>
+          <p className="text-muted-foreground line-clamp-2">{t("description")} : {product.description}</p>
 
           <Separator />
 
@@ -159,7 +159,11 @@ export default  function  ProductPage() {
                   </div>
                   <div className="flex items-center gap-1">
                     <ArrowLeftRight className="h-4 w-4" />
-                    <span>{user?.completedSwaps ?? 0} swaps</span>
+                    <span className="px-1">{user?.completedSwaps ?? 0}
+        
+                    </span>
+                    <span className="px-1">{t("swaps")} </span>
+
                   </div>
                 </div>
               </div>
@@ -173,12 +177,13 @@ export default  function  ProductPage() {
             <div className="flex gap-4">
               {(product.status_swap === 'available' && product.user_id !== tokenId)?
                  (<Button className="flex-1" onClick={makeSwap}>
-                {t("makeSwap")}
+                    <Repeat className="h-4 w-4" />
+                {t("swap")}
               </Button>):null
               }
               <Link href={`/products`}>
                 <Button variant="secondary" className="flex-1">
-                  Back
+                  {t("goBack")}
                 </Button>
               </Link>
             </div>
@@ -189,23 +194,23 @@ export default  function  ProductPage() {
           {/* Product Details Tabs */}
           <Tabs defaultValue="features">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="features">Features</TabsTrigger>
-              <TabsTrigger value="Category">Category</TabsTrigger>
-              <TabsTrigger value="swap_status">Swap Status</TabsTrigger>
+              <TabsTrigger value="features">{t("features")}</TabsTrigger>
+              <TabsTrigger value="Category">{t("category")}</TabsTrigger>
+              <TabsTrigger value="swap_status">{t("statusSwap")}</TabsTrigger>
             </TabsList>
             <TabsContent value="features" className="mt-4">
               {product.description}
             </TabsContent>
             <TabsContent value="Category" className="mt-4">
               <div className="grid gap-2">
-                {product.category}
+                {t(product.category)}
               </div>
             </TabsContent>
             <TabsContent value="swap_status" className="mt-4">
               {product.status_swap === 'available' ?
-                <p className="text-green-600">Swap State:  <span className="capitalize">{product?.status_swap}</span> - You Can Make Swap</p>
+                <p className="text-green-600">{t("statusSwap")}:  <span className="capitalize">{t(product?.status_swap)}</span> - {t("availableItems")}</p>
                 :
-                <p className="text-red-600">Swap State: <span className="capitalize">{product?.status_swap}</span> - Swap Not Available</p>
+                <p className="text-red-600">{t("statusSwap")}: <span className="capitalize">{t(product?.status_swap)}</span> - {t("unAvailableItems")}</p>
               }
             </TabsContent>
           </Tabs>

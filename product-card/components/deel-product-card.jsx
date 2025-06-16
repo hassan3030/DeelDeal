@@ -194,14 +194,14 @@ const router = useRouter()
           <h3 className="mb-1 line-clamp-2 min-h-[40px] text-sm font-medium capitalize">{name}</h3>
 
           {/* Rating */}
-          <div className="mb-2 flex items-center gap-1">
+          {/* <div className="mb-2 flex items-center gap-1">
             <div className="flex capitalize">
               {
                 location? "yes location":"no location"
               }
             </div>
            
-          </div>
+          </div> */}
 
           {/* Price */}
           <div className="mb-2">

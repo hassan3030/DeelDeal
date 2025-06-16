@@ -67,7 +67,7 @@ const Messages = () => {
             partner_id: partnerId,
             partner_name: partnerUser
               ? `${partnerUser.first_name} ${partnerUser.last_name || ""}`
-              : "Unknown",
+              :`${t("Unknown")||"Unknown"}`,
             partner_avatar: partnerUser?.avatar || "/placeholder.svg",
           };
         })
@@ -121,7 +121,7 @@ const Messages = () => {
                 DEELDEAL
               </Link>
               <Badge variant="outline" className="hidden sm:inline-flex">
-                Messages
+                {t("Messages")||"Messages"}
               </Badge>
             </div>
           </div>
@@ -138,7 +138,7 @@ const Messages = () => {
           <div className="p-4">
             <div className="flex items-center mb-4">
               <MessageCircle className="h-6 w-6 mr-3 text-primary" />
-              <h2 className="text-xl font-bold">Messages</h2>
+              <h2 className="text-xl font-bold">  {t("Messages")||"Messages"} </h2>
             </div>
             {/* Search */}
             <div className="relative mb-4">
@@ -173,7 +173,7 @@ const Messages = () => {
                                   `http://localhost:8055/assets/${offer.partner_avatar}` ||
                                   "/placeholder.svg"
                                 }
-                                alt={offer.partner_name || "Unknown"}
+                                alt={offer.partner_name || t("Unknown")}
                               />
                               <AvatarFallback>
                                 {offer.partner_name?.[0] || "U"}
@@ -225,7 +225,7 @@ const Messages = () => {
                           `http://localhost:8055/assets/${partner.avatar}` ||
                           "/placeholder.svg"
                         }
-                        alt={partner.first_name || "User"}
+                        alt={partner.first_name || t("User")||"User"}
                       />
                       <AvatarFallback>
                         {partner.first_name?.[0] || "U"}
@@ -306,7 +306,7 @@ const Messages = () => {
               <div className="p-4 border-t bg-card/30">
                 <div className="flex space-x-2">
                   <Input
-                    placeholder="Type your message..."
+                    placeholder={t("Typeyourmessage")||"Type your message..."}
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
@@ -323,10 +323,13 @@ const Messages = () => {
               <div className="text-center">
                 <MessageCircle className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold mb-2">
-                  Select a conversation
+                  {t("Selectaconversation")||"Select a conversation"}
+                 
                 </h3>
                 <p className="text-muted-foreground">
-                  Choose a swap offer to start chatting
+             
+                  {t("Chooseaswapoffertostartchatting")||"Select a conversation"}
+
                 </p>
               </div>
             </div>

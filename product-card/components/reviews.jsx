@@ -13,6 +13,10 @@ import {
  decodedToken
 } from "@/callAPI/utiles";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "@/lib/use-translations";
+
+
+
 const SwapRating = ({ from_user_id , to_user_id , offer_id , userName ,userAvatar  }) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -22,6 +26,7 @@ const SwapRating = ({ from_user_id , to_user_id , offer_id , userName ,userAvata
   const [hasReviewed, setHasReviewed] = useState(false);
 const router = useRouter();
   const { toast } = useToast()
+    const { t } = useTranslations();
 
 
 const checkReview = async () => {
@@ -64,8 +69,8 @@ const handleAddRating = async () =>{
   const handleSubmit = async () => {
     if (rating === 0) {
       toast({
-        title: "Rating required",
-        description: "Please select a star rating before submitting",
+        title: t("error")|| "Error",
+        description: t("Pleaseselectastarratingbeforesubmitting")|| "Please select a star rating before submitting",
         variant: "destructive"
       });
       return;
@@ -77,16 +82,16 @@ const handleAddRating = async () =>{
       
      await handleAddRating();
       toast({
-        title: "Rating submitted",
-        description: `Thank you for rating`
+        title: t("Ratingsubmitted")|| "Rating submitted",
+        description:  t("Thankyouforrating")|| `Thank you for rating`
         // description: `Thank you for rating ${userName}!`
       });
 router.push()
       
     } catch (error) {
       toast({
-        title: "Failed to submit rating",
-        description: "Please try again later",
+            title: t("error")|| "Error", 
+        description:t("FailedtosubmitratingPleasetryagainlater")|| "Failed to submit rating Please try again later",
         variant: "destructive"
       });
     } finally {
@@ -96,12 +101,12 @@ router.push()
 
   const getRatingText = (rating) => {
     switch (rating) {
-      case 1: return "Poor";
-      case 2: return "Fair";
-      case 3: return "Good";
-      case 4: return "Very Good";
-      case 5: return "Excellent";
-      default: return "Select a rating";
+      case 1: return  t("Poor")||"Poor";
+      case 2: return  t("Fair")||"Fair";
+      case 3: return  t("Good")||"Good";
+      case 4: return  t("VeryGood")||"Very Good";
+      case 5: return  t("Excellent")||"Excellent";
+      default: return  t("Selectarating")|| "Select a rating";
     }
   };
 useEffect(() => {
@@ -114,7 +119,7 @@ useEffect(() => {
       <CardHeader className="text-center">
         <CardTitle className="flex items-center justify-center gap-2">
           <Star className="h-5 w-5 text-yellow-500" />
-          Rate Your Swap Partner
+           {t("RateYourSwapPartner")||"Rate Your Swap Partner"}
         </CardTitle>
         <div className="flex items-center justify-center gap-3 mt-4">
           {userAvatar && (
@@ -161,7 +166,8 @@ useEffect(() => {
         {/* Message */}
         <div>
           <label className="text-sm font-medium mb-2 block">
-            Leave a message (optional)
+           {t("Leaveamessageoptional")||"Leave a message (optional)"}
+            
           </label>
           <Textarea
             placeholder="Share your experience with this swap partner..."
@@ -184,7 +190,8 @@ useEffect(() => {
               className="flex-1"
               disabled={isSubmitting}
             >
-              Cancel
+           {t("Cancel")||"Cancel"}
+              
             </Button>
           )}
           <Button 
@@ -193,11 +200,13 @@ useEffect(() => {
             className="flex-1"
           >
             {isSubmitting ? (
-              "Submitting..."
+              t("SubmitRating")||"Submit Rating"
             ) : (
               <>
                 <Send className="mr-2 h-4 w-4" />
-                Submit Rating
+           {t("SubmitRating")||"Submit Rating"}
+
+              
               </>
             )}
           </Button>
@@ -207,8 +216,8 @@ useEffect(() => {
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
     </svg>
     <div>
-      <div className="font-semibold text-green-700">Review Submitted</div>
-      <div className="text-sm text-green-600">You have already reviewed this offer. Thank you for your feedback!</div>
+      <div className="font-semibold text-green-700"> {t("ReviewSubmitted")||"Review Submitted"}</div>
+      <div className="text-sm text-green-600"> {t("YouhavealreadyreviewedthisofferThankyouforyourfeedback")||"You have already reviewed this offer. Thank you for your feedback!"}</div>
     </div>
   </div>)} 
     

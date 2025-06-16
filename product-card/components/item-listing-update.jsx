@@ -26,29 +26,6 @@ import { updateProduct } from "@/callAPI/products";
 
 // import { Category } from "@/components/item-card"
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
-const MAX_IMAGES = 3
-const categories = categoriesName
-
-const conditions = itemsStatus
-const allowedCat = allowedCategories
-
-
-
-const formSchema = z.object({
-  name: z.string().min(3, "Name must be at least 3 characters").max(100, "Name must be less than 100 characters"),
-  description: z
-    .string()
-    .min(20, "Description must be at least 20 characters")
-    .max(2000, "Description must be less than 2000 characters"),
-  category: z.enum(categories),
-  condition: z.string(),
-  value_estimate: z.coerce.number().positive("Value must be greater than 0"),
-  allowedCategories: z.array(z.enum(allowedCat)).min(1, "Select at least one category"),
-  // location: z.string().min(3, "Location must be at least 3 characters"),
-  // Images will be handled separately
-})
 
 
 
@@ -80,6 +57,31 @@ export function ItemListingUpdate({
 const [bigImage , setBigImage] =  useState('')
 const { toast } = useToast()
   const { t } = useTranslations();
+
+  const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+const MAX_IMAGES = 3
+const categories = categoriesName
+
+const conditions = itemsStatus
+const allowedCat = allowedCategories
+
+
+
+const formSchema = z.object({
+  name: z.string().min(3, "Name must be at least 3 characters").max(100, "Name must be less than 100 characters"),
+  description: z
+    .string()
+    .min(20, "Description must be at least 20 characters")
+    .max(2000, "Description must be less than 2000 characters"),
+  category: z.enum(categories),
+  condition: z.string(),
+  value_estimate: z.coerce.number().positive("Value must be greater than 0"),
+  allowedCategories: z.array(z.enum(allowedCat)).min(1, "Select at least one category"),
+  // location: z.string().min(3, "Location must be at least 3 characters"),
+  // Images will be handled separately
+})
+
   // -------------------- get images 
 
 

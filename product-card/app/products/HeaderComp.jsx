@@ -13,7 +13,7 @@ const { t } = useTranslations()
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold">{t("allProducts")}</h2>
           <Link href="/" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
-            {t("back")}
+            {t("goBack")}
             <ChevronRight className="h-4 w-4" />
           </Link>
         </div>

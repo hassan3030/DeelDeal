@@ -19,6 +19,7 @@ import { useTranslations } from "@/lib/use-translations";
 
 import { register } from "@/callAPI/users"
 import { decodedToken, getCookie } from "@/callAPI/utiles"
+import axios from "axios"
 
 
 
@@ -67,17 +68,26 @@ export function RegisterForm() {
     setIsLoading(true)
 
     try {
+      if(!form.getValues().email || form.getValues().password || !form.getValues().userName){
+        console.log(form.getValues().email, form.getValues().password, form.getValues().userName)
+        toast({
+          title:t("error")||"ERROR",
+        description: t("pleasefilldata")||"please fill data",
+        variant: "destructive",
+      })
+      }
+      else{
+        
       // In a real app, this would be an API call to your auth service
      const response = await register(form.getValues().email, form.getValues().password, form.getValues().userName);
-      // console.log(form.getValues().email, form.getValues().password, form.getValues().userName) ;
+      console.log(form.getValues().email, form.getValues().password, form.getValues().userName) ;
       // console.log( form.getValues().password) ;
       // console.log( form.getValues().userName) ;
-      if (!response) {
+      if (response) {
         const Token = await getCookie('Token')
         const {id} = await decodedToken(Token);
         toast({
-
-        title: t("successfully")||"Successfully",
+        title: t("successfully")||"Successfully", 
         description: t("YouraccounthasbeencreatedWelcometoDeelDeal")||"Your account has been created. Welcome to DeelDeal!",
       })
         console.log("id" , id)
@@ -96,6 +106,7 @@ export function RegisterForm() {
       
       // Redirect to the marketplace
       // router.push("/")
+      }
     } catch (error) {
       console.error("Registration error:", error)
       toast({
@@ -107,9 +118,20 @@ export function RegisterForm() {
       setIsLoading(false)
     }
   }
+const [email , setEmail] = useState('')
+const [password , setPassword] = useState('')
 
+const onSubmiting = async()=>{
+  console.log(email , password)
+  await register(email , password , "rema11")
+}
   return (
-    <Form {...form}>
+    <>
+    <input  placeholder="John Doe" value={email} onChange={(e)=>{setEmail(e.target.value)}}/><br/>
+    <input  placeholder="....." value={password} onChange={(e)=>{setPassword(e.target.value)}}/>
+<button onClick={()=>{onSubmiting()}}>onSubmiting</button>  
+
+     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
@@ -245,5 +267,7 @@ export function RegisterForm() {
         </div>
       </form>
     </Form>
+    </>
+   
   )
 }

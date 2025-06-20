@@ -9,7 +9,7 @@ export function LanguageToggle() {
   const { t } = useTranslations()
 
   return (
-    <Button variant="ghost" onClick={toggleLanguage} className="px-2 text-sm">
+    <Button variant="ghost" onClick={toggleLanguage} className="px-2 text-sm gold-gradient">
       {t("language")}
     </Button>
   )

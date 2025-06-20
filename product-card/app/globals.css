@@ -35,27 +35,27 @@
   }
 
   .dark {
-    /* v0-inspired dark mode colors */
-    --background: 0 0% 9%; /* #171717 - Dark background like v0 */
-    --foreground: 0 0% 98%; /* #fafafa - Light text like v0 */
+    /* DeelDeal-inspired dark mode colors */
+    --background: 0 0% 7%; /* #121212 - Very dark background */
+    --foreground: 0 0% 98%; /* #fafafa - Light text */
 
-    --card: 0 0% 13%; /* #212121 - Slightly lighter card background */
+    --card: 0 0% 10%; /* #1a1a1a - Slightly lighter card background */
     --card-foreground: 0 0% 98%; /* #fafafa - Light text */
 
-    --popover: 0 0% 13%; /* #212121 - Matching card background */
+    --popover: 0 0% 10%; /* #1a1a1a - Matching card background */
     --popover-foreground: 0 0% 98%; /* #fafafa - Light text */
 
-    /* Primary color - blue accent like v0 */
-    --primary: 214 100% 60%; /* #3291ff - v0 blue */
-    --primary-foreground: 0 0% 98%; /* #fafafa - Light text on primary */
+    /* Primary color - gold accent like in the image */
+    --primary: 45 93% 47%; /* #f5b014 - Gold/yellow accent */
+    --primary-foreground: 0 0% 10%; /* #1a1a1a - Dark text on primary */
 
-    /* Secondary color - subtle gray */
-    --secondary: 0 0% 20%; /* #333333 - Dark gray */
+    /* Secondary color - darker gold */
+    --secondary: 36 91% 43%; /* #d99212 - Darker gold */
     --secondary-foreground: 0 0% 98%; /* #fafafa - Light text */
 
-    /* Accent color - subtle blue */
-    --accent: 214 100% 60%; /* #3291ff - v0 blue */
-    --accent-foreground: 0 0% 98%; /* #fafafa - Light text */
+    /* Accent color - brighter gold */
+    --accent: 45 100% 60%; /* #ffcc33 - Brighter gold */
+    --accent-foreground: 0 0% 10%; /* #1a1a1a - Dark text */
 
     --muted: 0 0% 15%; /* #262626 - Muted background */
     --muted-foreground: 0 0% 65%; /* #a6a6a6 - Muted text */
@@ -65,7 +65,7 @@
 
     --border: 0 0% 18%; /* #2e2e2e - Border color */
     --input: 0 0% 18%; /* #2e2e2e - Input background */
-    --ring: 214 100% 60%; /* #3291ff - v0 blue for focus rings */
+    --ring: 45 93% 47%; /* #f5b014 - Gold accent for focus rings */
   }
 }
 
@@ -121,24 +121,24 @@
 
 /* Dark mode custom colors */
 .dark .bg-deep-orange {
-  background-color: hsl(214 100% 60%); /* v0 blue */
+  background-color: hsl(45 93% 47%); /* Gold accent */
 }
 
 .dark .text-deep-orange {
-  color: hsl(214 100% 60%); /* v0 blue */
+  color: hsl(45 93% 47%); /* Gold accent */
 }
 
 /* Additional dark mode custom classes */
 .dark .bg-dark-surface {
-  background-color: #171717;
+  background-color: #121212;
 }
 
 .dark .bg-dark-card {
-  background-color: #212121;
+  background-color: #1a1a1a;
 }
 
 .dark .bg-dark-accent {
-  background-color: #3291ff;
+  background-color: #f5b014;
 }
 
 .dark .bg-dark-text {
@@ -146,44 +146,58 @@
 }
 
 .dark .text-dark-surface {
-  color: #171717;
+  color: #121212;
 }
 
 .dark .text-dark-card {
-  color: #212121;
+  color: #1a1a1a;
 }
 
 .dark .text-dark-accent {
-  color: #3291ff;
+  color: #f5b014;
 }
 
 .dark .text-dark-text {
   color: #fafafa;
 }
 
-/* v0-specific styles */
-.dark .bg-v0-blue {
-  background-color: #3291ff;
+/* DeelDeal-specific styles */
+.dark .bg-deeldeal-gold {
+  background-color: #f5b014;
 }
 
-.dark .text-v0-blue {
-  color: #3291ff;
+.dark .text-deeldeal-gold {
+  color: #f5b014;
 }
 
-.dark .bg-v0-gray {
-  background-color: #333333;
+.dark .bg-deeldeal-dark {
+  background-color: #121212;
 }
 
-.dark .text-v0-gray {
-  color: #333333;
+.dark .text-deeldeal-dark {
+  color: #121212;
 }
 
-.dark .border-v0 {
+.dark .border-deeldeal {
   border-color: #2e2e2e;
 }
 
-.dark .hover-v0:hover {
+.dark .hover-deeldeal:hover {
   background-color: #2e2e2e;
+}
+
+/* Gold gradient */
+.gold-gradient {
+  @apply bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500;
+}
+
+.dark .gold-gradient {
+  @apply bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500;
+}
+
+/* Gold text gradient */
+.gold-text-gradient {
+  @apply bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 bg-clip-text text-transparent;
 }
 
 /* RTL Support */
@@ -204,4 +218,41 @@
 .scrollbar-hide {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 1000px 100%;
+}
+
+/* Stats counter animation */
+@keyframes countUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-count-up {
+  animation: countUp 1s forwards;
 }

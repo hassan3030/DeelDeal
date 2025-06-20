@@ -1,5 +1,6 @@
 export const translations = {
   en: {
+pleasefilldata:"please fill data",
     // about 
 // ========================================
 AboutOurCompany:"About Our Company",
@@ -577,6 +578,8 @@ MakeSwap:"Make Swap" ,
     developerAPIs: "Developer APIs",
   },
   ar: {
+pleasefilldata:" من فضلك أدخل البيانات",
+
     // about 
     // ==============================
 AboutOurCompany:" حول شركتنا",

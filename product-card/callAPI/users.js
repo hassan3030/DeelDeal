@@ -56,15 +56,24 @@ export const login = async (email, password) => {
 };
 
 // register user
-export const register = async (email, password, userName) => {
+export const register = async (email, password, first_name) => {
   try {
     // make register API call
-    await axios.post(`${baseURL}/users/register`, {
+    
+    // await axios.post(`${baseURL}/users/register`, {
+    await axios.post(`http://localhost:8055/users/register`, {
       email,
       password,
-      first_name: userName,
-    });
-
+      first_name,
+    },
+  {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+           
+    console.log(email, password);
     const authResponse = await auth(email, password);
     await setCookie(authResponse.access_token);
 

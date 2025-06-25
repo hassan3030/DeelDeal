@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Heart, Star, Repeat, Check } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { Heart, Repeat, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useLanguage } from "@/lib/language-provider"
@@ -10,9 +11,100 @@ import { useTranslations } from "@/lib/use-translations"
 import { getImageProducts } from "@/callAPI/products"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
-import { Skeleton } from "./ui/skeleton"
-import { getWishList, deleteWishList, addWishList } from "@/callAPI/swap";
-import { decodedToken, getCookie } from "@/callAPI/utiles";
+import { getWishList, deleteWishList, addWishList } from "@/callAPI/swap"
+import { decodedToken, getCookie } from "@/callAPI/utiles"
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut",
+    },
+  },
+  hover: {
+    y: -8,
+    scale: 1.02,
+    boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+    transition: {
+      duration: 0.3,
+      ease: "easeInOut",
+    },
+  },
+}
+
+const imageVariants = {
+  hover: {
+    scale: 1.1,
+    transition: {
+      duration: 0.4,
+      ease: "easeInOut",
+    },
+  },
+}
+
+const heartVariants = {
+  initial: { scale: 1 },
+  hover: { scale: 1.2 },
+  tap: { scale: 0.9 },
+  liked: {
+    scale: [1, 1.3, 1],
+    transition: {
+      duration: 0.3,
+      ease: "easeInOut",
+    },
+  },
+}
+
+const buttonVariants = {
+  idle: { scale: 1 },
+  hover: { scale: 1.05 },
+  tap: { scale: 0.95 },
+  loading: {
+    scale: [1, 1.05, 1],
+    transition: {
+      duration: 1,
+      repeat: Number.POSITIVE_INFINITY,
+      ease: "easeInOut",
+    },
+  },
+}
+
+const badgeVariants = {
+  hidden: { opacity: 0, scale: 0.8, x: -20 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    x: 0,
+    transition: {
+      delay: 0.2,
+      duration: 0.3,
+      ease: "easeOut",
+    },
+  },
+}
+
+const priceVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: 0.3,
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
+  pulse: {
+    scale: [1, 1.05, 1],
+    transition: {
+      duration: 0.5,
+      ease: "easeInOut",
+    },
+  },
+}
 
 export function DeelProductCard({
   id,
@@ -23,81 +115,89 @@ export function DeelProductCard({
   images,
   status_item,
   category,
-  location ,
-  showSwitchHeart= true,
-  // showbtn = true,
+  location,
+  showSwitchHeart = true,
 }) {
-  
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [isAddedToCart, setIsAddedToCart] = useState(false)
-    const [switchHeart, setswitchHeart] = useState(false);
+  const [switchHeart, setSwitchHeart] = useState(false)
+  const [bigImage, setBigImage] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   const { isRTL } = useLanguage()
   const { t } = useTranslations()
-    const { toast } = useToast()
-const makeSwap = async(e)=>{
-  e.preventDefault()
-  e.stopPropagation()
-const token = await getCookie()
+  const { toast } = useToast()
+  const router = useRouter()
 
-     if(token){
+  const makeSwap = async (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const token = await getCookie()
+
+    if (token) {
       router.push(`/swap/${id}`)
-    }
-    else{
-toast({
-        title: t("faildSwap") || "Faild Swap",
-        description:  "Invalid swap without login. Please try to login.",
+    } else {
+      toast({
+        title: t("faildSwap") || "Failed Swap",
+        description: "Invalid swap without login. Please try to login.",
         variant: "destructive",
       })
       router.push(`/auth/login`)
-    } 
+    }
   }
-  // const [item , setItem] =  useState(product)
-// const [images1 , setImages] =  useState([])
-const [bigImage , setBigImage] =  useState('')
- const [loading, setLoading] = useState(true);
-const router = useRouter()
-// console.log("product" , product  )
 
   const getDataImage = async () => {
-  const images2 = await getImageProducts(images)
-  // setImages(images)
-  setBigImage(images2[0].directus_files_id)
-  console.log('i am in single product ' , images)
-}
-
- const handleGetWishItem = async () => {
-    const user = await decodedToken();
-    const WishItem = await getWishList(user.id);
-    if (WishItem && user) {
-      const isItem = WishItem.find((i) => i.item_id == id) ? true : false;
-      setswitchHeart(isItem);
+    try {
+      const images2 = await getImageProducts(images)
+      setBigImage(images2[0]?.directus_files_id || "")
+    } catch (error) {
+      console.error("Error loading image:", error)
+    } finally {
+      setLoading(false)
     }
-  };
+  }
+
+  const handleGetWishItem = async () => {
+    try {
+      const user = await decodedToken()
+      const WishItem = await getWishList(user.id)
+      if (WishItem && user) {
+        const isItem = WishItem.find((i) => i.item_id == id) ? true : false
+        setSwitchHeart(isItem)
+      }
+    } catch (error) {
+      console.error("Error getting wish item:", error)
+    }
+  }
 
   const handleAddWishItem = async () => {
-    const user = await decodedToken();
-    const WishItem = await getWishList(user.id);
-    const WishItemId = WishItem.filter((i) => i.item_id == id);
-    if (WishItem && user) {
-      const isItem = WishItem.find((i) => i.item_id == id);
-      if (isItem) {
-        await deleteWishList(WishItemId[0]?.id);
-        setswitchHeart(false);
-        toast({
-          title: t("successAddWish") || "Success",
-          description:  t("successAddWishDesc") || "Item added to wishlist successfully.",
-        });
-      } else {
-        await addWishList(id , user.id);
-        setswitchHeart(true);
-        toast({
+    try {
+      const user = await decodedToken()
+      const WishItem = await getWishList(user.id)
+      const WishItemId = WishItem.filter((i) => i.item_id == id)
+      if (WishItem && user) {
+        const isItem = WishItem.find((i) => i.item_id == id)
+        if (isItem) {
+          await deleteWishList(WishItemId[0]?.id)
+          setSwitchHeart(false)
+          toast({
             title: t("successAddWish") || "Success",
-          description: t("deletedWishDesc") || "Deleted wishlist",
-        });
+            description: t("deletedWishDesc") || "Removed from wishlist",
+          })
+        } else {
+          await addWishList(id, user.id)
+          setSwitchHeart(true)
+          toast({
+            title: t("successAddWish") || "Success",
+            description: t("successAddWishDesc") || "Added to wishlist successfully.",
+          })
+        }
       }
+    } catch (error) {
+      console.error("Error handling wish item:", error)
     }
-  };
+  }
 
   const handleAddToCart = async (e) => {
     e.preventDefault()
@@ -116,131 +216,167 @@ const router = useRouter()
     }, 2000)
   }
 
-  // const discount = originalPrice ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0
-
-  // Format currency based on language
-  const formatCurrency = (value) => {
-    return new Intl.NumberFormat(isRTL ? "ar-EG" : "en-US", {
-      style: "currency",
-      currency: isRTL ? "EGP" : "USD",
-      maximumFractionDigits: 0,
-    }).format(value)
-  }
-
   useEffect(() => {
     getDataImage()
-  }
-  )
-   useEffect(() => {
-      handleGetWishItem();
-    },[switchHeart]);
+  }, [images])
+
+  useEffect(() => {
+    handleGetWishItem()
+  }, [switchHeart])
+
   return (
-    <>
-     <Link href={`/products/${id}`}>
-      
-      <div className="group relative flex w-[220px] flex-col overflow-hidden rounded-md border bg-background transition-all hover:shadow-md">
-        {/* Image container */}
-        <div className="relative aspect-square overflow-hidden">
-          <Image
-          // imageSrc
-          src={`http://localhost:8055/assets/${bigImage}`}
-            alt={name}
-            fill
-            className="object-contain transition-transform duration-300 group-hover:scale-105"
-             placeholder="blur"
-             blurDataURL={`/placeholder.svg?height=300&width=300`}
-             priority
-             onLoadingComplete={() => setLoading(false)}
-         
-         />
-{/* Heart button above photo */}
-       {
-        showSwitchHeart ? (<button
-              type="button"
-              className="absolute top-2 right-2 z-0 bg-transparent rounded-full p-1 hover:scale-110 transition-transform"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleAddWishItem();
-              }}
-            >
-              {switchHeart ? (
-                <Heart className="h-8 w-8 text-red-500 fill-current" />
+    <motion.div variants={cardVariants} initial="hidden" animate="visible" whileHover="hover" className="group">
+      <Link href={`/products/${id}`}>
+        <div className="group relative flex w-[220px] flex-col overflow-hidden rounded-md border bg-background transition-all hover:shadow-md">
+          {/* Image container */}
+          <div className="relative aspect-square overflow-hidden">
+            <AnimatePresence>
+              {loading ? (
+                <motion.div
+                  initial={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 flex items-center justify-center bg-muted"
+                >
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </motion.div>
               ) : (
-                <Heart className="h-8 w-8 text-muted-foreground" />
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  className="relative w-full h-full"
+                >
+                  <motion.div variants={imageVariants} className="w-full h-full">
+                    <Image
+                      src={bigImage ? `http://localhost:8055/assets/${bigImage}` : "/placeholder.svg"}
+                      alt={name}
+                      fill
+                      className="object-contain transition-transform duration-300"
+                      placeholder="blur"
+                      blurDataURL="/placeholder.svg?height=300&width=300"
+                      priority
+                      onLoad={() => setImageLoaded(true)}
+                    />
+                  </motion.div>
+                </motion.div>
               )}
-            </button>):null
-       }    
-        
-          {/* Badges */}
-          <div className="absolute left-2 top-2 flex flex-col gap-1">
-            <Badge className="bg-accent-orange text-white capitalize">{t(status_item)}</Badge>
-          </div>
+            </AnimatePresence>
 
-          {/* Favorite button */}
-         
-
-          {/* Discount badge */}
-          {/* {discount > 0 && (
-            <div className="absolute bottom-2 left-2 rounded-md bg-deep-orange px-1.5 py-0.5 text-xs font-bold text-white">
-              {discount}% {t("off")}
-            </div>
-          )} */}
-        </div>
-
-        {/* Content */}
-        <div className="flex flex-1 flex-col p-3">
-          {/* Title */}
-          <h3 className="mb-1 line-clamp-2 min-h-[40px] text-sm font-medium capitalize">{name}</h3>
-
-          {/* Rating */}
-          {/* <div className="mb-2 flex items-center gap-1">
-            <div className="flex capitalize">
-              {
-                location? "yes location":"no location"
-              }
-            </div>
-           
-          </div> */}
-
-          {/* Price */}
-          <div className="mb-2">
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-bold">{price}LE</span>
-            </div>
-          </div>
-
-          {/* Swap button */}
-          <Button
-            className="mt-auto w-full bg-primary-yellow text-gray-800 hover:bg-primary-orange hover:text-white"
-            size="sm"
-            onClick={handleAddToCart}
-            disabled={isAddingToCart || isAddedToCart}
-          >
-            {isAddingToCart ? (
-              <span className="flex items-center gap-1">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
-                {t("requesting")}
-              </span>
-            ) : isAddedToCart ? (
-              <span className="flex items-center gap-1">
-                <Check className="h-4 w-4" />
-                {t("requested")}
-              </span>
-            ) : (
-              <span className="flex items-center gap-1"
-              onClick={(e)=>{makeSwap(e)}}
+            {/* Heart button above photo */}
+            {showSwitchHeart && (
+              <motion.button
+                type="button"
+                className="absolute top-2 right-2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 hover:bg-white/90 transition-colors"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleAddWishItem()
+                }}
+                variants={heartVariants}
+                initial="initial"
+                whileHover="hover"
+                whileTap="tap"
+                animate={switchHeart ? "liked" : "initial"}
               >
-                <Repeat className="h-4 w-4" />
-                {t("swap")}
-              </span>
+                <Heart
+                  className={`h-5 w-5 transition-colors ${
+                    switchHeart ? "text-red-500 fill-current" : "text-muted-foreground"
+                  }`}
+                />
+              </motion.button>
             )}
-          </Button>
+
+            {/* Badges */}
+            <motion.div className="absolute left-2 top-2 flex flex-col gap-1" variants={badgeVariants}>
+              <Badge className="bg-accent-orange text-white capitalize">{t(status_item)}</Badge>
+            </motion.div>
+          </div>
+
+          {/* Content */}
+          <div className="flex flex-1 flex-col p-3">
+            {/* Title */}
+            <motion.h3
+              className="mb-1 line-clamp-2 min-h-[40px] text-sm font-medium capitalize"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
+            >
+              {name}
+            </motion.h3>
+
+            {/* Price */}
+            <motion.div className="mb-2" variants={priceVariants}>
+              <div className="flex items-baseline gap-1">
+                <motion.span className="text-lg font-bold" whileHover="pulse" variants={priceVariants}>
+                  {price}LE
+                </motion.span>
+              </div>
+            </motion.div>
+
+            {/* Swap button */}
+            <motion.div
+              className="mt-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.3 }}
+            >
+              <motion.div
+                variants={buttonVariants}
+                animate={isAddingToCart ? "loading" : "idle"}
+                whileHover="hover"
+                whileTap="tap"
+              >
+                <Button
+                  className="w-full bg-primary-yellow text-gray-800 hover:bg-primary-orange hover:text-white transition-colors"
+                  size="sm"
+                  onClick={handleAddToCart}
+                  disabled={isAddingToCart || isAddedToCart}
+                >
+                  <AnimatePresence mode="wait">
+                    {isAddingToCart ? (
+                      <motion.span
+                        key="loading"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-1"
+                      >
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></span>
+                        {t("requesting")}
+                      </motion.span>
+                    ) : isAddedToCart ? (
+                      <motion.span
+                        key="added"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        className="flex items-center gap-1"
+                      >
+                        <Check className="h-4 w-4" />
+                        {t("requested")}
+                      </motion.span>
+                    ) : (
+                      <motion.span
+                        key="swap"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-1"
+                        onClick={(e) => {
+                          makeSwap(e)
+                        }}
+                      >
+                        <Repeat className="h-4 w-4" />
+                        {t("swap")}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </Button>
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
-      </div>
-    </Link>
-    </>
-   
+      </Link>
+    </motion.div>
   )
 }
-

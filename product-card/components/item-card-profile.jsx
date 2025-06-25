@@ -1,22 +1,73 @@
-"use client";
+"use client"
 
-import React, { useEffect } from "react";
+import { useEffect, useState } from "react"
+import Image from "next/image"
+import Link from "next/link"
+import { motion, AnimatePresence } from "framer-motion"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Heart, Repeat } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { getImageProducts } from "@/callAPI/products"
+import { getWishList, deleteWishList, addWishList } from "@/callAPI/swap"
+import { decodedToken, getCookie } from "@/callAPI/utiles"
+import { useToast } from "@/components/ui/use-toast"
+import { useTranslations } from "@/lib/use-translations"
 
-import { useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Repeat, Star } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { cn, formatCurrency, formatRelativeTime } from "@/lib/utils";
-import { getImageProducts } from "@/callAPI/products";
-import { getWishList, deleteWishList, addWishList } from "@/callAPI/swap";
-import { decodedToken, getCookie } from "@/callAPI/utiles";
-import { useToast } from "@/components/ui/use-toast";
-import { useTranslations } from "@/lib/use-translations";
+const cardVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.4,
+      ease: "easeOut",
+    },
+  },
+  hover: {
+    y: -5,
+    scale: 1.02,
+    boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+    transition: {
+      duration: 0.2,
+      ease: "easeInOut",
+    },
+  },
+}
+
+const imageVariants = {
+  hover: {
+    scale: 1.1,
+    transition: {
+      duration:0.9,
+      ease: "easeInOut",
+    },
+  },
+}
+
+const heartVariants = {
+  initial: { scale: 1 },
+  animate: { scale: [1, 1.2, 1] },
+  transition: { duration: 0.3 },
+}
+
+const buttonVariants = {
+  hover: {
+    scale: 1.05,
+    transition: {
+      duration: 0.2,
+      ease: "easeInOut",
+    },
+  },
+  tap: {
+    scale: 0.95,
+    transition: {
+      duration: 0.1,
+    },
+  },
+}
 
 export function ItemCardProfile({
   id,
@@ -29,158 +80,218 @@ export function ItemCardProfile({
   status_swap,
   category,
   showbtn,
-  showSwitchHeart= true,
-
+  showSwitchHeart = true,
 }) {
-  const { t } = useTranslations();
-  const { toast } = useToast();
-  const router = useRouter();
+  const { t } = useTranslations()
+  const { toast } = useToast()
+  const router = useRouter()
 
-  const [bigImage, setBigImage] = useState("");
-  const [switchHeart, setswitchHeart] = useState(false);
+  const [bigImage, setBigImage] = useState("")
+  const [switchHeart, setSwitchHeart] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
   const getDataImage = async () => {
-    const images2 = await getImageProducts(images);
-    // setImages(images)
-    setBigImage(images2[0].directus_files_id);
-    // console.log('i am in single product ' , images)
-  };
-
-  
+    try {
+      const images2 = await getImageProducts(images)
+      setBigImage(images2[0].directus_files_id)
+      setIsLoading(false)
+    } catch (error) {
+      console.error("Error loading image:", error)
+      setIsLoading(false)
+    }
+  }
 
   const makeSwap = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const token = await getCookie();
+    e.preventDefault()
+    e.stopPropagation()
+    const token = await getCookie()
 
     if (token) {
-      router.push(`/swap/${id}`);
+      router.push(`/swap/${id}`)
     } else {
       toast({
-        title: t("faildSwap") || "Faild Swap",
+        title: t("faildSwap") || "Failed Swap",
         description: t("DescFaildSwapLogin"),
         variant: "destructive",
-      });
-      router.push(`/auth/login`);
+      })
+      router.push(`/auth/login`)
     }
-  };
+  }
 
   const handleGetWishItem = async () => {
-    const user = await decodedToken();
-    const WishItem = await getWishList(user.id);
-    if (WishItem) {
-      const isItem = WishItem.find((i) => i.item_id == id) ? true : false;
-      setswitchHeart(isItem);
+    try {
+      const user = await decodedToken()
+      const WishItem = await getWishList(user.id)
+      if (WishItem) {
+        const isItem = WishItem.find((i) => i.item_id == id) ? true : false
+        setSwitchHeart(isItem)
+      }
+    } catch (error) {
+      console.error("Error getting wishlist:", error)
     }
-  };
+  }
 
   const handleAddWishItem = async () => {
-    const user = await decodedToken();
-    const WishItem = await getWishList(user.id);
-    const WishItemId = WishItem.filter((i) => i.item_id == id);
-    if (WishItem) {
-      const isItem = WishItem.find((i) => i.item_id == id);
-      if (isItem) {
-        await deleteWishList(WishItemId[0]?.id);
-        setswitchHeart(false);
-        toast({
+    try {
+      const user = await decodedToken()
+      const WishItem = await getWishList(user.id)
+      const WishItemId = WishItem.filter((i) => i.item_id == id)
+      if (WishItem) {
+        const isItem = WishItem.find((i) => i.item_id == id)
+        if (isItem) {
+          await deleteWishList(WishItemId[0]?.id)
+          setSwitchHeart(false)
+          toast({
             title: t("successAddWish") || "Success",
-          description: t("deletedWishDesc") || "Deleted wishlist",
-        });
-      } else {
-        await addWishList(id , user.id);
-        setswitchHeart(true);
-        toast({
-          title: t("successAddWish") || "Success",
-          description:  t("successAddWishDesc") || "Item added to wishlist successfully.",
-        });
+            description: t("deletedWishDesc") || "Deleted wishlist",
+          })
+        } else {
+          await addWishList(id, user.id)
+          setSwitchHeart(true)
+          toast({
+            title: t("successAddWish") || "Success",
+            description: t("successAddWishDesc") || "Item added to wishlist successfully.",
+          })
+        }
       }
+    } catch (error) {
+      console.error("Error updating wishlist:", error)
     }
-  };
+  }
 
   useEffect(() => {
-    getDataImage();
-  });
+    getDataImage()
+  }, [])
 
   useEffect(() => {
-    handleGetWishItem();
-  },[switchHeart]);
+    handleGetWishItem()
+  }, [switchHeart])
 
   return (
     <Link href={`/products/${id}`}>
-      <Card className="overflow-hidden transition-all duration-200 hover:shadow-md">
-        <div className="relative">
-          <div className="relative aspect-square overflow-hidden">
-            <Image
-              src={
-                `http://localhost:8055/assets/${bigImage}` || "/placeholder.svg"
-              }
-              alt={name}
-              fill
-              className="object-cover transition-transform duration-300 hover:scale-105"
-            />
-            {/* Heart button above photo */}
-           {
-showSwitchHeart ?( <button
-              type="button"
-              className="absolute top-2 right-2 z-0 bg-transparent rounded-full p-1 hover:scale-110 transition-transform"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleAddWishItem();
-              }}
-            >
-              {switchHeart ? (
-                <Heart className="h-8 w-8 text-red-500 fill-current" />
-              ) : (
-                <Heart className="h-8 w-8 text-muted-foreground" />
+      <motion.div variants={cardVariants} initial="hidden" animate="visible" whileHover="hover">
+        <Card className="overflow-hidden transition-all duration-200 hover:shadow-md">
+          <div className="relative">
+            <div className="relative aspect-square overflow-hidden">
+              <AnimatePresence>
+                {isLoading ? (
+                  <motion.div
+                    className="absolute inset-0 bg-gray-200 animate-pulse"
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  />
+                ) : (
+                  <motion.div
+                  //  variants={imageVariants} 
+                   whileHover="hover">
+                    <Image
+                      src={`http://localhost:8055/assets/${bigImage}` || "/placeholder.svg"}
+                      alt={name}
+                      fill
+                      className="object-cover transition-transform duration-300"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Heart button */}
+              {showSwitchHeart && (
+                <motion.button
+                  type="button"
+                  className="absolute top-2 right-2 z-10 bg-white/80 backdrop-blur-sm rounded-full p-2 hover:bg-white transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    handleAddWishItem()
+                  }}
+                  variants={heartVariants}
+                  animate={switchHeart ? "animate" : "initial"}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <Heart
+                    className={`h-5 w-5 transition-colors ${
+                      switchHeart ? "text-red-500 fill-current" : "text-muted-foreground"
+                    }`}
+                  />
+                </motion.button>
               )}
-            </button>):null
+            </div>
 
-           }
-           
+            <motion.div
+              className="absolute left-2 top-2"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Badge className="bg-primary text-primary-foreground hover:bg-primary/90 capitalize">{t(category)}</Badge>
+            </motion.div>
           </div>
 
-          <Badge className="absolute left-2 top-2 bg-primary text-primary-foreground hover:bg-primary/90 capitalize">
-            {t(category)}
-          </Badge>
-        </div>
+          <CardContent className="p-4">
+            <motion.div
+              className="mb-2 flex items-start justify-between gap-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <h3 className="line-clamp-1 font-semibold group-hover:text-primary capitalize">{name}</h3>
+            </motion.div>
 
-        <CardContent className="p-4">
-          <div className="mb-2 flex items-start justify-between gap-2">
-            <h3 className="line-clamp-1 font-semibold group-hover:text-primary capitalize">
-              {name}
-            </h3>
-          </div>
-          <div className="flex items-center whitespace-nowrap text-sm font-semibold text-foreground text-green-500">
-        <span className="px-1">{t("aIExpectedPrice")}: </span> 
-        <span className="px-1"> LE</span> 
-        <span className="px-1"> {value_estimate}</span> 
-          </div>
-          <p className="mb-3 line-clamp-1 text-sm text-muted-foreground first-letter:capitalize">
-            {description}
-          </p>
+            <motion.div
+              className="flex items-center whitespace-nowrap text-sm font-semibold text-green-500 mb-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <span className="px-1">{t("aIExpectedPrice")}: </span>
+              <span className="px-1"> LE</span>
+              <span className="px-1"> {value_estimate}</span>
+            </motion.div>
 
-          <div className="flex items-center whitespace-nowrap text-sm font-semibold text-foreground text-green-500">
-            {t("price")}: {price}LE
-          </div>
-        </CardContent>
+            <motion.p
+              className="mb-3 line-clamp-1 text-sm text-muted-foreground first-letter:capitalize"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              {description}
+            </motion.p>
 
-        {/* Swap button */}
-        {status_swap == "available" && showbtn ? (
-          <Button
-            className="mt-auto w-full bg-primary-yellow text-gray-800 hover:bg-primary-orange hover:text-white"
-            size="sm"
-            onClick={(e) => {
-              makeSwap(e);
-            }}
-          >
-            <Repeat className="h-4 w-4" />
-            {t("swap")}
-          </Button>
-        ) : (
-          ""
-        )}
-      </Card>
+            <motion.div
+              className="flex items-center whitespace-nowrap text-sm font-semibold text-green-500"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              {t("price")}: {price}LE
+            </motion.div>
+          </CardContent>
+
+          {/* Swap button */}
+          {status_swap == "available" && showbtn && (
+            <motion.div
+              className="p-4 pt-0"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+                <Button
+                  className="w-full bg-primary-yellow text-gray-800 hover:bg-primary-orange hover:text-white transition-colors"
+                  size="sm"
+                  onClick={(e) => {
+                    makeSwap(e)
+                  }}
+                >
+                  <Repeat className="h-4 w-4 mr-2" />
+                  {t("swap")}
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+        </Card>
+      </motion.div>
     </Link>
-  );
+  )
 }

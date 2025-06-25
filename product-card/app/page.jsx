@@ -1,14 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion, useAnimation } from "framer-motion"
+import { motion, useAnimation, useScroll, useTransform } from "framer-motion"
 import { useInView } from "react-intersection-observer"
-import { Users, ShieldCheck, Package } from "lucide-react"
+import { Users, ShieldCheck, Package, Sparkles, TrendingUp, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DeelProductCard } from "@/components/deel-product-card"
 import { CategoryCard } from "@/components/category-card"
 import { ProductCarousel } from "@/components/product-carousel"
 import { DeelProductCardSkeleton } from "@/components/DeelProductCardSkeleton"
+import  FloatingActionButton  from "@/components/floating-action-button"
 import { HeroSlider } from "@/components/hero-slider"
 import { useLanguage } from "@/lib/language-provider"
 import { useTranslations } from "@/lib/use-translations"
@@ -17,24 +18,30 @@ import { useRouter } from "next/navigation"
 import { getProducts, getProductTopPrice } from "@/callAPI/products"
 import { getCookie } from "@/callAPI/utiles"
 
-// Animation variants
+// Enhanced Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.3,
+      staggerChildren: 0.15,
+      delayChildren: 0.2,
     },
   },
 }
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: "easeOut" },
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15,
+      duration: 0.6,
+    },
   },
 }
 
@@ -43,35 +50,75 @@ const statsContainerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.2,
+      staggerChildren: 0.3,
+      delayChildren: 0.4,
     },
   },
 }
 
 const statsItemVariants = {
-  hidden: { opacity: 0, scale: 0.8 },
+  hidden: { opacity: 0, scale: 0.5, y: 50 },
   visible: {
     opacity: 1,
     scale: 1,
+    y: 0,
     transition: {
       type: "spring",
-      stiffness: 100,
-      damping: 10,
+      stiffness: 150,
+      damping: 12,
       duration: 0.8,
     },
   },
 }
 
 const titleVariants = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.7, ease: "easeOut" },
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15,
+      duration: 0.8,
+    },
   },
 }
 
-// Counter animation component
+const floatingVariants = {
+  animate: {
+    y: [-10, 10, -10],
+    transition: {
+      duration: 4,
+      repeat: Number.POSITIVE_INFINITY,
+      ease: "easeInOut",
+    },
+  },
+}
+
+const pulseVariants = {
+  animate: {
+    scale: [1, 1.05, 1],
+    transition: {
+      duration: 2,
+      repeat: Number.POSITIVE_INFINITY,
+      ease: "easeInOut",
+    },
+  },
+}
+
+const shimmerVariants = {
+  animate: {
+    backgroundPosition: ["200% 0", "-200% 0"],
+    transition: {
+      duration: 3,
+      repeat: Number.POSITIVE_INFINITY,
+      ease: "linear",
+    },
+  },
+}
+
+// Enhanced Counter animation component
 const AnimatedCounter = ({ value, duration = 2, className }) => {
   const [count, setCount] = useState(0)
   const controls = useAnimation()
@@ -101,10 +148,56 @@ const AnimatedCounter = ({ value, duration = 2, className }) => {
   }, [inView, value, duration, controls])
 
   return (
-    <motion.div ref={ref} animate={controls} initial="hidden" variants={statsItemVariants} className={className}>
-      {count}
-      {value === 99.9 ? "%" : "K+"}
+    <>
+      <motion.div
+      ref={ref}
+      animate={controls}
+      initial="hidden"
+      variants={statsItemVariants}
+      className={className}
+      whileHover={{ scale: 1.1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    >
+      <motion.span
+        key={count}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        {count}
+        {value === 99.9 ? "%" : "K+"}
+      </motion.span>
     </motion.div>
+    </>
+  
+  )
+}
+
+// Floating particles component
+const FloatingParticles = () => {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(6)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-2 h-2 bg-primary/20 rounded-full"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [-20, -40, -20],
+            x: [-10, 10, -10],
+            opacity: [0.3, 0.8, 0.3],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Number.POSITIVE_INFINITY,
+            delay: Math.random() * 2,
+          }}
+        />
+      ))}
+    </div>
   )
 }
 
@@ -119,6 +212,11 @@ export default function Home() {
   const controls = useAnimation()
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.1 })
 
+  // Scroll-based animations
+  const { scrollY } = useScroll()
+  const y1 = useTransform(scrollY, [0, 300], [0, -50])
+  const y2 = useTransform(scrollY, [0, 300], [0, -100])
+
   const getWishList = async () => {
     const token = await getCookie()
     if (token) {
@@ -130,11 +228,11 @@ export default function Home() {
 
   const getData = async () => {
     const data = await getProducts()
-    const topPrice = await getProductTopPrice()
+    const topPriceData = await getProductTopPrice()
     setItems(data)
-    setTopPrice(topPrice)
+    setTopPrice(topPriceData)
     console.log("i am in product home ", data)
-    console.log("i am in product topPrice ", topPrice)
+    console.log("i am in product topPrice ", topPriceData)
 
     return data
   }
@@ -164,147 +262,447 @@ export default function Home() {
 
   return (
     <>
-      <main className="min-h-screen dark:bg-[#121212]">
-        {/* Hero Section */}
-        <section className="container py-6">
-          <HeroSlider />
-        </section>
+    {showSwitchHeart?(<FloatingActionButton/>):''}
 
-        {/* Stats Section - New section based on the image */}
+      <main className="min-h-screen dark:bg-[#121212] relative overflow-hidden">
+        <FloatingParticles />
+
+        {/* Hero Section */}
         <motion.section
-          className="container py-12"
+          className="container py-6 relative z-10"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          style={{ y: y1 }}
+        >
+          <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+            <HeroSlider />
+          </motion.div>
+        </motion.section>
+
+        {/* Enhanced Stats Section */}
+        <motion.section
+          className="container py-16 relative z-10"
           variants={statsContainerVariants}
           initial="hidden"
           animate="visible"
           ref={ref}
         >
-          <div className="grid grid-cols-3 gap-4 md:gap-8">
-            <div className="flex flex-col items-center justify-center text-center">
-              <motion.div className="flex items-center justify-center mb-4" variants={statsItemVariants}>
-                <Users className="h-8 w-8 md:h-12 md:w-12 text-primary dark:text-primary" />
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            <motion.div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-4"
+              variants={pulseVariants}
+              animate="animate"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="text-sm font-medium">Trusted Platform</span>
+            </motion.div>
+            <motion.h2
+              className="text-2xl md:text-3xl font-bold text-center mb-2"
+              variants={shimmerVariants}
+              animate="animate"
+              style={{
+                background: "linear-gradient(90deg, #333 25%, #49c5b6 50%, #333 75%)",
+                backgroundSize: "200% 100%",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+            >
+              Join Thousands of Happy Traders
+            </motion.h2>
+          </motion.div>
+
+          <div className="grid grid-cols-3 gap-6 md:gap-12">
+            <motion.div
+              className="flex flex-col items-center justify-center text-center group"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <motion.div className="flex items-center justify-center mb-6 relative" variants={statsItemVariants}>
+                <motion.div
+                  className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.6, 0.3],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "easeInOut",
+                  }}
+                />
+                <motion.div
+                  className="relative z-10 p-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg"
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <Users className="h-8 w-8 md:h-12 md:w-12 text-white" />
+                </motion.div>
               </motion.div>
-              <AnimatedCounter value={10} className="text-3xl md:text-5xl font-bold gold-text-gradient" />
-              <motion.div className="text-sm md:text-base text-muted-foreground mt-2" variants={statsItemVariants}>
+              <AnimatedCounter
+                value={10}
+                className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent"
+              />
+              <motion.div
+                className="text-sm md:text-base text-muted-foreground mt-3 font-medium"
+                variants={statsItemVariants}
+              >
                 Active Traders
               </motion.div>
-            </div>
+              <motion.div
+                className="w-12 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full mt-2"
+                initial={{ width: 0 }}
+                animate={{ width: 48 }}
+                transition={{ delay: 1, duration: 0.8 }}
+              />
+            </motion.div>
 
-            <div className="flex flex-col items-center justify-center text-center">
-              <motion.div className="flex items-center justify-center mb-4" variants={statsItemVariants}>
-                <ShieldCheck className="h-8 w-8 md:h-12 md:w-12 text-primary dark:text-primary" />
+            <motion.div
+              className="flex flex-col items-center justify-center text-center group"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <motion.div className="flex items-center justify-center mb-6 relative" variants={statsItemVariants}>
+                <motion.div
+                  className="absolute inset-0 bg-green-500/20 rounded-full blur-xl"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.6, 0.3],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "easeInOut",
+                    delay: 0.5,
+                  }}
+                />
+                <motion.div
+                  className="relative z-10 p-4 rounded-full bg-gradient-to-br from-green-500 to-green-600 shadow-lg"
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <ShieldCheck className="h-8 w-8 md:h-12 md:w-12 text-white" />
+                </motion.div>
               </motion.div>
-              <AnimatedCounter value={99.9} className="text-3xl md:text-5xl font-bold gold-text-gradient" />
-              <motion.div className="text-sm md:text-base text-muted-foreground mt-2" variants={statsItemVariants}>
+              <AnimatedCounter
+                value={99.9}
+                className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent"
+              />
+              <motion.div
+                className="text-sm md:text-base text-muted-foreground mt-3 font-medium"
+                variants={statsItemVariants}
+              >
                 Safe Trades
               </motion.div>
-            </div>
+              <motion.div
+                className="w-12 h-1 bg-gradient-to-r from-green-500 to-green-600 rounded-full mt-2"
+                initial={{ width: 0 }}
+                animate={{ width: 48 }}
+                transition={{ delay: 1.2, duration: 0.8 }}
+              />
+            </motion.div>
 
-            <div className="flex flex-col items-center justify-center text-center">
-              <motion.div className="flex items-center justify-center mb-4" variants={statsItemVariants}>
-                <Package className="h-8 w-8 md:h-12 md:w-12 text-primary dark:text-primary" />
+            <motion.div
+              className="flex flex-col items-center justify-center text-center group"
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              <motion.div className="flex items-center justify-center mb-6 relative" variants={statsItemVariants}>
+                <motion.div
+                  className="absolute inset-0 bg-purple-500/20 rounded-full blur-xl"
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.6, 0.3],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "easeInOut",
+                    delay: 1,
+                  }}
+                />
+                <motion.div
+                  className="relative z-10 p-4 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 shadow-lg"
+                  whileHover={{ rotate: 360 }}
+                  transition={{ duration: 0.6 }}
+                >
+                  <Package className="h-8 w-8 md:h-12 md:w-12 text-white" />
+                </motion.div>
               </motion.div>
-              <AnimatedCounter value={50} className="text-3xl md:text-5xl font-bold gold-text-gradient" />
-              <motion.div className="text-sm md:text-base text-muted-foreground mt-2" variants={statsItemVariants}>
+              <AnimatedCounter
+                value={50}
+                className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent"
+              />
+              <motion.div
+                className="text-sm md:text-base text-muted-foreground mt-3 font-medium"
+                variants={statsItemVariants}
+              >
                 Items Traded
               </motion.div>
-            </div>
+              <motion.div
+                className="w-12 h-1 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full mt-2"
+                initial={{ width: 0 }}
+                animate={{ width: 48 }}
+                transition={{ delay: 1.4, duration: 0.8 }}
+              />
+            </motion.div>
           </div>
         </motion.section>
 
-        {/* Categories */}
-        <section className="container py-8">
-          <motion.div className="mb-8 text-center" variants={titleVariants} initial="hidden" animate="visible">
-            <h2 className="text-3xl md:text-4xl font-bold gold-text-gradient mb-4">Browse Categories</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
+        {/* Enhanced Categories Section */}
+        <motion.section className="container py-16 relative z-10" style={{ y: y2 }}>
+          <motion.div className="mb-12 text-center" variants={titleVariants} initial="hidden" animate="visible">
+            <motion.div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6"
+              variants={floatingVariants}
+              animate="animate"
+            >
+              <TrendingUp className="h-4 w-4" />
+              <span className="text-sm font-medium">Popular Categories</span>
+            </motion.div>
+            <motion.h2
+              className="text-4xl md:text-5xl font-bold mb-6"
+              style={{
+                background: "linear-gradient(135deg, #49c5b6 0%, #3db6a7 50%, #2da89a 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              Browse Categories
+            </motion.h2>
+            <motion.p
+              className="text-muted-foreground max-w-2xl mx-auto text-lg"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
               Discover amazing items across various categories and find exactly what you're looking for
-            </p>
+            </motion.p>
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6"
+            className="grid grid-cols-3 gap-6 sm:grid-cols-4 md:grid-cols-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
             {isLoadingCat
-              ? Array.from({ length: 6 }).map((_, i) => <DeelProductCardSkeleton key={i} />)
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <motion.div
+                    key={i}
+                    variants={itemVariants}
+                    whileHover={{ y: -10 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  >
+                    <DeelProductCardSkeleton />
+                  </motion.div>
+                ))
               : categories.slice(0, 6).map((category, index) => (
-                  <motion.div key={category.name} variants={itemVariants} custom={index}>
+                  <motion.div
+                    key={category.name}
+                    variants={itemVariants}
+                    custom={index}
+                    whileHover={{
+                      y: -15,
+                      scale: 1.05,
+                      rotateY: 5,
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  >
                     <CategoryCard {...category} />
                   </motion.div>
                 ))}
           </motion.div>
-        </section>
+        </motion.section>
 
-        {/* Middle Banner */}
-        <section className="container py-8">
+        {/* Enhanced Middle Banner */}
+        <motion.section
+          className="container py-16 relative z-10"
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
           <motion.div
-            className="overflow-hidden rounded-lg bg-gradient-to-r from-[#1a1a1a] to-[#2a2a2a] border border-[#333] relative"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="overflow-hidden rounded-2xl bg-gradient-to-r from-[#1a1a1a] via-[#2a2a2a] to-[#1a1a1a] border border-[#333] relative shadow-2xl"
+            whileHover={{ scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
           >
             <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute inset-0 bg-[url('/placeholder.svg?height=200&width=1200')] opacity-10 bg-cover bg-center"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80"></div>
+              <motion.div
+                className="absolute inset-0 bg-[url('/placeholder.svg?height=200&width=1200')] opacity-10 bg-cover bg-center"
+                animate={{
+                  scale: [1, 1.1, 1],
+                }}
+                transition={{
+                  duration: 20,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "easeInOut",
+                }}
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-transparent to-black/80" />
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-primary/10"
+                animate={{
+                  opacity: [0.1, 0.3, 0.1],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "easeInOut",
+                }}
+              />
             </div>
 
-            <div className="container relative flex min-h-[150px] flex-col items-center justify-center py-8 text-center md:min-h-[200px] z-10">
+            <div className="container relative flex min-h-[200px] flex-col items-center justify-center py-12 text-center md:min-h-[250px] z-10">
+              <motion.div
+                className="absolute top-4 left-4"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              >
+                <Star className="h-6 w-6 text-primary/30" />
+              </motion.div>
+              <motion.div
+                className="absolute top-8 right-8"
+                animate={{ rotate: -360 }}
+                transition={{ duration: 15, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+              >
+                <Sparkles className="h-8 w-8 text-primary/20" />
+              </motion.div>
+
               <motion.h3
-                className="text-2xl md:text-3xl font-bold text-white mb-6 gold-text-gradient"
-                initial={{ opacity: 0, y: 20 }}
+                className="text-3xl md:text-4xl font-bold text-white mb-8"
+                style={{
+                  background: "linear-gradient(135deg, #ffffff 0%, #49c5b6 50%, #ffffff 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
+                transition={{ delay: 0.2, duration: 0.6 }}
               >
                 Ready to Trade Your Items?
               </motion.h3>
+
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4, duration: 0.5 }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.1, y: -5 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <Button
-                  className="bg-primary text-black hover:bg-primary/90 font-semibold px-8 py-6 text-lg"
+                  className="bg-gradient-to-r from-primary to-primary/80 text-white hover:from-primary/90 hover:to-primary/70 font-bold px-10 py-6 text-xl rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
                   onClick={() => {
                     router.push("/products")
                   }}
                 >
-                  {t("swapNow")}
+                  <motion.span
+                    animate={{
+                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Number.POSITIVE_INFINITY,
+                      ease: "linear",
+                    }}
+                    style={{
+                      background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)",
+                      backgroundSize: "200% 100%",
+                    }}
+                    className="inline-block"
+                  >
+                    {t("swapNow") || "Swap Now"}
+                  </motion.span>
                 </Button>
               </motion.div>
             </div>
           </motion.div>
-        </section>
-
-        {/* Products */}
-        <motion.section
-          className="container py-8"
-          id="items"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
-        >
-          <ProductCarousel title={t("allProducts")} viewAllHref="/products" viewAllLabel={t("viewAll")}>
-            {isLoading
-              ? Array.from({ length: 6 }).map((_, i) => <DeelProductCardSkeleton key={i} />)
-              : items.map((product) => (
-                  <DeelProductCard key={product.id} {...product} showSwitchHeart={showSwitchHeart} />
-                ))}
-          </ProductCarousel>
         </motion.section>
 
-        {/* Top Deals */}
-        <section className="container py-8">
-          <ProductCarousel title={t("topDeals")} viewAllHref="/products" viewAllLabel={t("viewAll")}>
-            {isLoading
-              ? Array.from({ length: 6 }).map((_, i) => <DeelProductCardSkeleton key={i} />)
-              : topPrice.map((product) => (
-                  <DeelProductCard key={product.id} {...product} showSwitchHeart={showSwitchHeart} />
-                ))}
-          </ProductCarousel>
-        </section>
+        {/* Enhanced Products Section */}
+        <motion.section
+          className="container py-16 relative z-10"
+          id="items"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
+          <motion.div whileHover={{ scale: 1.01 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+            <ProductCarousel title={t("allProducts")} viewAllHref="/products" viewAllLabel={t("viewAll")}>
+              {isLoading
+                ? Array.from({ length: 6 }).map((_, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.1, duration: 0.5 }}
+                    >
+                      <DeelProductCardSkeleton />
+                    </motion.div>
+                  ))
+                : items.map((product, index) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1, duration: 0.5 }}
+                      whileHover={{ y: -10 }}
+                    >
+                      <DeelProductCard {...product} showSwitchHeart={showSwitchHeart} />
+                    </motion.div>
+                  ))}
+            </ProductCarousel>
+          </motion.div>
+        </motion.section>
+
+        {/* Enhanced Top Deals Section */}
+        <motion.section
+          className="container py-16 relative z-10"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+        >
+          <motion.div whileHover={{ scale: 1.01 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+            <ProductCarousel title={t("topDeals")} viewAllHref="/products" viewAllLabel={t("viewAll")}>
+              {isLoading
+                ? Array.from({ length: 6 }).map((_, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.1, duration: 0.5 }}
+                    >
+                      <DeelProductCardSkeleton />
+                    </motion.div>
+                  ))
+                : topPrice.map((product, index) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 30 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1, duration: 0.5 }}
+                      whileHover={{ y: -10 }}
+                    >
+                      <DeelProductCard {...product} showSwitchHeart={showSwitchHeart} />
+                    </motion.div>
+                  ))}
+            </ProductCarousel>
+          </motion.div>
+        </motion.section>
       </main>
     </>
   )

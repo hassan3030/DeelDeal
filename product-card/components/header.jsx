@@ -95,6 +95,13 @@ const buttonVariants = {
   tap: { scale: 0.95 },
 }
 
+const badgeVariants = {
+  initial: { scale: 0 },
+  animate: { scale: 1 },
+  exit: { scale: 0 },
+  transition: { type: "spring", stiffness: 500, damping: 15 },
+}
+
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [user, setUser] = useState()
@@ -109,7 +116,6 @@ export function Header() {
   const router = useRouter()
   const { isRTL, toggleLanguage } = useLanguage()
   const { theme, toggleTheme } = useTheme()
-  // Use translations
   const { t } = useTranslations()
   const pathname = usePathname()
 
@@ -134,14 +140,12 @@ export function Header() {
   const getWishlist = async () => {
     const { id } = await decodedToken()
     const wishList = await getWishList(id)
-    console.log("wishlist", wishList) // Check what is returned
     setWishlistLength(Array.isArray(wishList) ? wishList.length : 0)
   }
 
   const getChat = async () => {
     const { id } = await decodedToken()
     const chat = await getMessage(id)
-    console.log("chat", chat) // Check what is returned
     setChatLength(Array.isArray(chat) ? chat.length : 0)
   }
 
@@ -149,10 +153,8 @@ export function Header() {
     const token = await getCookie()
     if (token) {
       const { id } = await decodedToken()
-      // Get all offers for the user
       const offers = await getOfferById(id)
 
-      // Filter offers where offer_status is "pending" or "accepted"
       const filteredOffers = Array.isArray(offers)
         ? offers.filter((offer) => offer.status_offer === "pending" || offer.status_offer === "accepted")
         : []
@@ -165,8 +167,6 @@ export function Header() {
           )
         : []
 
-      console.log("cartLength", cartLength)
-      console.log("notifications", notificationsLength)
       setCartLength(filteredOffers.length)
       setNotificationsLength(filteredNotifications.length)
     }
@@ -176,9 +176,7 @@ export function Header() {
     await removeCookie()
     setUser(null)
     window.location.reload()
-    // router.refresh();
-    router.push("/auth/login");
-
+    router.push("/auth/login")
   }
 
   useEffect(() => {
@@ -186,12 +184,10 @@ export function Header() {
     getOffers()
     getWishlist()
     getChat()
-
-    //  router.refresh();
   }, [])
 
   useEffect(() => {
-    if (!hasSearched) return // Don't redirect on initial mount
+    if (!hasSearched) return
     if (filter === "") {
       router.push("/")
     } else if (filter.trim() !== "") {
@@ -207,7 +203,7 @@ export function Header() {
         initial="hidden"
         animate="visible"
       >
-        {/* Top bar - hidden on small and medium screens, visible on large screens */}
+        {/* Top bar */}
         <motion.div
           className="hidden lg:block bg-primary text-primary-foreground px-4 py-1 dark:bg-[#1a1a1a]"
           variants={navVariants}
@@ -232,7 +228,7 @@ export function Header() {
         {/* Main header */}
         <div className="container py-4">
           <div className="flex items-center justify-between gap-4">
-            {/* Theme and Language toggles for main header - visible only on small and medium screens */}
+            {/* Mobile toggles */}
             <motion.div
               className="flex items-center gap-2 lg:hidden"
               custom={0}
@@ -431,6 +427,7 @@ export function Header() {
 
               {user ? (
                 <>
+                  {/* Notifications */}
                   <motion.div custom={5} variants={itemVariants}>
                     <Link href="/notifications" className="relative">
                       <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
@@ -440,22 +437,26 @@ export function Header() {
                           className="relative hover:text-primary dark:hover:text-primary"
                         >
                           <Bell className="h-5 w-5" />
-                          {notificationsLength ? (
-                            <motion.span
-                              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground dark:text-black"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                            >
-                              {notificationsLength}
-                            </motion.span>
-                          ) : null}
+                          <AnimatePresence>
+                            {notificationsLength > 0 && (
+                              <motion.span
+                                className="absolute animate-bounce -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground dark:text-black"
+                                variants={badgeVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                              >
+                                {notificationsLength}
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
                           <span className="sr-only">{t("notifications")}</span>
                         </Button>
                       </motion.div>
                     </Link>
                   </motion.div>
 
+                  {/* Cart */}
                   <motion.div custom={6} variants={itemVariants}>
                     <Link href="/cart" className="relative">
                       <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
@@ -465,25 +466,26 @@ export function Header() {
                           className="relative hover:text-primary dark:hover:text-primary"
                         >
                           <ShoppingCart className="h-5 w-5" />
-                          {cartLength ? (
-                            <motion.span
-                              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground dark:text-black"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                            >
-                              {cartLength}
-                            </motion.span>
-                          ) : (
-                            ""
-                          )}
-
+                          <AnimatePresence>
+                            {cartLength > 0 && (
+                              <motion.span
+                                className="absolute  -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground dark:text-black"
+                                variants={badgeVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                              >
+                                {cartLength}
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
                           <span className="sr-only">{t("cart") || "Cart "}</span>
                         </Button>
                       </motion.div>
                     </Link>
                   </motion.div>
 
+                  {/* Wishlist */}
                   <motion.div custom={7} variants={itemVariants}>
                     <Link href="/wishList" className="relative">
                       <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
@@ -493,25 +495,26 @@ export function Header() {
                           className="relative hover:text-primary dark:hover:text-primary"
                         >
                           <Heart className="h-5 w-5" />
-                          {wishlistLength !== 0 ? (
-                            <motion.span
-                              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground dark:text-black"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                            >
-                              {wishlistLength}
-                            </motion.span>
-                          ) : (
-                            ""
-                          )}
-
+                          <AnimatePresence>
+                            {wishlistLength > 0 && (
+                              <motion.span
+                                className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground dark:text-black"
+                                variants={badgeVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                              >
+                                {wishlistLength}
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
                           <span className="sr-only">{t("wishlist") || "wishlist"}</span>
                         </Button>
                       </motion.div>
                     </Link>
                   </motion.div>
 
+                  {/* Messages */}
                   <motion.div custom={8} variants={itemVariants}>
                     <Link href="/chat" className="relative">
                       <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
@@ -521,18 +524,19 @@ export function Header() {
                           className="relative hover:text-primary dark:hover:text-primary group"
                         >
                           <MessageCircle className="h-5 w-5" />
-                          {chatLength !== 0 ? (
-                            <motion.span
-                              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground dark:text-black"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                            >
-                              {chatLength}
-                            </motion.span>
-                          ) : (
-                            ""
-                          )}
+                          <AnimatePresence>
+                            {chatLength > 0 && (
+                              <motion.span
+                                className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground dark:text-black"
+                                variants={badgeVariants}
+                                initial="initial"
+                                animate="animate"
+                                exit="exit"
+                              >
+                                {chatLength}
+                              </motion.span>
+                            )}
+                          </AnimatePresence>
                           <span className="pointer-events-none absolute -top-8 right-0 z-10 hidden rounded bg-gray-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:block group-hover:opacity-100 dark:bg-black">
                             {t("messages") || "Messages"}
                           </span>
@@ -541,7 +545,7 @@ export function Header() {
                     </Link>
                   </motion.div>
 
-                  {/* add items */}
+                  {/* Add items */}
                   <motion.div custom={9} variants={itemVariants}>
                     <Link href="/profile/settings/editItem/new" className="relative">
                       <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
@@ -614,154 +618,110 @@ export function Header() {
 
           {/* Mobile menu */}
           <AnimatePresence>
-            {isMenuOpen &&
-              (user ? (
-                <motion.div
-                  className="mt-4 border-t pt-4 md:hidden dark:border-[#2a2a2a]"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <nav className="flex flex-col gap-2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-2 hover:text-black hover:bg-primary/10 dark:hover:text-primary dark:hover:bg-primary/10"
-                        >
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage
-                              src={user?.avatar || "/placeholder.svg"}
-                              alt={user?.first_name || t("account")}
-                            />
-                            <AvatarFallback className="bg-primary text-black dark:bg-primary dark:text-black">
-                              {user?.first_name?.charAt(0)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <DropdownMenuLabel className="font-normal">
-                            <div className="flex flex-col space-y-1">
-                              <p className="text-sm font-medium leading-none">{user?.first_name || t("account")}</p>
-                              <p className="text-xs leading-none text-muted-foreground">{user?.email || ""}</p>
-                            </div>
-                          </DropdownMenuLabel>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56 dark:bg-[#1a1a1a] dark:border-[#2a2a2a]">
-                        <DropdownMenuSeparator className="dark:bg-[#2a2a2a]" />
-
-                        <>
-                          <DropdownMenuItem asChild>
-                            <Link href="/profile" className="dark:hover:bg-[#2a2a2a] dark:focus:bg-[#2a2a2a]">
-                              <User className="mr-2 h-4 w-4" />
-                              <span>{t("profile")}</span>
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href={`/profile/settings/editProfile/`}
-                              className="dark:hover:bg-[#2a2a2a] dark:focus:bg-[#2a2a2a]"
-                            >
-                              <Settings className="mr-2 h-4 w-4" />
-                              <span>{t("settings")}</span>
-                            </Link>
-                          </DropdownMenuItem>
-                        </>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <div className="my-2 border-t dark:border-[#2a2a2a]"></div>
-                    <Link
-                      href="/notifications"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
-                    >
-                      <Bell className="h-4 w-4" />
-                      <span>
-                        {`${t("notifications")} `}
-                        {`${notificationsLength ? notificationsLength : ""}`}
-                      </span>
-                    </Link>
-                    <Link
-                      href="/cart"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
-                    >
-                      <ShoppingCart className="h-4 w-4" />
-                      <span>{`${t("cart")} ${cartLength ? cartLength : ""} `}</span>
-                    </Link>
-
-                    <Link
-                      href="/chat"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      <span>{`${t("messages") || "Messages"}  ${chatLength ? chatLength : ""} `}</span>
-
-                      <span></span>
-                    </Link>
-
-                    <Link
-                      href="/wishList"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
-                    >
-                      <Heart className="h-4 w-4" />
-
-                      <span>{`${t("wishList" || "WishList")} ${wishlistLength !== 0 ? wishlistLength : ""} `}</span>
-                    </Link>
-                    {/* add items */}
-
-                    <Link
-                      href="/profile/settings/editItem/new"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
-                    >
-                      <PlusCircle className="h-4 w-4" />
-                      <span>{t("addanewitem") || "Add a new item"}</span>
-                    </Link>
-
-                    <Link
-                      href="/customerService"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
-                    >
-                      <HandPlatter className="h-4 w-4" />
-
-                      <span>{t("customerService")}</span>
-                    </Link>
-
-                    <Link
-                      href="/"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
-                      onClick={() => logout()}
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span>{t("logout")}</span>
-                    </Link>
-                  </nav>
-                </motion.div>
-              ) : (
-                <motion.div
-                  className="mt-4 border-t pt-4 md:hidden dark:border-[#2a2a2a]"
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <nav className="flex flex-col gap-2">
-                    <div className="my-2 border-t dark:border-[#2a2a2a]"></div>
-                    <Link
-                      href="/auth/login"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
-                    >
-                      <User className="h-4 w-4" />
-                      <span>{t("signIn")}</span>
-                    </Link>
-                    <Link
-                      href="/customerService"
-                      className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
-                    >
-                      <span>{t("customerService")}</span>
-                    </Link>
-                  </nav>
-                </motion.div>
-              ))}
+            {isMenuOpen && (
+              <motion.div
+                className="mt-4 border-t pt-4 md:hidden dark:border-[#2a2a2a]"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Mobile menu content */}
+                <nav className="flex flex-col gap-2">
+                  {user ? (
+                    <>
+                      <div className="flex items-center gap-2 p-2">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage
+                            src={user?.avatar || "/placeholder.svg"}
+                            alt={user?.first_name || t("account")}
+                          />
+                          <AvatarFallback className="bg-primary text-black dark:bg-primary dark:text-black">
+                            {user?.first_name?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <p className="text-sm font-medium">{user?.first_name || t("account")}</p>
+                          <p className="text-xs text-muted-foreground">{user?.email || ""}</p>
+                        </div>
+                      </div>
+                      <div className="my-2 border-t dark:border-[#2a2a2a]"></div>
+                      {/* Mobile menu items */}
+                      <Link
+                        href="/notifications"
+                        className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
+                      >
+                        <Bell className="h-4 w-4" />
+                        <span>
+                          {`${t("notifications")} `}
+                          {`${notificationsLength ? notificationsLength : ""}`}
+                        </span>
+                      </Link>
+                      <Link
+                        href="/cart"
+                        className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
+                      >
+                        <ShoppingCart className="h-4 w-4" />
+                        <span>{`${t("cart")} ${cartLength ? cartLength : ""} `}</span>
+                      </Link>
+                      <Link
+                        href="/chat"
+                        className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        <span>{`${t("messages") || "Messages"}  ${chatLength ? chatLength : ""} `}</span>
+                      </Link>
+                      <Link
+                        href="/wishList"
+                        className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
+                      >
+                        <Heart className="h-4 w-4" />
+                        <span>{`${t("wishList" || "WishList")} ${wishlistLength !== 0 ? wishlistLength : ""} `}</span>
+                      </Link>
+                      <Link
+                        href="/profile/settings/editItem/new"
+                        className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                        <span>{t("addanewitem") || "Add a new item"}</span>
+                      </Link>
+                      <Link
+                        href="/customerService"
+                        className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
+                      >
+                        <HandPlatter className="h-4 w-4" />
+                        <span>{t("customerService")}</span>
+                      </Link>
+                      <Link
+                        href="/"
+                        className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
+                        onClick={() => logout()}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span>{t("logout")}</span>
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <div className="my-2 border-t dark:border-[#2a2a2a]"></div>
+                      <Link
+                        href="/auth/login"
+                        className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
+                      >
+                        <User className="h-4 w-4" />
+                        <span>{t("signIn")}</span>
+                      </Link>
+                      <Link
+                        href="/customerService"
+                        className="flex items-center gap-2 rounded-md px-3 py-2 hover:bg-primary/10 dark:hover:bg-primary/10"
+                      >
+                        <span>{t("customerService")}</span>
+                      </Link>
+                    </>
+                  )}
+                </nav>
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
 
@@ -779,8 +739,8 @@ export function Header() {
                   <Link
                     href={`/categories/${category}`}
                     className={cn(
-                      "whitespace-nowrap px-3 py-1 text-sm capitalize",
-                      pathname === category ? "text-primary font-medium" : "text-muted-foreground hover:text-primary",
+                      "whitespace-nowrap px-3 py-1 text-sm capitalize transition-colors hover:text-primary",
+                      pathname === category ? "text-primary font-medium" : "text-muted-foreground",
                     )}
                   >
                     {t(category)}

@@ -130,7 +130,7 @@ export function RegisterForm() {
       } else {
         const response = await register(form.getValues().email, form.getValues().password, form.getValues().userName)
 
-        if (response) {
+        if (response.data) {
           const Token = await getCookie("Token")
           const { id } = await decodedToken(Token)
           toast({

@@ -8,12 +8,12 @@ const FilterItemsPage = async ({params}) => {
   let showFilters = true
     const {cat} =  await params ;
     let products = await  getProductByCategory(cat)
-    if(products.length === 0) showFilters=false
+    if(products.count === 0) showFilters=false
     // let products = await  getProducts()
       
   return (
   <div className="my-3 mx-3">
-<ItemsList items={products} showCategoriesFilter={false} showFilters={showFilters}/> 
+<ItemsList items={products.data} showCategoriesFilter={false} showFilters={showFilters}/> 
  </div>
   )
 }

@@ -118,6 +118,22 @@ const shimmerVariants = {
   },
 }
 
+// New collection card animation variants
+const collectionCardVariants = {
+  hidden: { opacity: 0, y: 50, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+      damping: 15,
+      duration: 0.7,
+    },
+  },
+}
+
 // Enhanced Counter animation component
 const AnimatedCounter = ({ value, duration = 2, className }) => {
   const [count, setCount] = useState(0)
@@ -201,6 +217,47 @@ const FloatingParticles = () => {
   )
 }
 
+// Featured Collection Card component
+const FeaturedCollectionCard = ({ title, imageUrl, itemCount, rating, accent }) => {
+  return (
+    <motion.div
+      className="relative overflow-hidden rounded-xl shadow-lg group"
+      whileHover={{ y: -10, scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80 z-10" />
+      <div 
+        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{ 
+          background: `linear-gradient(135deg, ${accent}40 0%, transparent 100%)`,
+          zIndex: 5 
+        }}
+      />
+      
+      <div className="relative aspect-[4/5] overflow-hidden">
+        <img 
+          src={imageUrl || "/placeholder.svg?height=400&width=300"} 
+          alt={title}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+      </div>
+      
+      <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-medium text-white">
+            {itemCount} items
+          </div>
+          <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-medium text-white">
+            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+            {rating}
+          </div>
+        </div>
+        <h3 className="text-xl font-bold text-white">{title}</h3>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function Home() {
   const { isRTL } = useLanguage()
   const { t } = useTranslations()
@@ -216,6 +273,38 @@ export default function Home() {
   const { scrollY } = useScroll()
   const y1 = useTransform(scrollY, [0, 300], [0, -50])
   const y2 = useTransform(scrollY, [0, 300], [0, -100])
+  
+  // Featured collections data
+  const featuredCollections = [
+    { 
+      title: "Summer Essentials", 
+      imageUrl: "/placeholder.svg?height=400&width=300&text=Summer", 
+      itemCount: 24, 
+      rating: 4.8,
+      accent: "#FF6B6B" 
+    },
+    { 
+      title: "Tech Gadgets", 
+      imageUrl: "/placeholder.svg?height=400&width=300&text=Tech", 
+      itemCount: 42, 
+      rating: 4.9,
+      accent: "#4ECDC4" 
+    },
+    { 
+      title: "Vintage Finds", 
+      imageUrl: "/placeholder.svg?height=400&width=300&text=Vintage", 
+      itemCount: 18, 
+      rating: 4.7,
+      accent: "#FFD166" 
+    },
+    { 
+      title: "Luxury Items", 
+      imageUrl: "/placeholder.svg?height=400&width=300&text=Luxury", 
+      itemCount: 15, 
+      rating: 4.9,
+      accent: "#6A0572" 
+    }
+  ]
 
   const getWishList = async () => {
     const token = await getCookie()
@@ -229,8 +318,8 @@ export default function Home() {
   const getData = async () => {
     const data = await getProducts()
     const topPriceData = await getProductTopPrice()
-    setItems(data)
-    setTopPrice(topPriceData)
+    setItems(data.data)
+    setTopPrice(topPriceData.data)
     console.log("i am in product home ", data)
     console.log("i am in product topPrice ", topPriceData)
 
@@ -628,6 +717,80 @@ export default function Home() {
                 </Button>
               </motion.div>
             </div>
+          </motion.div>
+        </motion.section>
+
+        {/* NEW: Featured Collections Section */}
+        <motion.section 
+          className="container py-16 relative z-10"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.div className="mb-12 text-center" variants={titleVariants} initial="hidden" animate="visible">
+            <motion.div
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6"
+              variants={floatingVariants}
+              animate="animate"
+            >
+              <Sparkles className="h-4 w-4" />
+              <span className="text-sm font-medium">Curated For You</span>
+            </motion.div>
+            <motion.h2
+              className="text-4xl md:text-5xl font-bold mb-6"
+              style={{
+                background: "linear-gradient(135deg, #6A0572 0%, #AB83A1 50%, #49c5b6 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            >
+              Featured Collections
+            </motion.h2>
+            <motion.p
+              className="text-muted-foreground max-w-2xl mx-auto text-lg"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.6 }}
+            >
+              Discover our handpicked collections of exceptional items curated by our expert team
+            </motion.p>
+          </motion.div>
+
+          <motion.div 
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+          >
+            {featuredCollections.map((collection, index) => (
+              <motion.div
+                key={collection.title}
+                variants={collectionCardVariants}
+                custom={index}
+              >
+                <FeaturedCollectionCard {...collection} />
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div 
+            className="flex justify-center mt-12"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.6 }}
+          >
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white font-medium rounded-full px-8"
+            >
+              View All Collections
+            </Button>
           </motion.div>
         </motion.section>
 

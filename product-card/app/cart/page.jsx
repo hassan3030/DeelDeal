@@ -159,18 +159,18 @@ const Cart = () => {
 
     const offers = await getOfferById(id)
 
-    for (const offer of offers) {
+    for (const offer of offers.data) {
       const offerItem = await getOfferItemsByOfferId(offer.id)
       const user_from = await getUserById(offer.from_user_id)
       const user_to = await getUserById(offer.to_user_id)
-      usersSwaper.push(user_from, user_to)
-      offerItems.push(...offerItem)
+      usersSwaper.push(user_from.data, user_to.data)
+      offerItems.push(...offerItem.data)
     }
 
     for (const item of offerItems) {
       const product = await getProductById(item.item_id)
       items.push({
-        ...product,
+        ...product.data,
         offer_item_id: item.id,
         offered_by: item.offered_by,
         offer_id: item.offer_id,
@@ -179,7 +179,7 @@ const Cart = () => {
 
     const uniqueUsers = Array.from(new Map(usersSwaper.map((user) => [user.id, user])).values())
 
-    setOffers(offers)
+    setOffers(offers.data)
     setUserSwaps(uniqueUsers)
     setSwapItems(items)
     setItemsOffer(offerItems)
@@ -798,7 +798,7 @@ export const CardItemSwap = ({ id, name, description, price, status_item, images
     const getDataImage = async () => {
       if (images) {
         const images2 = await getImageProducts(images)
-        setBigImage(images2[0]?.directus_files_id || "")
+        setBigImage(images2.data[0]?.directus_files_id || "")
       }
     }
     getDataImage()

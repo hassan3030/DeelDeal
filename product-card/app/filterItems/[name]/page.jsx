@@ -37,7 +37,7 @@ const FilterItemsPage = ({ params }) => {
       setIsLoading(true)
       const { name } = await params
       const productsData = await getProductSearchFilter(name)
-      setProducts(productsData)
+      setProducts(productsData.data)
       setIsLoading(false)
     }
     fetchProducts()

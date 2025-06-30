@@ -133,9 +133,9 @@ export function ItemListingUpdate({
       if (!images || images.length === 0) return
       try {
         const fetchedImages = await getImageProducts(images)
-        if (fetchedImages && fetchedImages.length > 0) {
-          setBigImage(fetchedImages[0].directus_files_id)
-          const urls = fetchedImages.map((img) => `http://localhost:8055/assets/${img.directus_files_id}`)
+        if (fetchedImages.datas && fetchedImages.data.length > 0) {
+          setBigImage(fetchedImages.data[0].directus_files_id)
+          const urls = fetchedImages.data.map((img) => `http://localhost:8055/assets/${img.directus_files_id}`)
           setImageUrls(urls)
         }
       } catch (err) {

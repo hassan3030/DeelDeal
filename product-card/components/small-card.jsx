@@ -25,7 +25,7 @@ const [bigImage , setBigImage] =  useState('')
 
   const getDataImage = async () => {
   const images2 = await getImageProducts(item?.images)
-  setBigImage(images2[0].directus_files_id)
+  setBigImage(images2.data[0].directus_files_id)
   console.log('i am in single product ' , images)
 }
 

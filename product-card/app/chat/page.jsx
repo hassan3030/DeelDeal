@@ -89,7 +89,7 @@ const Messages = () => {
       const receivedOffers = await getOffersNotifications(id)
 
       // Combine and remove duplicates (by offer id)
-      const allOffers = [...sentOffers, ...receivedOffers].filter(
+      const allOffers = [...sentOffers.data, ...receivedOffers.data].filter(
         (offer, idx, arr) => arr.findIndex((o) => o.id === offer.id) === idx,
       )
 
@@ -101,10 +101,10 @@ const Messages = () => {
           return {
             ...offer,
             partner_id: partnerId,
-            partner_name: partnerUser
-              ? `${partnerUser.first_name} ${partnerUser.last_name || ""}`
+            partner_name: partnerUser.data
+              ? `${partnerUser.data.first_name} ${partnerUser.data.last_name || ""}`
               : `${t("Unknown") || "Unknown"}`,
-            partner_avatar: partnerUser?.avatar || "/placeholder.svg",
+            partner_avatar: partnerUser.data?.avatar || "/placeholder.svg",
           }
         }),
       )
@@ -120,11 +120,11 @@ const Messages = () => {
       if (!selectedOffer || !myUserId) return
       // Partner info is already attached to offer
       const partnerUser = await getUserById(selectedOffer.partner_id)
-      setPartner(partnerUser)
+      setPartner(partnerUser.data)
 
       // Fetch messages for this offer
       const msgs = await getMessage(selectedOffer.id)
-      setMessages(msgs || [])
+      setMessages(msgs.data || [])
     }
     fetchPartnerAndMessages()
   }, [selectedOffer, myUserId])
@@ -136,7 +136,7 @@ const Messages = () => {
   const handleSendMessage = async () => {
     if (!message.trim() || !selectedOffer || !partner) return
     const newMsg = await addMessage(message, selectedOffer.partner_id, selectedOffer.id)
-    setMessages((prev) => [...prev, newMsg])
+    setMessages((prev) => [...prev, newMsg.data])
     setMessage("")
   }
 

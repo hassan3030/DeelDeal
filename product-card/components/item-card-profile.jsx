@@ -93,7 +93,7 @@ export function ItemCardProfile({
   const getDataImage = async () => {
     try {
       const images2 = await getImageProducts(images)
-      setBigImage(images2[0].directus_files_id)
+      setBigImage(images2.data[0].directus_files_id)
       setIsLoading(false)
     } catch (error) {
       console.error("Error loading image:", error)
@@ -121,9 +121,9 @@ export function ItemCardProfile({
   const handleGetWishItem = async () => {
     try {
       const user = await decodedToken()
-      const WishItem = await getWishList(user.id)
-      if (WishItem) {
-        const isItem = WishItem.find((i) => i.item_id == id) ? true : false
+      const WishItem = await getWishList(user.data.id)
+      if (WishItem.data) {
+        const isItem = WishItem.data.find((i) => i.item_id == id) ? true : false
         setSwitchHeart(isItem)
       }
     } catch (error) {
@@ -134,10 +134,10 @@ export function ItemCardProfile({
   const handleAddWishItem = async () => {
     try {
       const user = await decodedToken()
-      const WishItem = await getWishList(user.id)
-      const WishItemId = WishItem.filter((i) => i.item_id == id)
-      if (WishItem) {
-        const isItem = WishItem.find((i) => i.item_id == id)
+      const WishItem = await getWishList(user.data.id)
+      const WishItemId = WishItem.data.filter((i) => i.item_id == id)
+      if (WishItem.data) {
+        const isItem = WishItem.data.find((i) => i.item_id == id)
         if (isItem) {
           await deleteWishList(WishItemId[0]?.id)
           setSwitchHeart(false)
@@ -146,7 +146,7 @@ export function ItemCardProfile({
             description: t("deletedWishDesc") || "Deleted wishlist",
           })
         } else {
-          await addWishList(id, user.id)
+          await addWishList(id, user.data.id)
           setSwitchHeart(true)
           toast({
             title: t("successAddWish") || "Success",

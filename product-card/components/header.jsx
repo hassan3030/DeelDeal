@@ -133,20 +133,20 @@ export function Header() {
     if (token) {
       const { id } = await decodedToken(token)
       const userData = await getUserById(id)
-      setUser(userData)
+      setUser(userData.data)
     }
   }
 
   const getWishlist = async () => {
     const { id } = await decodedToken()
     const wishList = await getWishList(id)
-    setWishlistLength(Array.isArray(wishList) ? wishList.length : 0)
+    setWishlistLength(Array.isArray(wishList.data) ? wishList.count : 0)
   }
 
   const getChat = async () => {
     const { id } = await decodedToken()
     const chat = await getMessage(id)
-    setChatLength(Array.isArray(chat) ? chat.length : 0)
+    setChatLength(Array.isArray(chat.data) ? chat.data.length : 0)
   }
 
   const getOffers = async () => {
@@ -155,14 +155,14 @@ export function Header() {
       const { id } = await decodedToken()
       const offers = await getOfferById(id)
 
-      const filteredOffers = Array.isArray(offers)
-        ? offers.filter((offer) => offer.status_offer === "pending" || offer.status_offer === "accepted")
+      const filteredOffers = Array.isArray(offers.data)
+        ? offers.data.filter((offer) => offer.status_offer === "pending" || offer.status_offer === "accepted")
         : []
 
       const notifications = await getOffersNotifications(id)
 
-      const filteredNotifications = Array.isArray(notifications)
-        ? notifications.filter(
+      const filteredNotifications = Array.isArray(notifications.data)
+        ? notifications.data.filter(
             (notifications) => notifications.status_offer === "pending" || notifications.status_offer === "accepted",
           )
         : []

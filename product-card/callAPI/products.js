@@ -1,744 +1,595 @@
-import axios from 'axios';
-import {  getCookie , setCookie , decodedToken , baseItemsURL , baseURL } from './utiles';
-import { getUserByProductId } from './users';
+import axios from "axios"
+import { getCookie, decodedToken, baseItemsURL, baseURL, handleApiError, makeAuthenticatedRequest } from "./utiles.js"
+import { getUserByProductId } from "./users.js"
 
-/**
- * Get available items by user id 
- * @param {Object} params - Query parameters
- */
+// Get available/unavailable products by user ID
+export const getAvailableAndUnavailableProducts = async (user_id, available = true) => {
+  try {
+    if (!user_id) {
+      throw new Error("User ID is required")
+    }
 
-export const getAvailableAndUnavailableProducts = async (user_id , available = true) => {
+    const token = await getCookie()
+    if (!token) {
+      return { success: false, error: "Authentication required", status: 401 }
+    }
+
+    const status = available ? "available" : "unavailable"
+    const response = await axios.get(
+      `${baseItemsURL}/Items?filter[user_id][_eq]=${user_id}&filter[status_swap][_eq]=${status}`,
+    )
+
+    console.log(`Retrieved ${status} products for user:`, user_id)
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      message: `${status} products retrieved successfully`,
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Available/Unavailable Products")
+  }
+}
+
+// Get all products with smart filtering based on authentication
+export const getProducts = async (filters = {}) => {
   try {
     const token = await getCookie()
-    if(!token){
-        return null
-    }
-    else{
-      if(available){
- const products = await axios.get(`${baseItemsURL}/Items?filter[user_id][_eq]=${user_id}&filter[status_swap][_eq]=available`);
-        return products.data.data;
+    let url
+    const queryParams = new URLSearchParams()
+
+    if (!token) {
+      // Public access - show only available items
+      queryParams.append("filter[status_swap][_neq]", "unavailable")
+    } else {
+      // Authenticated access - exclude user's own items and unavailable items
+      const decoded = await decodedToken()
+      if (decoded?.id) {
+        queryParams.append("filter[user_id][_neq]", decoded.id)
+        queryParams.append("filter[status_swap][_neq]", "unavailable")
+      } else {
+        queryParams.append("filter[status_swap][_neq]", "unavailable")
       }
-     else{
-      const products = await axios.get(`${baseItemsURL}/Items?filter[user_id][_eq]=${user_id}&filter[status_swap][_eq]=unavailable`);
-        return products.data.data;
-     }
-   
+    }
+
+    // Add additional filters
+    if (filters.category) {
+      queryParams.append("filter[category][_eq]", encodeURIComponent(filters.category))
+    }
+    if (filters.min_price) {
+      queryParams.append("filter[price][_gte]", filters.min_price)
+    }
+    if (filters.max_price) {
+      queryParams.append("filter[price][_lte]", filters.max_price)
+    }
+    if (filters.search) {
+      queryParams.append("filter[name][_contains]", encodeURIComponent(filters.search))
+    }
+    if (filters.sort) {
+      queryParams.append("sort", filters.sort)
+    }
+    if (filters.limit) {
+      queryParams.append("limit", filters.limit)
+    }
+
+    url = `${baseItemsURL}/Items?${queryParams.toString()}`
+    const response = await axios.get(url)
+
+    console.log("Products retrieved successfully, count:", response.data.data?.length || 0)
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      message: "Products retrieved successfully",
     }
   } catch (error) {
-    console.error("Get Available products Error:", error)
-    throw error
+    return handleApiError(error, "Get Products")
   }
 }
 
-
-
-/**
- * Get all products
- * @param {Object} params - Query parameters
- */
-export const getProducts = async (params = {}) => {
+// Get product images with validation
+export const getImageProducts = async (imageIds) => {
   try {
-    const token = await getCookie()
-    if(!token){
-       const products = await axios.get(`${baseItemsURL}/Items?filter[status_swap][_neq]=unavailable`);
-        // console.log("callAPI getProducts" , products.data.data) 
-        return products.data.data;
+    if (!imageIds || !Array.isArray(imageIds) || imageIds.length === 0) {
+      throw new Error("Image IDs array is required and must not be empty")
     }
-    else{
-      const {id} =  await decodedToken()
-      // not equal  
-      //  const products = await axios.get(`${baseItemsURL}/Items`);
-    const products = await axios.get(`${baseItemsURL}/Items?filter[user_id][_neq]=${id}&filter[status_swap][_neq]=unavailable`);
-        // console.log("callAPI getProducts" , products.data.data) 
-        return products.data.data;
-      // http://localhost:8055/items/Items
+
+    const validIds = imageIds.filter((id) => id && typeof id === "string")
+    if (validIds.length === 0) {
+      throw new Error("No valid image IDs provided")
     }
-       
-    // Apply filters based on params
-    // let filteredProducts = [...products]
 
-    // if (params.category) {
-    //   filteredProducts = filteredProducts.filter((p) => p.category === params.category)
-    // }
+    const ids = validIds.join(",")
+    const response = await axios.get(`${baseItemsURL}/Items_files?filter[id][_in]=${ids}`)
 
-    // if (params.search) {
-    //   const searchLower = params.search.toLowerCase()
-    //   filteredProducts = filteredProducts.filter(
-    //     (p) => p.name.toLowerCase().includes(searchLower) || p.description.toLowerCase().includes(searchLower),
-    //   )
-    // }
-
-    // if (params.minPrice) {
-    //   filteredProducts = filteredProducts.filter((p) => p.price >= params.minPrice)
-    // }
-
-    // if (params.maxPrice) {
-    //   filteredProducts = filteredProducts.filter((p) => p.price <= params.maxPrice)
-    // }
-
-    // // Sort products
-    // if (params.sort) {
-    //   switch (params.sort) {
-    //     case "price_asc":
-    //       filteredProducts.sort((a, b) => a.price - b.price)
-    //       break
-    //     case "price_desc":
-    //       filteredProducts.sort((a, b) => b.price - a.price)
-    //       break
-    //     case "rating":
-    //       filteredProducts.sort((a, b) => b.rating - a.rating)
-    //       break
-    //     case "newest":
-    //       filteredProducts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    //       break
-    //     default:
-    //       break
-    //   }
-    // }
-
-    // return filteredProducts
+    console.log("Product images retrieved successfully, count:", response.data.data?.length || 0)
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      message: "Images retrieved successfully",
+    }
   } catch (error) {
-    console.error("Get products error:", error)
-    throw error
+    return handleApiError(error, "Get Product Images")
   }
 }
 
-
-
-
-// This function fetches all images to one product
-export const getImageProducts = async (idImage) => {
-  try {
-    const ids = idImage.join(',')
-    const response = await axios.get(`${baseItemsURL}/Items_files?filter[id][_in]=${ids}`,
-      {
-        "email": "admin@example.com",
-         "password": "123"
-      } 
-    );
-    return response.data.data ;  
-    } catch (err) {
-      console.error('Failed to fetch Products:', err)
-      throw new Error('The API is not responding')
-    }
-
-}
-
-
-// This function fetches all images to one product
+// Get all product images
 export const getAllImageProducts = async () => {
   try {
-    const response = await axios.get(`${baseItemsURL}/Items_files`,
-      {
-        "email": "admin@example.com",
-         "password": "123"
-      }
-    );
-    return response.data.data ;  
-    } catch (err) {
-      console.error('Failed to fetch Products:', err)
-      throw new Error('The API is not responding')
-    }
+    const response = await axios.get(`${baseItemsURL}/Items_files`)
 
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      message: "All images retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get All Product Images")
+  }
 }
 
-
-
+// Get product by ID with enhanced validation
 export const getProductById = async (id) => {
   try {
-    const response = await axios.get(`${baseItemsURL}/Items/${id}`);
-    // console.log(response.data.data.id) 
-    return response.data.data ;
-     
-  } catch (err) {
-    console.error('Failed to fetch Products:', err)
-    throw new Error('The API is not responding')
-  }
+    if (!id) {
+      throw new Error("Product ID is required")
+    }
 
+    const response = await axios.get(`${baseItemsURL}/Items/${id}`)
+
+    if (!response.data.data) {
+      throw new Error("Product not found")
+    }
+
+    console.log("Product retrieved successfully, ID:", id)
+    return {
+      success: true,
+      data: response.data.data,
+      message: "Product retrieved successfully",
+    }
+  } catch (error) {
+    if (error.response?.status === 404) {
+      return {
+        success: false,
+        error: "Product not found",
+        status: 404,
+        context: "Get Product By ID",
+      }
+    }
+    return handleApiError(error, "Get Product By ID")
+  }
 }
 
-// top price deel 
-export const getProductTopPrice = async () => {
-  const {id} = await decodedToken()
+// Get top price products with enhanced filtering
+export const getProductTopPrice = async (limit = 5) => {
   try {
-    // const response = await axios.get(`${baseItemsURL}/Items?sort=-price&limit=5`);
-    const response = await axios.get(`${baseItemsURL}/Items?filter[status_swap][_eq]=available&filter[_or][][user_id][_neq]=${id}&sort=-price&limit=5`);
-return response.data.data;
-    // console.log(response.data.data) 
-  } catch (err) {
-    console.error('Failed to fetch Products:', err)
-    throw new Error('The API is not responding')
-  }
+    const decoded = await decodedToken()
+    let url
 
+    const queryParams = new URLSearchParams()
+    queryParams.append("filter[status_swap][_eq]", "available")
+    queryParams.append("sort", "-price")
+    queryParams.append("limit", limit.toString())
+
+    if (decoded?.id) {
+      queryParams.append("filter[user_id][_neq]", decoded.id)
+    }
+
+    url = `${baseItemsURL}/Items?${queryParams.toString()}`
+    const response = await axios.get(url)
+
+    console.log("Top price products retrieved successfully, count:", response.data.data?.length || 0)
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      message: "Top price products retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Top Price Products")
+  }
 }
 
-export const getProductSearchFilter = async (fliter) => {
+// Search products with enhanced filtering
+export const getProductSearchFilter = async (filter) => {
   try {
-    // const response = await axios.get(`${baseItemsURL}/Items/?filter[_or][0][name][_contains]=${fliter}`);
-    // `&filter[_or][][price][_eq]=${fliter}
-    // &filter[_or][][category][_contains]=${fliter}
-    // /items/products?filter[_or][][status][_eq]=draft&filter[_or][][status][_eq]=archived
-    // console.log(response.data.data) 
-    const response = await axios.get(
-  `${baseItemsURL}/Items?filter[_and][0][status_swap][_neq]=unavailable&filter[_and][1][_or][0][name][_contains]=${fliter}`
-);
-return response.data.data;
-    
-  } catch (err) {
-    console.error('Failed to fetch Products:', err)
-    throw new Error('The API is not responding')
-  }
+    if (!filter || typeof filter !== "string" || filter.trim().length === 0) {
+      throw new Error("Search filter is required and must be a non-empty string")
+    }
 
+    const cleanFilter = filter.trim()
+    const queryParams = new URLSearchParams()
+
+    queryParams.append("filter[_and][0][status_swap][_neq]", "unavailable")
+    queryParams.append("filter[_and][1][_or][0][name][_contains]", encodeURIComponent(cleanFilter))
+    queryParams.append("filter[_and][1][_or][1][description][_contains]", encodeURIComponent(cleanFilter))
+    queryParams.append("filter[_and][1][_or][2][category][_contains]", encodeURIComponent(cleanFilter))
+
+    const url = `${baseItemsURL}/Items?${queryParams.toString()}`
+    const response = await axios.get(url)
+
+    console.log("Search completed, results:", response.data.data?.length || 0)
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      search_term: cleanFilter,
+      message: "Search completed successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Search Products")
+  }
 }
 
-export const getProductByCategory = async (fliter) => {
+// Get products by category with validation
+export const getProductByCategory = async (category) => {
   try {
-    // const response = await axios.get(`${baseItemsURL}/Items/?filter[category][_eq]=${fliter}`);
-    // console.log(response.data.data) 
-    const response = await axios.get(`${baseItemsURL}/Items?filter[status_swap][_neq]=unavailable&filter[category][_eq]=${fliter}`);
-return response.data.data;
-    
-  } catch (err) {
-    console.error('Failed to fetch Products:', err)
-    throw new Error('The API is not responding')
-  }
+    if (!category || typeof category !== "string" || category.trim().length === 0) {
+      throw new Error("Category is required and must be a non-empty string")
+    }
 
+    const cleanCategory = category.trim()
+    const queryParams = new URLSearchParams()
+
+    queryParams.append("filter[status_swap][_neq]", "unavailable")
+    queryParams.append("filter[category][_eq]", encodeURIComponent(cleanCategory))
+
+    const url = `${baseItemsURL}/Items?${queryParams.toString()}`
+    const response = await axios.get(url)
+
+    console.log("Products by category retrieved successfully, count:", response.data.data?.length || 0)
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      category: cleanCategory,
+      message: "Products by category retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Products By Category")
+  }
 }
 
-// get Product By User Id to swapping
+// Get products by current user ID
 export const getProductByUserId = async () => {
-  const {id} = await decodedToken()
   try {
-    const response = await axios.get(`${baseItemsURL}/Items/?filter[user_id][_eq]=${id}`);
-    // console.log("getProductByUserId" , response.data.data) 
-    return response.data.data ;
-     
-  } catch (err) {
-    console.error('getProductByUserId   Failed to fetch Products: ', err)
-    throw new Error('The API is not responding')
-  }
+    return await makeAuthenticatedRequest(async () => {
+      const decoded = await decodedToken()
+      if (!decoded?.id) {
+        throw new Error("Authentication required")
+      }
 
+      const response = await axios.get(`${baseItemsURL}/Items/?filter[user_id][_eq]=${decoded.id}`)
+
+      console.log("User products retrieved successfully, count:", response.data.data?.length || 0)
+      return {
+        success: true,
+        data: response.data.data || [],
+        count: response.data.data?.length || 0,
+        user_id: decoded.id,
+        message: "User products retrieved successfully",
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Get Products By User ID")
+  }
 }
 
-// ----------------------------------------------------------------------------------
-// get Products Owner swapping
-export const getProductsOwnerById = async (idProduct) => {
+// Get products by owner ID (via product ID)
+export const getProductsOwnerById = async (productId) => {
   try {
-    const {id} =  await getUserByProductId(idProduct)
-    // if(!id){
-    //   return null
-    // }
-    // else{
-      const response = await axios.get(`${baseItemsURL}/Items/?filter[user_id][_eq]=${id}`);
-    // console.log("getProductsOwnerById" , response.data.data) 
-    return response.data.data ;
-    // }
-    
-     
-  } catch (err) {
-    console.error('getProductByUserId   Failed to fetch Products: ', err)
-    throw new Error('The API is not responding')
-  }
+    if (!productId) {
+      throw new Error("Product ID is required")
+    }
 
+    const userResult = await getUserByProductId(productId)
+    if (!userResult.success) {
+      throw new Error(userResult.error)
+    }
+
+    const response = await axios.get(`${baseItemsURL}/Items/?filter[user_id][_eq]=${userResult.data.id}`)
+
+    console.log("Owner products retrieved successfully, count:", response.data.data?.length || 0)
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      owner_id: userResult.data.id,
+      message: "Owner products retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Products By Owner ID")
+  }
 }
 
-
-/**
- * Delete a product
- * @param {string} id - Product ID
- * @returns {Promise<boolean>} Success status
- */
+// Delete product with authentication
 export const deleteProduct = async (id) => {
   try {
-    await new Promise((resolve) => setTimeout(resolve, 800))
- await axios.delete(`${baseItemsURL}/Items/${id}`);
-    // console.log(response.data.data) 
-   
- 
+    return await makeAuthenticatedRequest(async () => {
+      if (!id) {
+        throw new Error("Product ID is required")
+      }
+
+      // Verify ownership before deletion
+      const decoded = await decodedToken()
+      const productResult = await getProductById(id)
+
+      if (!productResult.success) {
+        throw new Error("Product not found")
+      }
+
+      if (productResult.data.user_id !== decoded.id) {
+        throw new Error("Unauthorized: You can only delete your own products")
+      }
+
+      // Add delay for better UX
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      await axios.delete(`${baseItemsURL}/Items/${id}`)
+
+      console.log("Product deleted successfully, ID:", id)
+      return {
+        success: true,
+        data: { deleted_id: id },
+        message: "Product deleted successfully",
+      }
+    })
   } catch (error) {
-    console.error(`Delete product ${id} error:`, error)
-    throw error
+    return handleApiError(error, "Delete Product")
   }
 }
 
-
-
-export const addProduct = async ( payload , files ) => {
-  const token = await getCookie() ; 
-  const { id } = await decodedToken();
- 
+// Add product with images and comprehensive validation
+export const addProduct = async (payload, files) => {
   try {
-    // 1. Create the item (without images yet)
-    const itemRes = await axios.post(
-      `${baseItemsURL}/Items`,
-      { ...payload, user_id: id },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-// -----------------------------------------
-
-
-    const itemData = itemRes.data;
-    console.log("Response:", itemData);
-
-    const itemId = itemData?.data?.id;
-    if (!itemId) {
-      throw new Error("Failed to retrieve item ID from the response.");
-    }
-    // 2. Upload each image and link to item
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append("file", file);
-      // Upload file to /files
-      const fileRes = await axios.post(`${baseURL}/files`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const fileData = fileRes.data;
-      console.log("File Response:", fileData);
-
-      const fileId = fileData?.data?.id;
-      if (!fileId) {
-        throw new Error("Failed to retrieve file ID from the response.");
+    return await makeAuthenticatedRequest(async () => {
+      if (!payload || typeof payload !== "object") {
+        throw new Error("Product data is required")
       }
 
-      // Link the uploaded image to the item
-      await axios.post(
-        `${baseItemsURL}/Items_files`,
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        throw new Error("At least one image is required")
+      }
+
+      // Validate required fields
+      const requiredFields = ["name", "price", "category"]
+      for (const field of requiredFields) {
+        if (!payload[field]) {
+          throw new Error(`${field} is required`)
+        }
+      }
+
+      const token = await getCookie()
+      const decoded = await decodedToken()
+
+      if (!token || !decoded?.id) {
+        throw new Error("Authentication required")
+      }
+
+      // Validate file types
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+      const invalidFiles = files.filter((file) => !allowedTypes.includes(file.type))
+      if (invalidFiles.length > 0) {
+        throw new Error("Only JPEG, PNG, and WebP images are allowed")
+      }
+
+      // Create the item
+      const itemRes = await axios.post(
+        `${baseItemsURL}/Items`,
         {
-          Items_id: itemId,
-          directus_files_id: fileId,
+          ...payload,
+          user_id: decoded.id,
+          status_swap: "available",
+          date_created: new Date().toISOString(),
         },
         {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+        },
+      )
+
+      const itemId = itemRes.data?.data?.id
+      if (!itemId) {
+        throw new Error("Failed to create product")
+      }
+
+      console.log("Product created successfully, ID:", itemId)
+
+      // Upload and link images with error handling
+      const uploadResults = []
+      for (let i = 0; i < files.length; i++) {
+        try {
+          const file = files[i]
+          const formData = new FormData()
+          formData.append("file", file)
+
+          const fileRes = await axios.post(`${baseURL}/files`, formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          })
+
+          const fileId = fileRes.data?.data?.id
+          if (!fileId) {
+            throw new Error(`Failed to upload image ${i + 1}`)
+          }
+
+          await axios.post(
+            `${baseItemsURL}/Items_files`,
+            {
+              Items_id: itemId,
+              directus_files_id: fileId,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          )
+
+          uploadResults.push({ index: i, file_id: fileId, success: true })
+        } catch (uploadError) {
+          console.error(`Failed to upload image ${i + 1}:`, uploadError.message)
+          uploadResults.push({ index: i, success: false, error: uploadError.message })
         }
-      );
-    }
-  } catch (err) {
-    console.error(err);
+      }
 
-   
+      const successfulUploads = uploadResults.filter((r) => r.success).length
+      console.log(`Product added successfully with ${successfulUploads}/${files.length} images, ID:`, itemId)
+
+      return {
+        success: true,
+        data: {
+          id: itemId,
+          images_uploaded: successfulUploads,
+          total_images: files.length,
+          upload_results: uploadResults,
+        },
+        message: `Product added successfully with ${successfulUploads} images`,
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Add Product")
   }
+}
 
-
-};
-
-
-export const updateProduct = async ( payload , files , idItemPage) => {
-// Convert all fetch calls to axios
- const token = await getCookie() ; 
-
-
+// Update product with images and comprehensive validation
+export const updateProduct = async (payload, files, itemId) => {
   try {
-    // 1. Update the item (PATCH)
-    const itemRes = await axios.patch(
-      `${baseItemsURL}/Items/${idItemPage}`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    const itemData = itemRes.data;
-    console.log("Response:", itemData);
-
-    const itemId = itemData?.data?.id;
-    if (!itemId) {
-      throw new Error("Failed to retrieve item ID from the response.");
-    }
-
-    // 2. Delete existing images linked to this item before uploading new ones
-    const existingImagesRes = await axios.get(
-      `${baseItemsURL}/Items_files?filter[Items_id][_eq]=${itemId}`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    const existingImagesData = existingImagesRes.data;
-    if (existingImagesData?.data?.length > 0) {
-      for (const img of existingImagesData.data) {
-        await axios.delete(`${baseItemsURL}/Items_files/${img.id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      }
-    }
-
-    // 3. Upload each image and link to item
-    for (const file of files) {
-      const formData = new FormData();
-      formData.append("file", file);
-      // Upload file to /files
-      const fileRes = await axios.post(`${baseURL}/files`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const fileData = fileRes.data;
-      console.log("File Response:", fileData);
-      const fileId = fileData?.data?.id;
-      if (!fileId) {
-        throw new Error("Failed to retrieve file ID from the response.");
+    return await makeAuthenticatedRequest(async () => {
+      if (!payload || typeof payload !== "object" || !itemId) {
+        throw new Error("Product data and ID are required")
       }
 
-      // Link the uploaded image to the item
-      await axios.post(
-        `${baseItemsURL}/Items_files`,
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        throw new Error("At least one image is required")
+      }
+
+      const token = await getCookie()
+      const decoded = await decodedToken()
+
+      if (!token || !decoded?.id) {
+        throw new Error("Authentication required")
+      }
+
+      // Verify ownership
+      const existingProduct = await getProductById(itemId)
+      if (!existingProduct.success) {
+        throw new Error("Product not found")
+      }
+
+      if (existingProduct.data.user_id !== decoded.id) {
+        throw new Error("Unauthorized: You can only update your own products")
+      }
+
+      // Validate file types
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+      const invalidFiles = files.filter((file) => !allowedTypes.includes(file.type))
+      if (invalidFiles.length > 0) {
+        throw new Error("Only JPEG, PNG, and WebP images are allowed")
+      }
+
+      // Update the item
+      const itemRes = await axios.patch(
+        `${baseItemsURL}/Items/${itemId}`,
         {
-          Items_id: itemId,
-          directus_files_id: fileId,
+          ...payload,
+          date_updated: new Date().toISOString(),
         },
         {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+        },
+      )
+
+      if (!itemRes.data?.data?.id) {
+        throw new Error("Failed to update product")
+      }
+
+      console.log("Product updated successfully, ID:", itemId)
+
+      // Delete existing images
+      try {
+        const existingImagesRes = await axios.get(`${baseItemsURL}/Items_files?filter[Items_id][_eq]=${itemId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        const deletePromises = (existingImagesRes.data?.data || []).map((img) =>
+          axios.delete(`${baseItemsURL}/Items_files/${img.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        )
+
+        await Promise.allSettled(deletePromises)
+        console.log("Existing images cleaned up")
+      } catch (deleteError) {
+        console.warn("Failed to delete some existing images:", deleteError.message)
+      }
+
+      // Upload new images
+      const uploadResults = []
+      for (let i = 0; i < files.length; i++) {
+        try {
+          const file = files[i]
+          const formData = new FormData()
+          formData.append("file", file)
+
+          const fileRes = await axios.post(`${baseURL}/files`, formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          })
+
+          const fileId = fileRes.data?.data?.id
+          if (!fileId) {
+            throw new Error(`Failed to upload image ${i + 1}`)
+          }
+
+          await axios.post(
+            `${baseItemsURL}/Items_files`,
+            {
+              Items_id: itemId,
+              directus_files_id: fileId,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          )
+
+          uploadResults.push({ index: i, file_id: fileId, success: true })
+        } catch (uploadError) {
+          console.error(`Failed to upload image ${i + 1}:`, uploadError.message)
+          uploadResults.push({ index: i, success: false, error: uploadError.message })
         }
-      );
-    }
+      }
 
-   
-  } catch (err) {
-    console.error(err);
-    
+      const successfulUploads = uploadResults.filter((r) => r.success).length
+      console.log(`Product updated successfully with ${successfulUploads}/${files.length} images, ID:`, itemId)
+
+      return {
+        success: true,
+        data: {
+          ...itemRes.data.data,
+          images_uploaded: successfulUploads,
+          total_images: files.length,
+          upload_results: uploadResults,
+        },
+        message: `Product updated successfully with ${successfulUploads} images`,
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Update Product")
   }
-};
-
-
-// used if error 
-// add items with fetch
-// const handleSubmit = async () => {
-//   const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFhZjc2NjE5LTI3ZDgtNDBlOC05ODQ0LWIzYzZjOWExNjlmNSIsInJvbGUiOm51bGwsImFwcF9hY2Nlc3MiOmZhbHNlLCJhZG1pbl9hY2Nlc3MiOmZhbHNlLCJpYXQiOjE3NDk3ODE2NTQsImV4cCI6MTc1MDM4NjQ1NCwiaXNzIjoiZGlyZWN0dXMifQ.gIGdvRMACpw9J6PS2IFEGCP9bqZyLz-Uo3fxljK9-5s"; // Replace with your actual token
-//   const apiBase = "http://localhost:8055";
-//  const {id} = await decodedToken()
-//   const files = images; // Use the images array for file uploads
-
-//   if (files.length === 0) {
-
-//      toast({
-//         title: t("error") || "ERROR ",
-//         description:"Please fill all fields and select at least one image.",
-//         variant: "destructive",
-//       })
-//     return;
-//   }
-
-//   try {
-//     // 1. Create the item (without images yet)
-//     const payload = { ...form.getValues() };
-//      // Ensure the id field is not included
-//     console.log("Payload:", payload);
-
-//     const itemRes = await fetch(`http://localhost:8055/items/Items`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${token}`,
-//       },
-//     body: JSON.stringify({...payload , user_id:id}) ,
-//     });
-
-//     const itemData = await itemRes.json();
-//     console.log("Response:", itemData);
-
-//     if (!itemRes.ok) {
-//       throw new Error(itemData.errors || "Failed to create item");
-//     }
-
-//     const itemId = itemData?.data?.id;
-//     if (!itemId) {
-//       throw new Error("Failed to retrieve item ID from the response.");
-//     }
-
-//     // 2. Upload each image and link to item
-//     for (const file of files) {
-//       const formData = new FormData();
-//       formData.append("file", file);
-
-//       // Upload file to /files
-//       const fileRes = await fetch(`${apiBase}/files`, {
-//         method: "POST",
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: formData,
-//       });
-
-//       const fileData = await fileRes.json();
-//       console.log("File Response:", fileData);
-
-//       if (!fileRes.ok) {
-//         throw new Error(fileData.errors || "Failed to upload file");
-//       }
-
-//       const fileId = fileData?.data?.id;
-//       if (!fileId) {
-//         throw new Error("Failed to retrieve file ID from the response.");
-//       }
-
-//       // Link the uploaded image to the item
-//       await fetch(`${apiBase}/items/Items_files`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify({
-//           Items_id: itemId,
-//           directus_files_id: fileId,
-//         }),
-//       });
-//     }
-    
-//   toast({
-//           title: t("successfully") ,
-//           description:  "Item added successfully with images!",
-//         })
-//          // Clear all fields and images
-//   form.reset();
-//   setImages([]);
-//   setImageUrls([]);
-//   router.refresh()
-
-//   } catch (err) {
-//     console.error(err);
-    
-//      toast({
-//         title: t("error") || "ERROR ",
-//         description:err.message || "Error adding item.",
-//         variant: "destructive",
-//       })
-
-//   }
-// };
-
-
-
-// with axios
-// const handleSubmit = async () => {
-//   const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFhZjc2NjE5LTI3ZDgtNDBlOC05ODQ0LWIzYzZjOWExNjlmNSIsInJvbGUiOm51bGwsImFwcF9hY2Nlc3MiOmZhbHNlLCJhZG1pbl9hY2Nlc3MiOmZhbHNlLCJpYXQiOjE3NDk3ODE2NTQsImV4cCI6MTc1MDM4NjQ1NCwiaXNzIjoiZGlyZWN0dXMifQ.gIGdvRMACpw9J6PS2IFEGCP9bqZyLz-Uo3fxljK9-5s"; // Replace with your actual token
-//   const apiBase = "http://localhost:8055";
-//   const { id } = await decodedToken();
-//   const files = images;
-
-//   if (files.length === 0) {
-//     toast({
-//       title: t("error") || "ERROR ",
-//       description: "Please fill all fields and select at least one image.",
-//       variant: "destructive",
-//     });
-//     return;
-//   }
-
-//   try {
-//     // 1. Create the item (without images yet)
-//     const payload = { ...form.getValues() };
-//     console.log("Payload:", payload);
-
-//     const itemRes = await axios.post(
-//       `${apiBase}/items/Items`,
-//       { ...payload, user_id: id },
-//       {
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//       }
-//     );
-
-//     const itemData = itemRes.data;
-//     console.log("Response:", itemData);
-
-//     const itemId = itemData?.data?.id;
-//     if (!itemId) {
-//       throw new Error("Failed to retrieve item ID from the response.");
-//     }
-
-//     // 2. Upload each image and link to item
-//     for (const file of files) {
-//       const formData = new FormData();
-//       formData.append("file", file);
-
-//       // Upload file to /files
-//       const fileRes = await axios.post(`${apiBase}/files`, formData, {
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//       });
-
-//       const fileData = fileRes.data;
-//       console.log("File Response:", fileData);
-
-//       const fileId = fileData?.data?.id;
-//       if (!fileId) {
-//         throw new Error("Failed to retrieve file ID from the response.");
-//       }
-
-//       // Link the uploaded image to the item
-//       await axios.post(
-//         `${apiBase}/items/Items_files`,
-//         {
-//           Items_id: itemId,
-//           directus_files_id: fileId,
-//         },
-//         {
-//           headers: {
-//             "Content-Type": "application/json",
-//             Authorization: `Bearer ${token}`,
-//           },
-//         }
-//       );
-//     }
-
-//     toast({
-//       title: t("successfully"),
-//       description: "Item added successfully with images!",
-//     });
-//     // Clear all fields and images
-//     form.reset();
-//     setImages([]);
-//     setImageUrls([]);
-//     router.refresh();
-//   } catch (err) {
-//     console.error(err);
-
-//     toast({
-//       title: t("error") || "ERROR ",
-//       description: err.message || "Error adding item.",
-//       variant: "destructive",
-//     });
-//   }
-// };
-
-//  update with fetch
-// const handleSubmit = async () => {
-//   const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0ODg4NjQwMSwiZXhwIjoxNzQ5NDkxMjAxLCJpc3MiOiJkaXJlY3R1cyJ9.xVvqMIqFcmEgaJny0QI0IDKUYruhBiKQxRLpYNGlNH4"; // Replace with your actual token
-//   const apiBase = "http://localhost:8055";
-
-//   const files = imagesFile; // Use the images array for file uploads
-
-//   if (files.length === 0) {
-//      toast({
-//         title: t("error") || "ERROR ",
-//         description:"Please fill all fields and select at least one image.",
-//         variant: "destructive",
-//       })
-   
-//     return;
-//   }
-
-//   try {
-//     // 1. Create the item (without images yet)
-//     const payload = { ...form.getValues() };
-//      // Ensure the id field is not included
-//     console.log("Payload:", payload);
-
-//     const itemRes = await fetch(`http://localhost:8055/items/Items/${id}`, {
-//       method: "PATCH",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${token}`,
-//       },
-//       body: JSON.stringify(payload),
-//     });
-
-//     const itemData = await itemRes.json();
-//     console.log("Response:", itemData);
-
-//     if (!itemRes.ok) {
-//       throw new Error(itemData.errors || "Failed to create item");
-//     }
-
-//     const itemId = itemData?.data?.id;
-//     if (!itemId) {
-//       throw new Error("Failed to retrieve item ID from the response.");
-//     }
-
-//     // 2- Delete existing images linked to this item before uploading new ones
-//     const existingImagesRes = await fetch(`${apiBase}/items/Items_files?filter[Items_id][_eq]=${itemId}`, {
-//       headers: {
-//       Authorization: `Bearer ${token}`,
-//       },
-//     });
-//     const existingImagesData = await existingImagesRes.json();
-//     if (existingImagesData?.data?.length > 0) {
-//       for (const img of existingImagesData.data) {
-//       await fetch(`${apiBase}/items/Items_files/${img.id}`, {
-//         method: "DELETE",
-//         headers: {
-//         Authorization: `Bearer ${token}`,
-//         },
-//       });
-//       }
-//     }
-    
-
-//     // 3. Upload each image and link to item
-//     for (const file of files) {
-//       const formData = new FormData();
-//       formData.append("file", file);
-
-//       // Upload file to /files
-//       const fileRes = await fetch(`${apiBase}/files`, {
-//         method: "POST",
-//         headers: {
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: formData,
-//       });
-
-//       const fileData = await fileRes.json();
-//       console.log("File Response:", fileData);
-
-//       if (!fileRes.ok) {
-//         throw new Error(fileData.errors || "Failed to upload file");
-//       }
-
-//       const fileId = fileData?.data?.id;
-//       if (!fileId) {
-//         throw new Error("Failed to retrieve file ID from the response.");
-//       }
-
-//       // Link the uploaded image to the item
-//       await fetch(`${apiBase}/items/Items_files`, {
-//         method: "POST",
-//         headers: {
-//           "Content-Type": "application/json",
-//           Authorization: `Bearer ${token}`,
-//         },
-//         body: JSON.stringify({
-//           Items_id: itemId,
-//           directus_files_id: fileId,
-//         }),
-//       });
-//     }
-//   toast({
-//         title: t("error") || "ERROR ",
-//         description:"Item added successfully with images!",
-//       })
- 
-//   } catch (err) {
-//     console.error(err);
-//     toast({
-//         title: t("error") || "ERROR ",
-//         description: `${err.message}` || "Error adding item.",
-//       })
-  
-//   }
-// };
+}

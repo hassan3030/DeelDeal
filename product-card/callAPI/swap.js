@@ -1,514 +1,867 @@
-// ------------- offers and transactions -------------------//
+import axios from "axios"
+import { getCookie, decodedToken, baseItemsURL, baseURL, handleApiError, makeAuthenticatedRequest } from "./utiles.js"
+import { getUserByProductId } from "./users.js"
 
-import axios from 'axios';
-import {  getCookie , setCookie , decodedToken } from './utiles';
-import { getUserByProductId } from './users';
-const baseItemsURL = 'http://localhost:8055/items';
-const baseURL = 'http://localhost:8055';
-
-
-
-
-// make swap (on cart)
-//    1- get user by products my token               back-end
-//    2- get owner by products prod id               back-end
-
-//    3- get  my products my token  != available     back-end
-//    4- get  owner products prod id  != available   back-end
-
-//    5- store suitable cat                          front
-//    6- select items 
-//    7- add message to chate                        
-//    8- send request to back-end to swap items      back-end
-
-// add to cart 
-//    1-view 
-//    2-delete item = change price 
-//    3- delete all = withdraw delete offers 
-//    4-add message to chat 
-
-// display notifications 
-//  1-view 
-//  2-delete item = change price 
-//  3-delete all = rejected offers
-//  4-add message to chat
-//  5-accepted offers completed 
-//  6-store in transctions
-
- // display chat
-//   1-view 
-//   2-add message to chat
-//   3-delete message 
-
-
-// get all swaps (offers)
-
-
-// get all swape by id (offers)
-
-// transactions (completed offers)
-
-// add review (rate , from , to , comment)
-
-
-
-
-
-
-
-// ************************** offer ***************************//
-
-// ----------- Offers API -----------
-
-// Get all offers
-export const getAllOffers = async () => {
-  try {
-    const response = await axios.get(`${baseItemsURL}/Offers`);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to fetch Offers:', err);
-    throw new Error('The API is not responding');
+// Validate authentication and return user info
+const validateAuth = async () => {
+  const token = await getCookie()
+  if (!token) {
+    throw new Error("Authentication required")
   }
-};
 
-// Get offers by from_user_id
-export const getOfferById = async (id) => {
-  if (!id) throw new Error("User ID is required");
-  try {
-    const response = await axios.get(`${baseItemsURL}/Offers?filter[from_user_id][_eq]=${id}`);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to fetch Offers:', err);
-    throw new Error('The API is not responding');
+  const decoded = await decodedToken()
+  if (!decoded?.id) {
+    throw new Error("Invalid authentication token")
   }
-};
 
-// Get offers by to_user_id (notifications)
-export const getOffersNotifications = async (id) => {
-  if (!id) throw new Error("User ID is required");
-  try {
-    const response = await axios.get(`${baseItemsURL}/Offers?filter[to_user_id][_eq]=${id}`);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to fetch Offers Notifications:', err);
-    throw new Error('The API is not responding');
-  }
-};
+  return { token, userId: decoded.id }
+}
 
-// Get Offer_Items by offer_id
-export const getItemsByOfferId = async (id) => {
-  if (!id) throw new Error("Offer ID is required");
+// ========================= OFFERS MANAGEMENT =========================
+
+// Get all offers with enhanced filtering
+export const getAllOffers = async (filters = {}) => {
   try {
-    const items = await axios.get(`${baseItemsURL}/Offer_Items?filter[offer_id][_eq]=${id}`);
-    return items.data.data;
+    const queryParams = new URLSearchParams()
+
+    // Add filters if provided
+    if (filters.status) {
+      queryParams.append("filter[status_offer][_eq]", filters.status)
+    }
+    if (filters.from_user_id) {
+      queryParams.append("filter[from_user_id][_eq]", filters.from_user_id)
+    }
+    if (filters.to_user_id) {
+      queryParams.append("filter[to_user_id][_eq]", filters.to_user_id)
+    }
+    if (filters.sort) {
+      queryParams.append("sort", filters.sort)
+    } else {
+      queryParams.append("sort", "-date_created")
+    }
+
+    const url = `${baseItemsURL}/Offers${queryParams.toString() ? `?${queryParams.toString()}` : ""}`
+    const response = await axios.get(url)
+
+    console.log("Offers retrieved successfully, count:", response.data.data?.length || 0)
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      filters: filters,
+      message: "Offers retrieved successfully",
+    }
   } catch (error) {
-    console.error(`Failed to get items from this Offer:`, error);
-    throw error;
+    return handleApiError(error, "Get All Offers")
   }
-};
+}
 
-// Delete (reject) an offer by id
+// Get offers by from_user_id (keeping original function name)
+export const getOfferById = async (id) => {
+  try {
+    if (!id) {
+      throw new Error("User ID is required")
+    }
+
+    const response = await axios.get(`${baseItemsURL}/Offers?filter[from_user_id][_eq]=${id}&sort=-date_created`)
+
+    console.log("Sent offers retrieved successfully for user:", id)
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      user_id: id,
+      message: "Sent offers retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Offers By User ID")
+  }
+}
+
+// Get offers notifications (to_user_id)
+export const getOffersNotifications = async (id) => {
+  try {
+    if (!id) {
+      throw new Error("User ID is required")
+    }
+
+    const response = await axios.get(`${baseItemsURL}/Offers?filter[to_user_id][_eq]=${id}&sort=-date_created`)
+
+    console.log("Received offers retrieved successfully for user:", id)
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      user_id: id,
+      message: "Received offers retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Offers Notifications")
+  }
+}
+
+// Get items by offer ID
+export const getItemsByOfferId = async (id) => {
+  try {
+    if (!id) {
+      throw new Error("Offer ID is required")
+    }
+
+    const response = await axios.get(`${baseItemsURL}/Offer_Items?filter[offer_id][_eq]=${id}`)
+
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      offer_id: id,
+      message: "Offer items retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Items By Offer ID")
+  }
+}
+
+// Delete offer by ID (reject offer)
 export const deleteOfferById = async (id) => {
   try {
-    if (!id) throw new Error("Offer ID is required");
-
-    // 1. Get all Offer_Items for this offer
-    const items = await getItemsByOfferId(id);
-    if (!Array.isArray(items)) throw new Error("Failed to fetch Offer_Items");
-
-    // 2. For each item, set status_swap to 'available' and delete Offer_Item
-    for (const item of items) {
-      if (!item.item_id || !item.id) {
-        console.warn("Invalid Offer_Item object:", item);
-        continue;
+    return await makeAuthenticatedRequest(async () => {
+      if (!id) {
+        throw new Error("Offer ID is required")
       }
-      await axios.patch(`${baseItemsURL}/Items/${item.item_id}`, {
-        status_swap: "available",
-      });
-      await axios.delete(`${baseItemsURL}/Offer_Items/${item.id}`);
-    }
 
-    // 3. Delete related chats
-    const chatRes = await axios.get(`${baseItemsURL}/Chat?filter[offer_id][_eq]=${id}`);
-    const chats = chatRes.data?.data || [];
-    for (const chat of chats) {
-      if (chat.id) {
-        await axios.delete(`${baseItemsURL}/Chat/${chat.id}`);
+      // Get all items in the offer
+      const itemsResult = await getItemsByOfferId(id)
+      if (!itemsResult.success) {
+        throw new Error("Failed to fetch offer items")
       }
-    }
 
-    // 4. Set offer status to 'rejected'
-    await axios.patch(`${baseItemsURL}/Offers/${id}`, {
-      status_offer: "rejected",
-    });
+      const items = itemsResult.data
 
-    return true;
+      // Restore item availability
+      const restorePromises = items.map(async (item) => {
+        if (item.item_id) {
+          try {
+            await axios.patch(`${baseItemsURL}/Items/${item.item_id}`, {
+              status_swap: "available",
+            })
+            return { item_id: item.item_id, success: true }
+          } catch (error) {
+            console.warn(`Failed to restore item ${item.item_id}:`, error.message)
+            return { item_id: item.item_id, success: false, error: error.message }
+          }
+        }
+      })
+
+      const restoreResults = await Promise.allSettled(restorePromises)
+
+      // Delete offer items
+      const deleteItemPromises = items.map(async (item) => {
+        if (item.id) {
+          try {
+            await axios.delete(`${baseItemsURL}/Offer_Items/${item.id}`)
+            return { offer_item_id: item.id, success: true }
+          } catch (error) {
+            console.warn(`Failed to delete offer item ${item.id}:`, error.message)
+            return { offer_item_id: item.id, success: false, error: error.message }
+          }
+        }
+      })
+
+      await Promise.allSettled(deleteItemPromises)
+
+      // Delete related chats
+      try {
+        const chatRes = await axios.get(`${baseItemsURL}/Chat?filter[offer_id][_eq]=${id}`)
+        const chats = chatRes.data?.data || []
+
+        const deleteChatPromises = chats.map((chat) =>
+          chat.id ? axios.delete(`${baseItemsURL}/Chat/${chat.id}`) : Promise.resolve(),
+        )
+
+        await Promise.allSettled(deleteChatPromises)
+      } catch (chatError) {
+        console.warn("Failed to delete some chat messages:", chatError.message)
+      }
+
+      // Update offer status to rejected
+      await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+        status_offer: "rejected",
+      })
+
+      console.log("Offer rejected successfully, ID:", id)
+      return {
+        success: true,
+        data: {
+          offer_id: id,
+          items_restored: items.length,
+          restore_results: restoreResults,
+        },
+        message: "Offer rejected successfully",
+      }
+    })
   } catch (error) {
-    console.error(`Delete Offer ${id} error:`, error?.response?.data || error.message || error);
-    throw error;
+    return handleApiError(error, "Delete Offer By ID")
   }
-};
+}
 
-// Accept an offer by id
+// Accept offer (keeping original function name)
 export const acceptedOffer = async (id) => {
-  if (!id) throw new Error("Offer ID is required");
   try {
-    const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
-      status_offer: "accepted"
-    });
-    return response.data.data;
-  } catch (error) {
-    console.error(`accepted Offer ${id} error:`, error);
-    throw error;
-  }
-};
+    return await makeAuthenticatedRequest(async () => {
+      if (!id) {
+        throw new Error("Offer ID is required")
+      }
 
-// Update offer by id (cash adjustment)
+      const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+        status_offer: "accepted",
+      })
+
+      console.log("Offer accepted successfully, ID:", id)
+      return {
+        success: true,
+        data: response.data.data,
+        message: "Offer accepted successfully",
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Accept Offer")
+  }
+}
+
+// Update offer by ID (cash adjustment)
 export const updateOfferById = async (id, cash_adjustment) => {
-  if (!id) throw new Error("Offer ID is required");
   try {
-    const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
-      cash_adjustment,
-    });
-    return response.data.data;
+    return await makeAuthenticatedRequest(async () => {
+      if (!id) {
+        throw new Error("Offer ID is required")
+      }
+
+      if (typeof cash_adjustment !== "number") {
+        throw new Error("Cash adjustment must be a number")
+      }
+
+      const response = await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+        cash_adjustment,
+      })
+
+      console.log("Offer cash adjustment updated successfully, ID:", id)
+      return {
+        success: true,
+        data: response.data.data,
+        message: "Cash adjustment updated successfully",
+      }
+    })
   } catch (error) {
-    console.error(`Update Offer ${id} error:`, error);
-    throw error;
+    return handleApiError(error, "Update Offer By ID")
   }
-};
+}
 
-
-
-
-// accepted  offer by id 
+// Accept offer by ID (keeping original function name)
 export const acceptedOfferById = async (id_offer) => {
-  const {id} = await decodedToken();
-  if (!id_offer) throw new Error("Offer ID is required");
-  if (!id) throw new Error("Login is required");
   try {
+    return await makeAuthenticatedRequest(async () => {
+      if (!id_offer) {
+        throw new Error("Offer ID is required")
+      }
 
-    const response = await axios.patch(`${baseItemsURL}/Offers/${id_offer}`, {
-      status_offer: "accepted",
-    });
-    return response.data.data;
+      const response = await axios.patch(`${baseItemsURL}/Offers/${id_offer}`, {
+        status_offer: "accepted",
+      })
+
+      console.log("Offer accepted successfully, ID:", id_offer)
+      return {
+        success: true,
+        data: response.data.data,
+        message: "Offer accepted successfully",
+      }
+    })
   } catch (error) {
-    console.error(`Update Offer ${id} error:`, error);
-    throw error;
+    return handleApiError(error, "Accept Offer By ID")
   }
-};
+}
 
-
-// Complete an offer (and delete related items)
+// Complete offer by ID
 export const completedOfferById = async (id_offer) => {
-   const {id} = await decodedToken();
-  if (!id_offer) throw new Error("Offer ID is required");
-  if (!id) throw new Error("Login is required");
   try {
-    const response = await axios.patch(`${baseItemsURL}/Offers/${id_offer}`, {
-      status_offer: "completed"
-    });
-    const items = await getItemsByOfferId(id_offer);
-    if (Array.isArray(items)) {
-      for (const item of items) {
-        if (item.id) {
-          await axios.delete(`${baseItemsURL}/Items/${item.id}`);
-        }
+    return await makeAuthenticatedRequest(async () => {
+      if (!id_offer) {
+        throw new Error("Offer ID is required")
       }
-      // Delete all Offer_Items for this offer
-      for (const item of items) {
-        if (item.id) {
-          await axios.delete(`${baseItemsURL}/Offer_Items/${item.id}`);
-        }
+
+      // Get all items in the offer
+      const itemsResult = await getItemsByOfferId(id_offer)
+      if (!itemsResult.success) {
+        throw new Error("Failed to fetch offer items")
       }
-    }
-    return response.data.data;
+
+      const items = itemsResult.data
+
+      // Delete the actual items (they've been traded)
+      const deleteItemPromises = items.map(async (item) => {
+        if (item.item_id) {
+          try {
+            await axios.delete(`${baseItemsURL}/Items/${item.item_id}`)
+            return { item_id: item.item_id, success: true }
+          } catch (error) {
+            console.warn(`Failed to delete item ${item.item_id}:`, error.message)
+            return { item_id: item.item_id, success: false, error: error.message }
+          }
+        }
+      })
+
+      const deleteResults = await Promise.allSettled(deleteItemPromises)
+
+      // Delete offer items
+      const deleteOfferItemPromises = items.map(async (item) => {
+        if (item.id) {
+          try {
+            await axios.delete(`${baseItemsURL}/Offer_Items/${item.id}`)
+            return { offer_item_id: item.id, success: true }
+          } catch (error) {
+            console.warn(`Failed to delete offer item ${item.id}:`, error.message)
+            return { offer_item_id: item.id, success: false, error: error.message }
+          }
+        }
+      })
+
+      await Promise.allSettled(deleteOfferItemPromises)
+
+      // Update offer status to completed
+      const response = await axios.patch(`${baseItemsURL}/Offers/${id_offer}`, {
+        status_offer: "completed",
+      })
+
+      console.log("Offer completed successfully, ID:", id_offer)
+      return {
+        success: true,
+        data: {
+          ...response.data.data,
+          items_traded: items.length,
+          delete_results: deleteResults,
+        },
+        message: "Offer completed successfully",
+      }
+    })
   } catch (error) {
-    console.error(`completed Offer ${id_offer} error:`, error);
-    throw error;
+    return handleApiError(error, "Complete Offer By ID")
   }
-};
+}
 
+// Add offer with transaction-like behavior
+export const addOffer = async (to_user_id, cash_adjustment = 0, user_prods, owner_prods, message, name = "") => {
+  let offer_id = null
+  const createdItemIds = []
+  const updatedItemIds = []
 
-// Add a new offer
-export const addOffer = async (to_user_id, cash_adjustment = 0, user_prods, owner_prods ,message , name='' ) => {
-  let offer_id;
   try {
-    const token = await getCookie();
-    if (!token) throw new Error("No token found");
-
-    const { id } = await decodedToken();
-    if (!id) throw new Error("Invalid token");
-
-    // 1. Add offer to Offers table
-    const offerRes = await axios.post(`${baseURL}/items/Offers`, {
-      from_user_id: id,
-      to_user_id,
-      cash_adjustment,
-      status_offer: "pending",
-      name
-    });
-    offer_id = offerRes.data.data.id;
-
-    const allItems = [...user_prods, ...owner_prods];
-    for (const item of allItems) {
-      if (!offer_id || !item) {
-        console.error("Missing required field:", { offer_id, item });
-        break;
+    return await makeAuthenticatedRequest(async () => {
+      // Validation
+      if (!to_user_id) {
+        throw new Error("Recipient user ID is required")
       }
-      const ownerProduct = await getUserByProductId(item);
-      await axios.post(`${baseURL}/items/Offer_Items`, {
-        offer_id,
-        item_id: item,
-        offered_by: ownerProduct.id
-      });
-    }
-    // 3. Update items' status_swap to 'unavailable'
-    for (const item of allItems) {
-      await axios.patch(`${baseItemsURL}/Items/${item}`, {
-        status_swap: "unavailable"
-      });
-    }
-    if (message) {
-      await axios.post(`${baseURL}/items/Chat`, {
-        from_user_id: id,
-        to_user_id,
-        offer_id,
-        message
-      });
-    }
-    return offer_id;
-  } catch (err) {
-    console.error('Failed to add offer:', err);
-    if (offer_id) await deleteOfferById(offer_id);
-    throw err;
-  }
-};
 
-// Get all Offer_Items
+      if (!user_prods || !owner_prods || (!user_prods.length && !owner_prods.length)) {
+        throw new Error("At least one item must be included in the offer")
+      }
+
+      const auth = await validateAuth()
+      const allItems = [...(user_prods || []), ...(owner_prods || [])]
+
+      // Validate all items exist and are available
+      for (const itemId of allItems) {
+        const itemResponse = await axios.get(`${baseItemsURL}/Items/${itemId}`)
+        const item = itemResponse.data.data
+
+        if (!item) {
+          throw new Error(`Item ${itemId} not found`)
+        }
+
+        if (item.status_swap !== "available") {
+          throw new Error(`Item ${itemId} is not available for swapping`)
+        }
+      }
+
+      // Create the offer
+      const offerRes = await axios.post(`${baseURL}/items/Offers`, {
+        from_user_id: auth.userId,
+        to_user_id,
+        cash_adjustment: cash_adjustment || 0,
+        status_offer: "pending",
+        name: name || `Offer from ${auth.userId}`,
+      })
+
+      offer_id = offerRes.data.data.id
+      console.log("Offer created successfully, ID:", offer_id)
+
+      // Add items to the offer
+      for (const itemId of allItems) {
+        const ownerResult = await getUserByProductId(itemId)
+        if (!ownerResult.success) {
+          throw new Error(`Failed to get owner for item ${itemId}`)
+        }
+
+        const offerItemResponse = await axios.post(`${baseURL}/items/Offer_Items`, {
+          offer_id,
+          item_id: itemId,
+          offered_by: ownerResult.data.id,
+        })
+
+        createdItemIds.push(offerItemResponse.data.data.id)
+      }
+
+      // Update items status to unavailable
+      for (const itemId of allItems) {
+        await axios.patch(`${baseItemsURL}/Items/${itemId}`, {
+          status_swap: "unavailable",
+        })
+        updatedItemIds.push(itemId)
+      }
+
+      // Add initial message if provided
+      if (message && message.trim()) {
+        await axios.post(`${baseURL}/items/Chat`, {
+          from_user_id: auth.userId,
+          to_user_id,
+          offer_id,
+          message: message.trim(),
+        })
+      }
+
+      console.log("Offer created successfully with all items and message")
+      return {
+        success: true,
+        data: {
+          offer_id,
+          items_count: allItems.length,
+          has_message: !!(message && message.trim()),
+        },
+        message: "Offer created successfully",
+      }
+    })
+  } catch (error) {
+    // Rollback on error
+    console.error("Error creating offer, attempting rollback...")
+
+    try {
+      // Restore item statuses
+      for (const itemId of updatedItemIds) {
+        await axios.patch(`${baseItemsURL}/Items/${itemId}`, {
+          status_swap: "available",
+        })
+      }
+
+      // Delete created offer items
+      for (const offerItemId of createdItemIds) {
+        await axios.delete(`${baseItemsURL}/Offer_Items/${offerItemId}`)
+      }
+
+      // Delete created offer
+      if (offer_id) {
+        await axios.delete(`${baseItemsURL}/Offers/${offer_id}`)
+      }
+
+      console.log("Rollback completed successfully")
+    } catch (rollbackError) {
+      console.error("Rollback failed:", rollbackError.message)
+    }
+
+    return handleApiError(error, "Add Offer")
+  }
+}
+
+// ========================= OFFER ITEMS MANAGEMENT =========================
+
+// Get all offer items
 export const getOfferItems = async () => {
   try {
-    const response = await axios.get(`${baseItemsURL}/Offer_Items`);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to fetch Offer_Items:', err);
-    throw new Error('The API is not responding');
-  }
-};
+    const response = await axios.get(`${baseItemsURL}/Offer_Items`)
 
-// Get Offer_Item by id
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      message: "Offer items retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Offer Items")
+  }
+}
+
+// Get offer item by ID
 export const getOfferItemsById = async (id) => {
-  if (!id) throw new Error("Offer_Item ID is required");
   try {
-    const response = await axios.get(`${baseItemsURL}/Offer_Items/${id}`);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to fetch Offer_Item:', err);
-    throw new Error('The API is not responding');
-  }
-};
+    if (!id) {
+      throw new Error("Offer item ID is required")
+    }
 
-// Get Offer_Items by offer_id
+    const response = await axios.get(`${baseItemsURL}/Offer_Items/${id}`)
+
+    return {
+      success: true,
+      data: response.data.data,
+      message: "Offer item retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Offer Items By ID")
+  }
+}
+
+// Get offer items by offer ID
 export const getOfferItemsByOfferId = async (offer_id) => {
-  if (!offer_id) throw new Error("Offer ID is required");
   try {
-    const response = await axios.get(`${baseItemsURL}/Offer_Items?filter[offer_id][_eq]=${offer_id}`);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to fetch Offer Items:', err);
-    throw new Error('The API is not responding');
-  }
-};
+    if (!offer_id) {
+      throw new Error("Offer ID is required")
+    }
 
-// Delete Offer_Item by its ID
+    const response = await axios.get(`${baseItemsURL}/Offer_Items?filter[offer_id][_eq]=${offer_id}`)
+
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      offer_id: offer_id,
+      message: "Offer items retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Offer Items By Offer ID")
+  }
+}
+
+// Delete offer item by ID
 export const deleteOfferItemsById = async (id, idItemItself, cashAdjustment, offer_id) => {
   try {
-    if (!id || !idItemItself) throw new Error("Offer_Item ID is required for deletion.");
-    await axios.patch(`${baseItemsURL}/Items/${idItemItself}`, {
-      status_swap: "available"
-    });
-    await axios.delete(`${baseItemsURL}/Offer_Items/${id}`);
-    // Only update cashAdjustment if it's a valid number
-    if (cashAdjustment !== null && cashAdjustment !== undefined && !isNaN(cashAdjustment)) {
-    const patchRes = await axios.patch(`${baseItemsURL}/Offers/${offer_id}`, {
-  cash_adjustment: cashAdjustment
-});
-console.log("PATCH response:", patchRes.data);
-    }
-  } catch (err) {
-    console.error('Failed to delete Offer_Item:', err?.response?.data || err.message || err);
-    throw new Error('Failed to delete Offer_Item');
-  }
-};
+    return await makeAuthenticatedRequest(async () => {
+      if (!id || !idItemItself) {
+        throw new Error("Offer item ID and item ID are required")
+      }
 
-// Update Offer_Item by id (add your update fields as needed)
+      // Restore item availability
+      await axios.patch(`${baseItemsURL}/Items/${idItemItself}`, {
+        status_swap: "available",
+      })
+
+      // Delete offer item
+      await axios.delete(`${baseItemsURL}/Offer_Items/${id}`)
+
+      // Update cash adjustment if provided
+      if (offer_id && cashAdjustment !== null && cashAdjustment !== undefined && !isNaN(cashAdjustment)) {
+        const patchRes = await axios.patch(`${baseItemsURL}/Offers/${offer_id}`, {
+          cash_adjustment: cashAdjustment,
+        })
+        console.log("Cash adjustment updated:", patchRes.data)
+      }
+
+      console.log("Offer item deleted successfully, ID:", id)
+      return {
+        success: true,
+        data: {
+          deleted_offer_item_id: id,
+          restored_item_id: idItemItself,
+          cash_adjustment_updated: cashAdjustment !== null && !isNaN(cashAdjustment),
+        },
+        message: "Offer item deleted successfully",
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Delete Offer Items By ID")
+  }
+}
+
+// Update offer item by ID
 export const updateOfferItemsById = async (id, updateData = {}) => {
-  if (!id) throw new Error("Offer_Item ID is required");
   try {
-    const response = await axios.patch(`${baseItemsURL}/Offer_Items/${id}`, updateData);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to update Offer_Item:', err);
-    throw new Error('The API is not responding');
-  }
-};
+    return await makeAuthenticatedRequest(async () => {
+      if (!id) {
+        throw new Error("Offer item ID is required")
+      }
 
-// Add chat 
-export const addMessage = async (message , to_user_id , offer_id  ) => {
-  if (!message) return null;
-  const {id} = await decodedToken();
+      if (!updateData || typeof updateData !== "object") {
+        throw new Error("Update data is required")
+      }
+
+      const response = await axios.patch(`${baseItemsURL}/Offer_Items/${id}`, updateData)
+
+      console.log("Offer item updated successfully, ID:", id)
+      return {
+        success: true,
+        data: response.data.data,
+        message: "Offer item updated successfully",
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Update Offer Items By ID")
+  }
+}
+
+// ========================= CHAT/MESSAGING SYSTEM =========================
+
+// Add message
+export const addMessage = async (message, to_user_id, offer_id) => {
   try {
-    const response = await axios.post(`${baseItemsURL}/Chat`, {
-      from_user_id: id,
-      to_user_id,
-      offer_id,
-      message
-    });
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to update Message:', err);
-    throw new Error('The API is not responding');
+    return await makeAuthenticatedRequest(async () => {
+      if (!message || !message.trim()) {
+        throw new Error("Message content is required")
+      }
+
+      if (!to_user_id || !offer_id) {
+        throw new Error("Recipient user ID and offer ID are required")
+      }
+
+      const auth = await validateAuth()
+
+      const response = await axios.post(`${baseItemsURL}/Chat`, {
+        from_user_id: auth.userId,
+        to_user_id,
+        offer_id,
+        message: message.trim(),
+      })
+
+      console.log("Message added successfully to offer:", offer_id)
+      return {
+        success: true,
+        data: response.data.data,
+        message: "Message sent successfully",
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Add Message")
   }
-};
+}
 
-
-
-
-
-
-// Get chat by id 
-export const getMessage = async (offer_id ) => {
-
+// Get messages by offer ID
+export const getMessage = async (offer_id) => {
   try {
-    const response = await axios.get(`${baseItemsURL}/Chat?filter[offer_id][_eq]=${offer_id}`);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to update Message:', err);
-    throw new Error('The API is not responding');
+    if (!offer_id) {
+      throw new Error("Offer ID is required")
+    }
+
+    const response = await axios.get(`${baseItemsURL}/Chat?filter[offer_id][_eq]=${offer_id}&sort=date_created`)
+
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      offer_id: offer_id,
+      message: "Messages retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Message")
   }
-};
+}
 
-
-// Get chat
+// Get all messages
 export const getAllMessage = async () => {
   try {
-    const response = await axios.get(`${baseItemsURL}/Chat`);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to update Message:', err);
-    throw new Error('The API is not responding');
+    const response = await axios.get(`${baseItemsURL}/Chat?sort=-date_created`)
+
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      message: "All messages retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get All Messages")
   }
-};
+}
 
+// ========================= WISHLIST MANAGEMENT =========================
 
-
-// ---------------Add wishList -------------------------
-
-// Add wishList 
-export const addWishList = async (item_id  , user_id ) => {
-  
+// Add to wishlist
+export const addWishList = async (item_id, user_id) => {
   try {
+    if (!item_id || !user_id) {
+      throw new Error("Item ID and user ID are required")
+    }
+
+    // Check if item already in wishlist
+    const existingResponse = await axios.get(
+      `${baseItemsURL}/WishList?filter[item_id][_eq]=${item_id}&filter[user_id][_eq]=${user_id}`,
+    )
+
+    if (existingResponse.data.data.length > 0) {
+      return {
+        success: false,
+        error: "Item already in wishlist",
+        status: 409,
+      }
+    }
+
     const response = await axios.post(`${baseItemsURL}/WishList`, {
-     item_id,
-      user_id
-    });
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to update WishList:', err);
-    throw new Error('The API is not responding');
+      item_id,
+      user_id,
+    })
+
+    console.log("Item added to wishlist successfully, item ID:", item_id)
+    return {
+      success: true,
+      data: response.data.data,
+      message: "Item added to wishlist successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Add Wish List")
   }
-};
+}
 
-
-
-
-
-
-// Get wishList by  user_id
+// Get wishlist by user ID
 export const getWishList = async (user_id) => {
-
   try {
-    const response = await axios.get(`${baseItemsURL}/WishList?filter[user_id][_eq]=${user_id}`);
-    if (!response.data || !response.data.data) {
-      return [];
+    if (!user_id) {
+      throw new Error("User ID is required")
     }
-    else{
 
-      return response.data.data;
+    const response = await axios.get(`${baseItemsURL}/WishList?filter[user_id][_eq]=${user_id}`)
+
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      user_id: user_id,
+      message: "Wishlist retrieved successfully",
     }
-  } catch (err) {
-    console.error('Failed to update WishList:', err);
-    throw new Error('The API is not responding');
+  } catch (error) {
+    return handleApiError(error, "Get Wish List")
   }
-};
+}
 
-
-// Get wishList 
+// Get all wishlists
 export const getAllWishList = async () => {
   try {
-    const response = await axios.get(`${baseItemsURL}/WishList`);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to update WishList:', err);
-    throw new Error('The API is not responding');
+    const response = await axios.get(`${baseItemsURL}/WishList`)
+
+    return {
+      success: true,
+      data: response.data.data || [],
+      count: response.data.data?.length || 0,
+      message: "All wishlists retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get All Wish List")
   }
-};
+}
 
-
-
-
-// Delete wishList by id
+// Delete wishlist item by ID
 export const deleteWishList = async (id) => {
-
   try {
-     await axios.delete(`${baseItemsURL}/WishList/${id}`);
-  } catch (err) {
-    console.error('Failed to update WishList:', err);
-    throw new Error('The API is not responding');
+    if (!id) {
+      throw new Error("Wishlist ID is required")
+    }
+
+    await axios.delete(`${baseItemsURL}/WishList/${id}`)
+
+    console.log("Item removed from wishlist successfully, ID:", id)
+    return {
+      success: true,
+      data: { deleted_id: id },
+      message: "Item removed from wishlist successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Delete Wish List")
   }
-};
+}
 
+// ========================= REVIEWS SYSTEM =========================
 
-
-
-
-
-
-// ---------------Add wishList -------------------------
-
-// Add wishList 
-export const addReview = async (from_user_id , to_user_id , offer_id , rating , comment) => {
-  if(!comment) comment = "No comment";
+// Add review
+export const addReview = async (from_user_id, to_user_id, offer_id, rating, comment) => {
   try {
-    const response = await axios.post(`${baseItemsURL}/Reviews`, {
-  from_user_id , to_user_id , offer_id , rating , comment
-    });
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to update Reviews:', err);
-    throw new Error('The API is not responding');
+    return await makeAuthenticatedRequest(async () => {
+      if (!from_user_id || !to_user_id || !offer_id || !rating) {
+        throw new Error("From user ID, to user ID, offer ID, and rating are required")
+      }
+
+      if (rating < 1 || rating > 5) {
+        throw new Error("Rating must be between 1 and 5")
+      }
+
+      // Check if review already exists
+      const existingResponse = await axios.get(
+        `${baseItemsURL}/Reviews?filter[from_user_id][_eq]=${from_user_id}&filter[offer_id][_eq]=${offer_id}`,
+      )
+
+      if (existingResponse.data.data.length > 0) {
+        return {
+          success: false,
+          error: "Review already exists for this offer",
+          status: 409,
+        }
+      }
+
+      const response = await axios.post(`${baseItemsURL}/Reviews`, {
+        from_user_id,
+        to_user_id,
+        offer_id,
+        rating,
+        comment: comment || "No comment",
+      })
+
+      console.log("Review added successfully for offer:", offer_id)
+      return {
+        success: true,
+        data: response.data.data,
+        message: "Review added successfully",
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Add Review")
   }
-};
+}
 
-
+// Get reviews for a user
 export const getReview = async (to_user_id) => {
   try {
-    const response = await axios.get(`${baseItemsURL}/Reviews/?filter[to_user_id][_eq]=${to_user_id}`)
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to update Reviews:', err);
-    throw new Error('The API is not responding');
+    if (!to_user_id) {
+      throw new Error("User ID is required")
+    }
+
+    const response = await axios.get(`${baseItemsURL}/Reviews?filter[to_user_id][_eq]=${to_user_id}`)
+
+    const reviews = response.data.data || []
+    const averageRating =
+      reviews.length > 0 ? reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length : 0
+
+    return {
+      success: true,
+      data: {
+        reviews,
+        total_reviews: reviews.length,
+        average_rating: Math.round(averageRating * 10) / 10,
+      },
+      message: "Reviews retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get Review")
   }
-};
+}
 
-
-export const getReviewConditins = async ( from_user_id , offer_id ) => {
+// Get review conditions (check if user can review)
+export const getReviewConditins = async (from_user_id, offer_id) => {
   try {
-   const response = await axios.get(
-  `${baseItemsURL}/Reviews/?filter[from_user_id][_eq]=${from_user_id}&filter[offer_id][_eq]=${offer_id}`
-);
-    return response.data.data;
-  } catch (err) {
-    console.error('Failed to update Reviews:', err);
-    return null;
+    if (!from_user_id || !offer_id) {
+      throw new Error("From user ID and offer ID are required")
+    }
+
+    const response = await axios.get(
+      `${baseItemsURL}/Reviews?filter[from_user_id][_eq]=${from_user_id}&filter[offer_id][_eq]=${offer_id}`,
+    )
+
+    const hasReviewed = response.data.data.length > 0
+
+    return {
+      success: true,
+      data: {
+        can_review: !hasReviewed,
+        has_reviewed: hasReviewed,
+        existing_reviews: response.data.data || [],
+      },
+      message: hasReviewed ? "User has already reviewed this offer" : "User can review this offer",
+    }
+  } catch (error) {
+    console.error("Failed to check review conditions:", error)
+    return {
+      success: false,
+      error: "Failed to check review conditions",
+      status: error.response?.status || 500,
+    }
   }
-};
+}

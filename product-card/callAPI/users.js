@@ -1,254 +1,428 @@
-import axios from "axios";
-
+import axios from "axios"
 import {
   baseURL,
   getCookie,
   setCookie,
   decodedToken,
   baseItemsURL,
-} from "./utiles";
+  removeCookie,
+  handleApiError,
+  makeAuthenticatedRequest,
+} from "./utiles.js"
 
-// authenticate the user and get the token
+const STATIC_ADMIN_TOKEN = "5WPX_OsuYORlkVh0yC3m0LcRLparo8CB"
+
+// Authenticate user and get token
 export const auth = async (email, password) => {
   try {
-    const authResponse = await axios.post(`${baseURL}/auth/login`, {
-      email,
-      password,
-    });
-    const token = await authResponse.data.data.access_token;
-    await setCookie(token);
-    //  console.log("authResponse.data.data i am in auth func" , authResponse.data.data.access_token)
-    //  console.log("access_token i am in auth func" , token)
-
-    return authResponse.data.data;
-    // console.log("response.data.data" , response.data.data)
-  } catch (err) {
-    console.error("Failed to authantication:", err);
-    // throw new Error('The API is not responding')
-  }
-};
-
-// login user
-export const login = async (email, password) => {
-  try {
-    const authResponse = await auth(email, password);
-    const { id } = await decodedToken(authResponse.access_token);
-    //  console.log("i am in login func  id" , id)
-    const response = await axios.get(
-      `${baseURL}/users/${id}`,
-      {
-        email,
-        password,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${authResponse.access_token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    // console.log(response.data.data)
-    return response.data.data;
-  } catch (err) {
-    console.error("Failed to login:", err);
-    // throw new Error('The API is not responding')
-  }
-};
-
-// register user
-export const register = async (email, password, first_name) => {
-  try {
-    // make register API call
-    
-    // await axios.post(`${baseURL}/users/register`, {
-    await axios.post(`http://localhost:8055/users/register`, {
-      email,
-      password,
-      first_name,
-    },
-  {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-           
-    console.log(email, password);
-    const authResponse = await auth(email, password);
-    await setCookie(authResponse.access_token);
-
-    // console.log("response.data.data" , response.data.data)
-    // console.log("i am in register authResponse.data.data " , authResponse.access_token)
-    // return authResponse.data.data;
-  } catch (err) {
-    console.error("Failed to register:", err);
-    // throw new Error('The API register is not responding')
-  }
-};
-
-//  add message
-// register user
-export const addMessage = async (email, name, message, phone_number) => {
-  try {
-    const token = getCookie();
-    if (token) {
-      const { id } = await decodedToken();
-      const data = await axios.post(`${baseURL}/items/Customers_Problems`, {
-        user_id: id,
-        email: email,
-        name: name,
-        message: message,
-        phone_number: phone_number,
-      });
-      // console.log("response.data.data" , response.data.data)
-      // console.log("i am in add message " , data )
-    } else {
-      const data = await axios.post(`${baseURL}/items/Customers_Problems`, {
-        email: email,
-        name: name,
-        message: message,
-        phone_number: phone_number,
-      });
-      // console.log("response.data.data" , response.data.data)
-      // console.log("i am in add message " , data )
+    if (!email || !password) {
+      throw new Error("Email and password are required")
     }
 
-    // return authResponse.data.data;
-  } catch (err) {
-    console.error("Failed to register:", err);
-    throw new Error('The API register is not responding')
-  }
-};
+    const authResponse = await axios.post(`${baseURL}/auth/login`, {
+      email: email.toLowerCase().trim(),
+      password,
+    })
 
-//get user by id
+    const token = authResponse.data?.data?.access_token
+    if (!token) {
+      throw new Error("Authentication failed - no token received")
+    }
+
+    const setCookieResult = await setCookie(token)
+    if (!setCookieResult.success) {
+      throw new Error("Failed to store authentication token")
+    }
+
+    console.log("Authentication successful for:", email)
+    return {
+      success: true,
+      data: authResponse.data.data,
+      message: "Authentication successful",
+    }
+  } catch (error) {
+    return handleApiError(error, "Authentication")
+  }
+}
+
+// Login user with enhanced error handling
+export const login = async (email, password) => {
+  try {
+    const authResult = await auth(email, password)
+    if (!authResult.success) {
+      return authResult
+    }
+
+    const decoded = await decodedToken()
+    if (!decoded?.id) {
+      throw new Error("Failed to decode user token")
+    }
+
+    const response = await axios.get(`${baseURL}/users/${decoded.id}`, {
+      headers: {
+        Authorization: `Bearer ${authResult.data.access_token}`,
+        "Content-Type": "application/json",
+      },
+    })
+
+    console.log("Login successful for user:", decoded.id)
+    return {
+      success: true,
+      data: {
+        user: response.data.data,
+        token: authResult.data.access_token,
+      },
+      message: "Login successful",
+    }
+  } catch (error) {
+    return handleApiError(error, "Login")
+  }
+}
+
+// Register user with enhanced Directus handling
+export const register = async (email, password, first_name, additional_data = {}) => {
+  try {
+    // Input validation
+    if (!email || !password || !first_name) {
+      throw new Error("Email, password, and first name are required")
+    }
+
+    // Email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      throw new Error("Please provide a valid email address")
+    }
+
+    // Password strength validation
+    if (password.length < 8) {
+      throw new Error("Password must be at least 8 characters long")
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)/
+    if (!passwordRegex.test(password)) {
+      throw new Error("Password must contain at least one letter and one number")
+    }
+
+    const cleanEmail = email.toLowerCase().trim()
+    const cleanFirstName = first_name.trim()
+
+    // Check if user already exists
+    try {
+      const existingUserCheck = await axios.get(
+        `${baseURL}/users?filter[email][_eq]=${encodeURIComponent(cleanEmail)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${STATIC_ADMIN_TOKEN}`,
+          },
+        },
+      )
+
+      if (existingUserCheck.data?.data?.length > 0) {
+        throw new Error("An account with this email already exists")
+      }
+    } catch (checkError) {
+      if (checkError.message.includes("already exists")) {
+        throw checkError
+      }
+      console.warn("Could not verify existing user, proceeding with registration")
+    }
+
+    // Prepare user data for Directus
+    const userData = {
+      email: cleanEmail,
+      password,
+      first_name: cleanFirstName,
+      status: "active",
+      role: "bfefbc56-574b-4a83-869f-1940f1aa1687",
+      ...additional_data,
+    }
+
+    console.log("Creating user in Directus for:", cleanEmail)
+    const userRegister = await axios.post(`${baseURL}/users`, userData, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${STATIC_ADMIN_TOKEN}`,
+      },
+    })
+
+    if (!userRegister.data?.data) {
+      throw new Error("Failed to create user account")
+    }
+
+    const newUser = userRegister.data.data
+    console.log("User created successfully in Directus, ID:", newUser.id)
+
+    // Attempt automatic login after registration
+    let autoLoginResult = null
+    try {
+      console.log("Attempting automatic login after registration...")
+      autoLoginResult = await auth(cleanEmail, password)
+
+      if (autoLoginResult.success) {
+        console.log("Auto-login successful after registration")
+      }
+    } catch (loginError) {
+      console.warn("Auto-login failed after registration:", loginError.message)
+    }
+
+    return {
+      success: true,
+      data: {
+        user: {
+          id: newUser.id,
+          email: newUser.email,
+          first_name: newUser.first_name,
+          status: newUser.status,
+          date_created: newUser.date_created,
+        },
+        auto_login: autoLoginResult?.success || false,
+        token: autoLoginResult?.success ? autoLoginResult.data?.access_token : null,
+      },
+      message: autoLoginResult?.success
+        ? "Registration successful and automatically logged in"
+        : "Registration successful. Please log in to continue.",
+    }
+  } catch (error) {
+    // Handle Directus-specific errors
+    if (error.response?.data?.errors) {
+      const directusErrors = error.response.data.errors
+      let errorMessage = "Registration failed"
+
+      if (Array.isArray(directusErrors)) {
+        const errorMessages = directusErrors.map((err) => {
+          if (err.extensions?.code === "RECORD_NOT_UNIQUE") {
+            return "An account with this email already exists"
+          }
+          if (err.extensions?.code === "FAILED_VALIDATION") {
+            return `Validation error: ${err.message}`
+          }
+          return err.message || "Unknown error"
+        })
+        errorMessage = errorMessages.join(", ")
+      } else if (directusErrors.message) {
+        errorMessage = directusErrors.message
+      }
+
+      return {
+        success: false,
+        error: errorMessage,
+        status: error.response?.status || 400,
+        code: "DIRECTUS_REGISTRATION_ERROR",
+      }
+    }
+
+    return handleApiError(error, "Registration")
+  }
+}
+
+// Add customer message with validation
+export const addMessage = async (email, name, message, phone_number) => {
+  try {
+    if (!email || !name || !message) {
+      throw new Error("Email, name, and message are required")
+    }
+
+    const messageData = {
+      email: email.toLowerCase().trim(),
+      name: name.trim(),
+      message: message.trim(),
+      phone_number: phone_number || null,
+    }
+
+    const token = await getCookie()
+    if (token) {
+      const decoded = await decodedToken()
+      if (decoded?.id) {
+        messageData.user_id = decoded.id
+      }
+    }
+
+    const response = await axios.post(`${baseURL}/items/Customers_Problems`, messageData)
+
+    console.log("Message added successfully")
+    return {
+      success: true,
+      data: response.data,
+      message: "Message sent successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Add Message")
+  }
+}
+
+// Get user by ID with enhanced error handling
 export const getUserById = async (id) => {
   try {
-    const response = await axios.get(`${baseURL}/users/${id}`);
-    console.log(response.data.data.id)
-    return response.data.data;
-  } catch (err) {
-    console.error("Failed to fetch user data:", err);
-    throw new Error("The API is not responding");
+    if (!id) {
+      throw new Error("User ID is required")
+    }
+
+    const response = await axios.get(`${baseURL}/users/${id}`)
+
+    console.log("User data retrieved for ID:", id)
+    return {
+      success: true,
+      data: response.data.data,
+      message: "User data retrieved successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Get User By ID")
   }
-};
+}
 
-/// get Product By User Id to swapping
-export const getUserByProductId = async (ProductId) => {
+// Get user by product ID
+export const getUserByProductId = async (productId) => {
   try {
-    // Get the product to extract the user_id
-    const productRes = await axios.get(`${baseItemsURL}/Items/${ProductId}`);
-    const userId = await productRes.data?.data?.user_id;
-    if (!userId) throw new Error("No user_id found for this product");
+    if (!productId) {
+      throw new Error("Product ID is required")
+    }
 
-    // Fetch the user by userId
-    const response = await axios.get(`${baseURL}/users/${userId}`);
-    return response.data.data;
-  } catch (err) {
-    console.error("Failed to fetch user data:", err);
-    throw new Error("The API is not responding");
+    const productRes = await axios.get(`${baseItemsURL}/Items/${productId}`)
+    const userId = productRes.data?.data?.user_id
+
+    if (!userId) {
+      throw new Error("No user associated with this product")
+    }
+
+    const userResult = await getUserById(userId)
+    if (!userResult.success) {
+      throw new Error(userResult.error)
+    }
+
+    return userResult
+  } catch (error) {
+    return handleApiError(error, "Get User By Product ID")
   }
-};
-// edit profile user
+}
 
-export const editeProfile = async (userData, authId, avatar) => {
+// Edit profile with enhanced validation and authentication
+export const editeProfile = async (userData, authId, avatar = null) => {
   try {
-    // const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0OTU0NTYxMywiZXhwIjoxNzUwMTUwNDEzLCJpc3MiOiJkaXJlY3R1cyJ9.VsIBg7slfZOcEqJ8FPEypSRsZJlelWiD62LI4qG0hh8"
-    const { id } = await decodedToken();
-    // console.log("token.id" , id)
-    // console.log("token" , token)
+    return await makeAuthenticatedRequest(async () => {
+      const decoded = await decodedToken()
+      if (!decoded?.id) {
+        throw new Error("Authentication required")
+      }
 
-    if (id === authId) {
-      if (!avatar) {
-        // console.log("You are authorized to edit this profile without avatar" , id)
-        const response = await axios.patch(
-          `${baseURL}/users/${id}`,
-          {
-            ...userData,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${getCookie("Token")}`,
-              "Content-Type": "application/json",
-            },
+      if (decoded.id !== authId) {
+        throw new Error("Unauthorized: Cannot edit another user's profile")
+      }
+
+      const token = await getCookie()
+      if (!token) {
+        throw new Error("Authentication token not found")
+      }
+
+      const updateData = { ...userData }
+
+      if (avatar) {
+        try {
+          // Remove old avatar if exists
+          const currentUser = await getUserById(decoded.id)
+          if (currentUser.success && currentUser.data.avatar) {
+            await axios.delete(`${baseURL}/files/${currentUser.data.avatar}`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
           }
-        );
-        // console.log(response.data.data)
-        return response.data.data;
-      } else {
-        // remove old avatar from the server
-        const oldAvatarId = await axios.get(`${baseURL}/users/${id}`);
-        await axios.delete(`${baseURL}/files/${oldAvatarId.data.data.avatar}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        // upload avatar to the server and  get the avatar id
-        const formData = new FormData();
-        formData.append("file", avatar);
-        const avatarResponse = await axios.post(
-          `http://localhost:8055/files`,
-          formData,
-          {
+
+          // Upload new avatar
+          const formData = new FormData()
+          formData.append("file", avatar)
+
+          const avatarResponse = await axios.post(`${baseURL}/files`, formData, {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "multipart/form-data",
             },
-          }
-        );
-        // console.log("avatar uploaded" , avatarResponse.data.data)
+          })
 
-        // upload new avatar to user profile
-        const response = await axios.patch(
-          `${baseURL}/users/${id}`,
-          {
-            ...userData,
-            avatar: avatarResponse.data.data.id,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        // console.log(response.data.data)
+          updateData.avatar = avatarResponse.data.data.id
+        } catch (avatarError) {
+          console.warn("Avatar upload failed:", avatarError.message)
+        }
       }
-    } else {
-      // console.log("You are not authorized to edit this profile")
-      return null;
-    }
-  } catch (err) {
-    console.error("Failed to edite profile:", err);
-    // throw new Error('The API register is not responding')
-  }
-};
 
-// reset pass
+      const response = await axios.patch(`${baseURL}/users/${decoded.id}`, updateData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      console.log("Profile updated successfully")
+      return {
+        success: true,
+        data: response.data.data,
+        message: "Profile updated successfully",
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Edit Profile")
+  }
+}
+
+// Reset password with validation
 export const resetPassword = async (newPassword, email) => {
   try {
-    const { id } = await decodedToken();
-
-    if (id) {
-      const user = await getUserById(id);
-      if (user.email === email) {
-        const response = await axios.patch(
-          `${baseURL}/users/${id}`,
-          {
-            password: newPassword,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImJmZWZiYzU2LTU3NGItNGE4My04NjlmLTE5NDBmMWFhMTY4NyIsInJvbGUiOiIzOGM4YTAwMy02MmEwLTQzYjItYWZmZS1mZjI1NDJkNGRjY2MiLCJhcHBfYWNjZXNzIjp0cnVlLCJhZG1pbl9hY2Nlc3MiOnRydWUsImlhdCI6MTc0ODcyNzU1MywiZXhwIjoxNzQ5MzMyMzUzLCJpc3MiOiJkaXJlY3R1cyJ9.qe92ZWahzineAgfmeS3slHSTipz6mOZ_ZMcoVvI2iic"}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        console.log("reset password", response.data.data);
-        return response.data.data;
+    return await makeAuthenticatedRequest(async () => {
+      if (!newPassword || !email) {
+        throw new Error("New password and email are required")
       }
-    }
-  } catch (err) {
-    console.error("Failed to reset password:", err);
-    // throw new Error('The API register is not responding')
+
+      if (newPassword.length < 8) {
+        throw new Error("Password must be at least 8 characters long")
+      }
+
+      const decoded = await decodedToken()
+      if (!decoded?.id) {
+        throw new Error("Authentication required")
+      }
+
+      const userResult = await getUserById(decoded.id)
+      if (!userResult.success) {
+        throw new Error("Failed to verify user")
+      }
+
+      if (userResult.data.email !== email.toLowerCase().trim()) {
+        throw new Error("Email verification failed")
+      }
+
+      const token = await getCookie()
+      const response = await axios.patch(
+        `${baseURL}/users/${decoded.id}`,
+        {
+          password: newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      )
+
+      console.log("Password reset successful")
+      return {
+        success: true,
+        data: response.data.data,
+        message: "Password reset successfully",
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Reset Password")
   }
-};
+}
+
+// Logout user
+export const logout = async () => {
+  try {
+    const result = await removeCookie()
+    console.log("User logged out successfully")
+    return {
+      success: true,
+      message: "Logged out successfully",
+    }
+  } catch (error) {
+    return handleApiError(error, "Logout")
+  }
+}

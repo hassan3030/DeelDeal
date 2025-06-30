@@ -105,7 +105,7 @@ const SwapRating = ({ from_user_id, to_user_id, offer_id, userName, userAvatar }
     try {
       const myId = await decodedToken()
       const rev = await getReviewConditins(myId.id, offer_id)
-      if (Array.isArray(rev) && rev.length > 0) {
+      if (Array.isArray(rev.data) && rev.data.length > 0) {
         setHasReviewed(false)
       } else {
         setHasReviewed(true)

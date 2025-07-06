@@ -1,2 +1,4 @@
 {
+    "editor.pasteAs.showPasteSelector": "never",
+    "markdown.editor.updateLinksOnPaste.enabled": false
 }

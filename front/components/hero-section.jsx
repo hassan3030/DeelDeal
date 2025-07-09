@@ -5,10 +5,10 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fadeIn, slideIn, floatingAnimation, glowEffect } from "@/lib/animations";
 import { useSmoothScroll } from "@/hooks/use-scroll-animation";
-
+import { useTranslations } from "@/lib/use-translations"
  const HeroSection = ()=> {
   const { scrollToSection } = useSmoothScroll();
-
+  const { t } = useTranslations()
   const heroImages = [
     {
       src: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&h=300",
@@ -37,7 +37,7 @@ import { useSmoothScroll } from "@/hooks/use-scroll-animation";
   ];
 
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative overflow-hidden h-screen">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-[hsl(14,100%,60%)]/20 dark:from-neutral-900 dark:via-neutral-800 dark:to-primary/20" />
 
       <div className="container mx-auto px-4 py-20 relative z-10">
@@ -54,20 +54,19 @@ import { useSmoothScroll } from "@/hooks/use-scroll-animation";
                 variants={fadeIn("up", 0.2)}
                 className="text-4xl md:text-6xl font-bold leading-tight"
               >
-                <span className="gradient-text">DeelDeal</span>
+                <span className="gradient-text"> {t("deelDeal")}</span>
               </motion.h1>
               <motion.h2
                 variants={fadeIn("up", 0.4)}
                 className="text-3xl md:text-5xl font-bold text-foreground leading-tight"
               >
-                Swap, Trade, Exchange
+             {t("deelDealSlogan")}
               </motion.h2>
               <motion.p
                 variants={fadeIn("up", 0.6)}
                 className="text-lg text-muted-foreground max-w-lg"
               >
-                Discover a new way to exchange items with trusted community members. 
-                Turn your unused items into treasures you love.
+                {t("deelDealDescription")}
               </motion.p>
             </div>
 
@@ -85,7 +84,7 @@ import { useSmoothScroll } from "@/hooks/use-scroll-animation";
                   onClick={() => scrollToSection("items")}
                 >
                   <span className="flex items-center gap-2">
-                    Browse Items
+                      {t("browseItems")}
                     <motion.div
                       animate={{ x: [0, 5, 0] }}
                       transition={{ duration: 1.5, repeat: Infinity }}
@@ -100,19 +99,13 @@ import { useSmoothScroll } from "@/hooks/use-scroll-animation";
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-2 border-primary text-primary hover:bg-primary/10 px-8 py-4 text-lg font-medium"
-                >
-                  List Your Item
-                </Button>
+              
               </motion.div>
             </motion.div>
           </motion.div>
 
           {/* Floating Images */}
-          <div className="relative hidden lg:block">
+          <div className="relative hidden lg:block -t-0" >
             <div className="absolute inset-0">
               {heroImages.map((image, index) => (
                 <motion.div

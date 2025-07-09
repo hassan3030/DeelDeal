@@ -175,8 +175,8 @@ export function Header() {
   const logout = async () => {
     await removeCookie()
     setUser(null)
-    window.location.reload()
     router.push("/auth/login")
+    window.location.reload()
   }
 
   useEffect(() => {
@@ -195,6 +195,20 @@ export function Header() {
     }
   }, [filter, hasSearched])
 
+  const objPath = {}  
+  useEffect(() => {
+    // Check for specific path(s)
+    if (router.asPath == '/auth/login' || router.asPath == '/auth/register' ) { 
+        objPath.path1 = router.asPath
+      }
+    if(router.asPath == '') {
+               objPath.path2 = router.asPath
+               if( (objPath.path1 =='/auth/login' || objPath.path1 == '/auth/register') &&  objPath.path2 =='/' )
+            router.refresh()
+            window.location.reload()
+               objPath = {}     
+    }
+    }, [objPath]);
   return (
     <>
       <motion.header
@@ -352,14 +366,14 @@ export function Header() {
                         ) : (
                           <User className="h-4 w-4" />
                         )}
-                        <span>{user?.first_name || t("account")}</span>
+                        <span>{(String(user?.first_name).length <= 11 ? (String(user?.first_name)) : (String(user?.first_name).slice(0, 10)) )|| t("account")}</span>
                       </Button>
                     </motion.div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 dark:bg-[#1a1a1a] dark:border-[#2a2a2a]">
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user?.first_name || t("account")}</p>
+                        <p className="text-sm font-medium leading-none">{(String(user?.first_name).length <= 11 ? (String(user?.first_name)) : (String(user?.first_name).slice(0, 10)) )|| t("account")}</p>
                         <p className="text-xs leading-none text-muted-foreground">{user?.email || ""}</p>
                       </div>
                     </DropdownMenuLabel>
@@ -637,11 +651,11 @@ export function Header() {
                             alt={user?.first_name || t("account")}
                           />
                           <AvatarFallback className="bg-primary text-black dark:bg-primary dark:text-black">
-                            {user?.first_name?.charAt(0)}
+                            {String(user?.first_name).charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <p className="text-sm font-medium">{user?.first_name || t("account")}</p>
+                          <p className="text-sm font-medium"> {(String(user?.first_name).length <= 11 ? (String(user?.first_name)) : (String(user?.first_name).slice(0, 10)) )|| t("account")}</p>
                           <p className="text-xs text-muted-foreground">{user?.email || ""}</p>
                         </div>
                       </div>

@@ -11,3 +11,234 @@ const formatCurrency = (value) => {
       maximumFractionDigits: 0,
     }).format(value)
   }
+
+
+ //  if(dataCount>=1000) {
+  // setItemsCount(`${dataCount}`)
+  //   }
+  //   if(dataCount>=1000) {
+  //   setItemsCount(`${dataCount/1000} K+`)
+  //   }
+  //   if(dataCount>=1000000) {
+  // setItemsCount(`${dataCount/1000000} M+`)
+  //   }
+
+
+
+
+
+
+  'use client'
+
+import axios from 'axios';
+import { register , login } from "@/callAPI/users"
+const train=()=> {
+  
+  const ADMIN_TOKEN = 'y-M5MNSauYKP5VFW0rvRl4zQg6V_LyR6';
+const registerUser = async () => {
+  try {
+    const response = await axios.post('http://localhost:8055/users/register', {
+      email: 'make22222@example.com',
+      password: 'password123',
+      first_name: 'make222222',
+
+    }
+      );
+
+      const getRes = await axios.get('http://localhost:8055/users', {
+      params: {
+        filter: { email: { _eq: 'make22222@example.com' } },
+      },
+      headers: {
+        Authorization: `Bearer ${ADMIN_TOKEN}`,
+      },
+    });
+
+    const user = getRes.data.data[0];
+
+    if (!user) {
+      console.log('User not found.');
+      return;
+    }
+
+    const userId = user.id;
+
+    // Step 2: Update (PATCH) the user status to active
+    const patchRes = await axios.patch(`http://localhost:8055/users/${userId}`,
+      { status: 'active' },
+      {
+        headers: {
+          Authorization: `Bearer ${ADMIN_TOKEN}`,
+        },
+      }
+    );
+
+    console.log('User activated:', patchRes.data);
+
+console.log('User registered:', response.data);
+
+await login("make22222@example.com" , 'password123')
+
+  } catch (error) {
+    console.error('Registration error:', error.response?.data || error.message);
+  }
+};
+
+
+
+
+
+
+  return (
+    <section>
+<button onClick={()=>{registerUser()}}>registerUser</button> <br/>
+<button onClick={()=>{rr}}>login</button> <br/>
+
+    </section>
+  );
+}
+
+
+
+export default train;
+
+
+
+
+
+
+
+// Update product with images and comprehensive validation
+export const updateProduct = async (payload, files, itemId) => {
+  try {
+    return await makeAuthenticatedRequest(async () => {
+      if (!payload || typeof payload !== "object" || !itemId) {
+        throw new Error("Product data and ID are required")
+      }
+
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        throw new Error("At least one image is required")
+      }
+
+      const token = await getCookie()
+      const decoded = await decodedToken()
+
+      if (!token || !decoded?.id) {
+        throw new Error("Authentication required")
+      }
+
+      // Verify ownership
+      const existingProduct = await getProductById(itemId)
+      if (!existingProduct.success) {
+        throw new Error("Product not found")
+      }
+
+      if (existingProduct.data.user_id !== decoded.id) {
+        throw new Error("Unauthorized: You can only update your own products")
+      }
+
+      // Validate file types
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
+      const invalidFiles = files.filter((file) => !allowedTypes.includes(file.type))
+      if (invalidFiles.length > 0) {
+        throw new Error("Only JPEG, PNG, and WebP images are allowed")
+      }
+
+      // Update the item
+      const itemRes = await axios.patch(
+        `${baseItemsURL}/Items/${itemId}`,
+        {
+          ...payload,
+          date_updated: new Date().toISOString(),
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
+
+      if (!itemRes.data?.data?.id) {
+        throw new Error("Failed to update product")
+      }
+
+      console.log("Product updated successfully, ID:", itemId)
+
+      // Delete existing images
+      try {
+        const existingImagesRes = await axios.get(`${baseItemsURL}/Items_files?filter[Items_id][_eq]=${itemId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+        const deletePromises = (existingImagesRes.data?.data || []).map((img) =>
+          axios.delete(`${baseItemsURL}/Items_files/${img.id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        )
+
+        await Promise.allSettled(deletePromises)
+        console.log("Existing images cleaned up")
+      } catch (deleteError) {
+        console.warn("Failed to delete some existing images:", deleteError.message)
+      }
+
+      // Upload new images
+      const uploadResults = []
+      for (let i = 0; i < files.length; i++) {
+        try {
+          const file = files[i]
+          const formData = new FormData()
+          formData.append("file", file)
+
+          const fileRes = await axios.post(`${baseURL}/files`, formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          })
+
+          const fileId = fileRes.data?.data?.id
+          if (!fileId) {
+            throw new Error(`Failed to upload image ${i + 1}`)
+          }
+
+          await axios.post(
+            `${baseItemsURL}/Items_files`,
+            {
+              Items_id: itemId,
+              directus_files_id: fileId,
+            },
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          )
+
+          uploadResults.push({ index: i, file_id: fileId, success: true })
+        } catch (uploadError) {
+          console.error(`Failed to upload image ${i + 1}:`, uploadError.message)
+          uploadResults.push({ index: i, success: false, error: uploadError.message })
+        }
+      }
+
+      const successfulUploads = uploadResults.filter((r) => r.success).length
+      console.log(`Product updated successfully with ${successfulUploads}/${files.length} images, ID:`, itemId)
+
+      return {
+        success: true,
+        data: {
+          ...itemRes.data.data,
+          images_uploaded: successfulUploads,
+          total_images: files.length,
+          upload_results: uploadResults,
+        },
+        message: `Product updated successfully with ${successfulUploads} images`,
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Update Product")
+  }
+} 

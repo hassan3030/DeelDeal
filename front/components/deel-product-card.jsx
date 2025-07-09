@@ -149,8 +149,8 @@ export function DeelProductCard({
 
   const getDataImage = async () => {
     try {
-      const images2 = await getImageProducts(images)
-      setBigImage(images2.data[0]?.directus_files_id || "")
+      const image = await getImageProducts(images)
+      setBigImage(image?.data[0].directus_files_id )
     } catch (error) {
       console.error("Error loading image:", error)
     } finally {
@@ -162,7 +162,7 @@ export function DeelProductCard({
     try {
       const user = await decodedToken()
       const WishItem = await getWishList(user.id)
-      if (WishItem.data && user.data) {
+      if (WishItem.data && user.id) {
         const isItem = WishItem.data.find((i) => i.item_id == id) ? true : false
         setSwitchHeart(isItem)
       }
@@ -176,7 +176,7 @@ export function DeelProductCard({
       const user = await decodedToken()
       const WishItem = await getWishList(user.id)
       const WishItemId = WishItem.data.filter((i) => i.item_id == id)
-      if (WishItem.data && user.data) {
+      if (WishItem.data && user.id) {
         const isItem = WishItem.data.find((i) => i.item_id == id)
         if (isItem) {
           await deleteWishList(WishItemId[0]?.id)

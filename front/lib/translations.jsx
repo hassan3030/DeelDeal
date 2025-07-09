@@ -1,5 +1,20 @@
 export const translations = {
   en: {
+     PopularCategories:'Popular Categories',
+    TrustedPlatform:'Trusted Platform',
+              JoinThousandsofHappySwapers :'Join Thousands of Happy Swapers',
+                ActiveSwapers :'Active Swapers',
+                SafeSwaps :'Safe Swaps',
+               ItemsSwaps:'Items Swaps',
+              BrowseCategories:'Browse Categories',
+             Discoveramazingitemsacrossvariouscategoriesandfindexactlywhatyourelookingfor :"Discover amazing items across various categories and find exactly what you're looking for",
+                ReadytoTradeYourItems:'Ready to Trade Your Items?',
+             CuratedForYou:"Curated For You",
+              FeaturedCollections:'Featured Collections',
+          Discoverourhandpickedcollectionsofexceptionalitemscuratedbyourexpertteam: 'Discover our handpicked collections of exceptional items curated by our expert team',
+              ViewAllCollections:'View All Collections',
+
+    // ================================
 pleasefilldata:"please fill data",
 Pleaseenteravalidemailaddress : "Please enter a valid email address",
     // about 
@@ -579,6 +594,20 @@ MakeSwap:"Make Swap" ,
     developerAPIs: "Developer APIs",
   },
   ar: {
+    PopularCategories:' الفئات المشهورة',
+     TrustedPlatform:'منصة موثوقة:',
+              JoinThousandsofHappySwapers :'انضم إلى آلاف المبادلون السعداء',
+                ActiveSwapers :'المبادلون النشطون',
+                SafeSwaps :'المبادلات الآمنة',
+               ItemsSwaps:'مبادلات العناصر',
+              BrowseCategories:'تصفح الفئات',
+             Discoveramazingitemsacrossvariouscategoriesandfindexactlywhatyourelookingfor :"اكتشف منتجات رائعة من مختلف الفئات واعثر على ما تبحث عنه بالضبط",
+                ReadytoTradeYourItems:'هل أنت مستعد لتداول منتجاتك؟',
+             CuratedForYou:"مختار لك",
+              FeaturedCollections:'المجموعات المميزة',
+          Discoverourhandpickedcollectionsofexceptionalitemscuratedbyourexpertteam: 'اكتشف مجموعاتنا المختارة بعناية من المنتجات الاستثنائية التي اختارها فريق خبرائنا',
+              ViewAllCollections:'عرض جميع المجموعات',
+
     Pleaseenteravalidemailaddress : "من فضلك ادخل إيميل صحيح",
 pleasefilldata:" من فضلك أدخل البيانات",
 

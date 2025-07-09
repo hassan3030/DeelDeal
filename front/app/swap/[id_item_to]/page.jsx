@@ -123,7 +123,7 @@ export default function SwapPage() {
     if (token) {
       const { id } = await decodedToken()
       const myProductsData = await getAvailableAndUnavailableProducts(id)
-      setMyItems(myProductsData)
+      setMyItems(myProductsData.data)
     } else {
       router.push(`/auth/login`)
     }
@@ -132,8 +132,8 @@ export default function SwapPage() {
   // Fetch other user's items
   const getOtherItems = useCallback(async () => {
     const otherUser = await getUserByProductId(id_item_to)
-    const otherProductsData = await getAvailableAndUnavailableProducts(otherUser.id)
-    setOtherItems(otherProductsData)
+    const otherProductsData = await getAvailableAndUnavailableProducts(otherUser.data.id)
+    setOtherItems(otherProductsData.data)
   }, [id_item_to])
 
   // Fetch swap history
@@ -142,9 +142,9 @@ export default function SwapPage() {
     if (token) {
       const { id } = await decodedToken(token)
       const offers = await getOfferById(id)
-      const users = await Promise.all(offers.map((swap) => getUserById(swap.to_user_id)))
+      const users = await Promise.all(offers.data.map((swap) => getUserById(swap.to_user_id)))
       setUsersOffer(users)
-      setSwapHistory(offers)
+      setSwapHistory(offers.data)
     }
   }, [])
 
@@ -223,7 +223,7 @@ export default function SwapPage() {
     setDisabledOffer(true)
     try {
       const to_user = await getUserByProductId(id_item_to)
-      await addOffer(to_user.id, priceDifference, selectedMyItems, selectedOtherItems, message, name)
+      await addOffer(to_user.data.id, priceDifference, selectedMyItems, selectedOtherItems, message, name)
       toast({
         title: t("successfully") || "Success",
         description: "Successfully created offer",
@@ -820,7 +820,7 @@ const ItemCard = ({ id, name, description, price, images, allowed_categories, st
     const getDataImage = async () => {
       if (images) {
         const images2 = await getImageProducts(images)
-        setBigImage(images2[0]?.directus_files_id || "")
+        setBigImage(images2.data[0]?.directus_files_id || "")
       }
     }
     getDataImage()

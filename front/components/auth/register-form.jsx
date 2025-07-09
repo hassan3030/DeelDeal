@@ -121,7 +121,7 @@ export function RegisterForm() {
     setIsLoading(true)
 
     try {
-      if (!form.getValues().email || !form.getValues().password || !form.getValues().userName) {
+      if (!form.getValues().email || !form.getValues().password  || !form.getValues().confirmPassword || !form.getValues().userName) {
         toast({
           title: t("error") || "ERROR",
           description: t("pleasefilldata") || "please fill data",

@@ -90,17 +90,22 @@ export const getProducts = async (filters = {}) => {
 // Get product images with validation
 export const getImageProducts = async (imageIds) => {
   try {
-    if (!imageIds || !Array.isArray(imageIds) || imageIds.length === 0) {
-      throw new Error("Image IDs array is required and must not be empty")
-    }
+    // if (!imageIds || !Array.isArray(imageIds) || imageIds.length === 0) {
+    //   throw new Error("Image IDs array is required and must not be empty")
+    // }
 
-    const validIds = imageIds.filter((id) => id && typeof id === "string")
-    if (validIds.length === 0) {
-      throw new Error("No valid image IDs provided")
-    }
+    // const validIds = imageIds.filter((id) => id && typeof id === "string")
+    // if (validIds.length === 0) {
+    //   throw new Error("No valid image IDs provided")
+    // }
 
-    const ids = validIds.join(",")
-    const response = await axios.get(`${baseItemsURL}/Items_files?filter[id][_in]=${ids}`)
+    const ids = imageIds.join(",")
+    const response = await axios.get(`${baseItemsURL}/Items_files?filter[id][_in]=${ids}`, 
+      //  {
+      //   "email": "admin@example.com",
+      //    "password": "123"
+      // } 
+    )
 
     console.log("Product images retrieved successfully, count:", response.data.data?.length || 0)
     return {
@@ -146,7 +151,7 @@ export const getProductById = async (id) => {
     console.log("Product retrieved successfully, ID:", id)
     return {
       success: true,
-      data: response.data.data,
+      data: response.data.data || [],
       message: "Product retrieved successfully",
     }
   } catch (error) {
@@ -592,4 +597,4 @@ export const updateProduct = async (payload, files, itemId) => {
   } catch (error) {
     return handleApiError(error, "Update Product")
   }
-}
+} 

@@ -40,7 +40,7 @@ export default function ProductsPage() {
     async function fetchData() {
       setIsLoading(true)
       const productsData = await getProducts()
-      setProducts(productsData)
+      setProducts(productsData.data)
 
       const token = await getCookie()
       if (token) setShowSwitchHeart(true)

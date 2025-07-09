@@ -115,8 +115,15 @@ export function ItemsList({
   }, [items, category, searchTerm])
 
   // Pagination logic
-  const totalPages = Math.max(1, Math.ceil(displayedItems.length / itemsPerPage))
-  const paginatedItems = displayedItems.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+const totalPages = Math.max(1, Math.ceil(displayedItems.length / itemsPerPage));
+
+const paginatedItems = Array.isArray(displayedItems)
+  ? displayedItems.slice((page - 1) * itemsPerPage, page * itemsPerPage)
+  : [];
+
+
+  // const totalPages = Math.max(1, Math.ceil(displayedItems.length / itemsPerPage))
+  // const paginatedItems =  displayedItems.slice((page - 1) * itemsPerPage, page * itemsPerPage)
 
   const handleSearch = () => setPage(1)
   const handleCategoryChange = (value) => {
@@ -178,7 +185,7 @@ export function ItemsList({
         </motion.div>
       )}
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait"  >
         {isLoading ? (
           <motion.div
             className="flex h-40 items-center justify-center"
@@ -231,7 +238,7 @@ export function ItemsList({
               <AnimatePresence>
                 {paginatedItems.map((item, index) => (
                   <motion.div
-                    key={item.id}
+                   key={crypto.randomUUID()}
                     variants={itemVariants}
                     custom={index}
                     layout

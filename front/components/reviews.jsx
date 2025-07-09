@@ -150,7 +150,7 @@ const SwapRating = ({ from_user_id, to_user_id, offer_id, userName, userAvatar }
         title: t("Ratingsubmitted") || "Rating submitted",
         description: t("Thankyouforrating") || "Thank you for rating",
       })
-      router.push()
+      router.refresh()
     } catch (error) {
       toast({
         title: t("error") || "Error",

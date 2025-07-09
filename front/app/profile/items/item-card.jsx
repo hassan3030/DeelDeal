@@ -67,7 +67,7 @@ const ItemCard = ({ item }) => {
   const getDataImage = async () => {
     if (item.images) {
       const images2 = await getImageProducts(item.images)
-      setBigImage(images2[0]?.directus_files_id || "")
+      setBigImage(images2.data[0]?.directus_files_id || "")
     }
   }
 
@@ -215,62 +215,72 @@ const ItemCard = ({ item }) => {
                 </Button>
               </motion.div>
 
-              {item.status_swap == "available" && (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
-                      <Button variant="destructive" size="sm" disabled={isDeleting}>
-                        <Trash2 className="mr-1 h-4 w-4" />
-                        {isDeleting ? t("deleting") || "Deleting..." : t("delete")}
-                      </Button>
-                    </motion.div>
-                  </DialogTrigger>
-                  <AnimatePresence>
-                    <DialogContent asChild>
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                      >
-                        <DialogHeader>
-                          <DialogTitle>{t("deleteOneItem") || "Delete Item"}</DialogTitle>
-                          <DialogDescription>
-                            {t("deleteDialogDesc") ||
-                              "Are you sure you want to delete this item? This action cannot be undone."}
-                          </DialogDescription>
-                        </DialogHeader>
-                        <p>{t("areYouSureDelete") || "This will permanently remove the item from your listings."}</p>
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
-                              <Button variant="outline">{t("cancel") || "Cancel"}</Button>
-                            </motion.div>
-                          </DialogClose>
-                          <DialogClose asChild>
-                            <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
-                              <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-                                {isDeleting ? (
-                                  <>
-                                    <motion.div
-                                      animate={{ rotate: 360 }}
-                                      transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                                      className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
-                                    />
-                                    {t("deleting") || "Deleting..."}
-                                  </>
-                                ) : (
-                                  t("delete") || "Delete"
-                                )}
-                              </Button>
-                            </motion.div>
-                          </DialogClose>
-                        </DialogFooter>
-                      </motion.div>
-                    </DialogContent>
-                  </AnimatePresence>
-                </Dialog>
-              )}
+            {item.status_swap === "available" && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+                    <Button variant="destructive" size="sm" disabled={isDeleting}>
+                      <Trash2 className="mr-1 h-4 w-4" />
+                      {isDeleting ? t("deleting") || "Deleting..." : t("delete")}
+                    </Button>
+                  </motion.div>
+                </DialogTrigger>
+
+                <DialogContent>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  >
+                    <DialogHeader>
+                      <DialogTitle>{t("deleteOneItem") || "Delete Item"}</DialogTitle>
+                      <DialogDescription>
+                        {t("deleteDialogDesc") ||
+                          "Are you sure you want to delete this item? This action cannot be undone."}
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <p>
+                      {t("areYouSureDelete") ||
+                        "This will permanently remove the item from your listings."}
+                    </p>
+
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+                          <Button variant="outline">{t("cancel") || "Cancel"}</Button>
+                        </motion.div>
+                      </DialogClose>
+
+                      <DialogClose asChild>
+                        <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+                          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                            {isDeleting ? (
+                              <>
+                                <motion.div
+                                  animate={{ rotate: 360 }}
+                                  transition={{
+                                    duration: 1,
+                                    repeat: Infinity,
+                                    ease: "linear",
+                                  }}
+                                  className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
+                                />
+                                {t("deleting") || "Deleting..."}
+                              </>
+                            ) : (
+                              t("delete") || "Delete"
+                            )}
+                          </Button>
+                        </motion.div>
+                      </DialogClose>
+                    </DialogFooter>
+                  </motion.div>
+                </DialogContent>
+              </Dialog>
+            )}
+
             </div>
           </motion.div>
         </div>

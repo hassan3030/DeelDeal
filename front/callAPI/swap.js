@@ -204,6 +204,38 @@ export const deleteOfferById = async (id) => {
   }
 }
 
+
+
+
+
+
+// Finally Delete offer by ID 
+export const deleteFinallyOfferById = async (id) => {
+  try {
+    return await makeAuthenticatedRequest(async () => {
+      if (!id) {
+        throw new Error("Offer ID is required")
+      }
+ 
+      await axios.patch(`${baseItemsURL}/Offers/${id}`, {
+        finaly_deleted: false,
+      })
+      console.log("Offer Deleted Finally successfully, ID:", id)
+      return {
+        success: true,
+        data: {
+          offer_id: id,
+          items_restored: items.length,
+          restore_results: restoreResults,
+        },
+        message: "Offer Finally Deleted successfully",
+      }
+    })
+  } catch (error) {
+    return handleApiError(error, "Finally Delete Offer By ID")
+  }
+}
+
 // Accept offer (keeping original function name)
 export const acceptedOffer = async (id) => {
   try {
@@ -674,18 +706,18 @@ export const addWishList = async (item_id, user_id) => {
       throw new Error("Item ID and user ID are required")
     }
 
-    // Check if item already in wishlist
-    const existingResponse = await axios.get(
-      `${baseItemsURL}/WishList?filter[item_id][_eq]=${item_id}&filter[user_id][_eq]=${user_id}`,
-    )
+    // // Check if item already in wishlist
+    // const existingResponse = await axios.get(
+    //   `${baseItemsURL}/WishList?filter[item_id][_eq]=${item_id}&filter[user_id][_eq]=${user_id}`,
+    // )
 
-    if (existingResponse.data.data.length > 0) {
-      return {
-        success: false,
-        error: "Item already in wishlist",
-        status: 409,
-      }
-    }
+    // if (existingResponse.data.data.length > 0) {
+    //   return {
+    //     success: false,
+    //     error: "Item already in wishlist",
+    //     status: 409,
+    //   }
+    // }
 
     const response = await axios.post(`${baseItemsURL}/WishList`, {
       item_id,

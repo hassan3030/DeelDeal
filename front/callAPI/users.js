@@ -10,7 +10,7 @@ import {
   makeAuthenticatedRequest,
 } from "./utiles.js"
 
-const STATIC_ADMIN_TOKEN =  'y-M5MNSauYKP5VFW0rvRl4zQg6V_LyR6';
+const STATIC_ADMIN_TOKEN =  'wQuBWUjR0p4_3Rz2BIeHAnkiK5f7GDaR';
 
 // Authenticate user and get token
 export const auth = async (email, password) => {
@@ -41,7 +41,7 @@ export const auth = async (email, password) => {
       message: "Authentication successful",
     }
   } catch (error) {
-    return handleApiError(error, "Authentication")
+    return handleApiError(error, "Authentication") 
   }
 }
 
@@ -66,6 +66,9 @@ export const login = async (email, password) => {
     })
 
     console.log("Login successful for user:", decoded.id)
+    window.location.reload()
+           window.location.replace('/');
+
     return {
       success: true,
       data: {
@@ -261,10 +264,10 @@ export const register = async (email, password, first_name, additional_data = {}
 
     const cleanEmail = email.toLowerCase().trim()
     const cleanFirstName = first_name.trim()
-
+   
 
    try {
-     // Check if user already exists
+    //  Check if user already exists
      const existingUserCheck = await axios.get(
         `${baseURL}/users?filter[email][_eq]=${cleanEmail}`,
         {
@@ -273,6 +276,7 @@ export const register = async (email, password, first_name, additional_data = {}
           },
         },
       )
+    console.log('i am in regisration existingUserCheck ',existingUserCheck )
 
      
       if (existingUserCheck.data?.data?.length > 0) {
@@ -281,11 +285,13 @@ export const register = async (email, password, first_name, additional_data = {}
 
     const response = await axios.post('http://localhost:8055/users/register', {
       email: cleanEmail,
-      password: password,
+      password,
       first_name: cleanFirstName,
 
     }
       );
+      
+
 
       const getRes = await axios.get('http://localhost:8055/users', {
       params: {
@@ -295,15 +301,17 @@ export const register = async (email, password, first_name, additional_data = {}
         Authorization: `Bearer ${STATIC_ADMIN_TOKEN}`,
       },
     });
+    console.log('i am in regisration getRes  ',getRes )
 
     const user = getRes.data.data[0];
-
+    console.log('i am in regisration user ',user )
     if (!user) {
       console.log('User not found.');
       return;
     }
 
     const userId = user.id;
+    console.log('i am in regisration userId ',userId )
 
     // Step 2: Update (PATCH) the user status to active
     const patchRes = await axios.patch(`http://localhost:8055/users/${userId}`,
@@ -315,11 +323,12 @@ export const register = async (email, password, first_name, additional_data = {}
       }
     );
 
-    console.log('User activated:', patchRes.data);
+    console.log('User activated:', patchRes.data.data);
 
-console.log('User registered:', response.data);
+console.log('User registered:', response.data.data);
 
-await login(email , password)
+const logining  =  await login(email , password)
+    console.log('i am in regisration function2 ',logining )
 
   } catch (error) {
     console.error('Registration error:', error.response?.data || error.message);
@@ -393,7 +402,14 @@ export const getAllUsers = async () => {
   try {
     const tokenAdmin =  await getCookie()
     if (!tokenAdmin) {
-      throw new Error("User not login")
+      const response = await axios.get(`${baseURL}/users`)
+
+    // console.log("User data retrieved for ID:", id)
+    return {
+      success: true,
+       count: response.data.data?.length || 0, 
+      message: "Users data retrieved successfully",
+    }
     }
 
     const response = await axios.get(`${baseURL}/users`)

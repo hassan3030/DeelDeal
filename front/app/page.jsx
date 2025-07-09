@@ -15,8 +15,11 @@ import { useLanguage } from "@/lib/language-provider"
 import { useTranslations } from "@/lib/use-translations"
 import { categories } from "@/lib/data"
 import { useRouter } from "next/navigation"
-import { getProducts, getProductTopPrice } from "@/callAPI/products"
+import { getProducts, getProductTopPrice , getProductByCategory } from "@/callAPI/products"
+import {getAllUsers} from "@/callAPI/users"
 import { getCookie } from "@/callAPI/utiles"
+import HeroSection from "@/components/hero-section"
+import Link from "next/link"
 
 // Enhanced Animation variants
 const containerVariants = {
@@ -135,7 +138,7 @@ const collectionCardVariants = {
 }
 
 // Enhanced Counter animation component
-const AnimatedCounter = ({ value, duration = 2, className }) => {
+const AnimatedCounter = ({ value, duration = 2, className , shape=true}) => {
   const [count, setCount] = useState(0)
   const controls = useAnimation()
   const [ref, inView] = useInView({ triggerOnce: true, threshold: 0.1 })
@@ -163,6 +166,7 @@ const AnimatedCounter = ({ value, duration = 2, className }) => {
     }
   }, [inView, value, duration, controls])
 
+
   return (
     <>
       <motion.div
@@ -180,8 +184,9 @@ const AnimatedCounter = ({ value, duration = 2, className }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        {count}
-        {value === 99.9 ? "%" : "K+"}
+        {shape?`${count>=1000?`${count/1000}K+`:count>=1000000?`${count/1000000}M+`:count}`:`${value === 99.9 ? `${value}%` : "K+"}`}
+        
+        {/*  */}
       </motion.span>
     </motion.div>
     </>
@@ -218,8 +223,19 @@ const FloatingParticles = () => {
 }
 
 // Featured Collection Card component
-const FeaturedCollectionCard = ({ title, imageUrl, itemCount, rating, accent }) => {
+const FeaturedCollectionCard = ({ title, imageUrl , rating, accent,  url }) => {
+  const { t } = useTranslations()
+  const [itemCount , setItemCount] = useState(0)
+const countCat = async()=>{
+ const prodsCatCount = await getProductByCategory(title)
+ setItemCount(prodsCatCount.count)
+}
+useEffect(()=>{
+ countCat()
+},[])
+
   return (
+   <Link href={url}>
     <motion.div
       className="relative overflow-hidden rounded-xl shadow-lg group"
       whileHover={{ y: -10, scale: 1.02 }}
@@ -237,7 +253,7 @@ const FeaturedCollectionCard = ({ title, imageUrl, itemCount, rating, accent }) 
       <div className="relative aspect-[4/5] overflow-hidden">
         <img 
           src={imageUrl || "/placeholder.svg?height=400&width=300"} 
-          alt={title}
+          alt={t(title)||title}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
       </div>
@@ -245,16 +261,17 @@ const FeaturedCollectionCard = ({ title, imageUrl, itemCount, rating, accent }) 
       <div className="absolute bottom-0 left-0 right-0 p-4 z-20">
         <div className="flex items-center gap-2 mb-2">
           <div className="px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-medium text-white">
-            {itemCount} items
+            {itemCount} {t('items')||"Items"}
           </div>
           <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/20 backdrop-blur-sm text-xs font-medium text-white">
             <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
             {rating}
           </div>
         </div>
-        <h3 className="text-xl font-bold text-white">{title}</h3>
+        <h3 className="text-xl font-bold text-white">{t(title)||title}</h3>
       </div>
     </motion.div>
+   </Link>
   )
 }
 
@@ -262,6 +279,8 @@ export default function Home() {
   const { isRTL } = useLanguage()
   const { t } = useTranslations()
   const [items, setItems] = useState([])
+  const [itemsCount , setItemsCount ] = useState(0)
+  const [usersCount , setUsersCount] = useState(0)
   const [topPrice, setTopPrice] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingCat, setIsLoadingCat] = useState(true)
@@ -277,30 +296,34 @@ export default function Home() {
   // Featured collections data
   const featuredCollections = [
     { 
-      title: "Summer Essentials", 
-      imageUrl: "/placeholder.svg?height=400&width=300&text=Summer", 
-      itemCount: 24, 
+      title: "realestate", 
+      imageUrl:  "/categories/realestate.jpg",
+      url:  "categories/realestate",
+      // itemCount: 24, 
       rating: 4.8,
-      accent: "#FF6B6B" 
+      accent: "#FF6B6B" ,
     },
     { 
-      title: "Tech Gadgets", 
-      imageUrl: "/placeholder.svg?height=400&width=300&text=Tech", 
-      itemCount: 42, 
+      title: "books", 
+      imageUrl: "/categories/book.jpg",
+      url: "categories/books",
+      // itemCount: 42, 
       rating: 4.9,
       accent: "#4ECDC4" 
     },
     { 
-      title: "Vintage Finds", 
-      imageUrl: "/placeholder.svg?height=400&width=300&text=Vintage", 
-      itemCount: 18, 
+      title: "automotive", 
+      imageUrl: "/categories/automotive.jpg",
+      url: "categories/automotive",
+      // itemCount: 18, 
       rating: 4.7,
       accent: "#FFD166" 
     },
     { 
-      title: "Luxury Items", 
-      imageUrl: "/placeholder.svg?height=400&width=300&text=Luxury", 
-      itemCount: 15, 
+      title: "electronics", 
+      imageUrl:  "/categories/electronics.jpg",
+      url:  "categories/electronics",
+      // itemCount: 15, 
       rating: 4.9,
       accent: "#6A0572" 
     }
@@ -316,14 +339,21 @@ export default function Home() {
   const router = useRouter()
 
   const getData = async () => {
-    const data = await getProducts()
-    const topPriceData = await getProductTopPrice()
-    setItems(data.data)
-    setTopPrice(topPriceData.data)
-    console.log("i am in product home ", data)
-    console.log("i am in product topPrice ", topPriceData)
+    const prods = await getProducts()
+    const users = await getAllUsers()
+    const topPriceProds = await getProductTopPrice()
+    setItems(prods.data)
+    setTopPrice(topPriceProds.data)
+    setItemsCount(prods.count)
+    setUsersCount(users.count)
+    
 
-    return data
+    console.log("i am in product home ", prods)
+    console.log("i am in product topPrice ", topPriceProds)
+    console.log("i am in itemsCount", itemsCount)
+    console.log("i am in usersCount", usersCount)
+
+    // return prodsData
   }
 
   useEffect(() => {
@@ -357,7 +387,8 @@ export default function Home() {
         <FloatingParticles />
 
         {/* Hero Section */}
-        <motion.section
+        <HeroSection/>
+        {/* <motion.section 
           className="container py-6 relative z-10"
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -367,7 +398,7 @@ export default function Home() {
           <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
             <HeroSlider />
           </motion.div>
-        </motion.section>
+        </motion.section> */}
 
         {/* Enhanced Stats Section */}
         <motion.section
@@ -389,7 +420,7 @@ export default function Home() {
               animate="animate"
             >
               <Sparkles className="h-4 w-4" />
-              <span className="text-sm font-medium">Trusted Platform</span>
+              <span className="text-sm font-medium">{t('TrustedPlatform') || 'Trusted Platform'}</span>
             </motion.div>
             <motion.h2
               className="text-2xl md:text-3xl font-bold text-center mb-2"
@@ -403,7 +434,8 @@ export default function Home() {
                 backgroundClip: "text",
               }}
             >
-              Join Thousands of Happy Traders
+              {t('JoinThousandsofHappySwapers') || 'Join Thousands of Happy Swapers'}
+   
             </motion.h2>
           </motion.div>
 
@@ -426,7 +458,7 @@ export default function Home() {
                     ease: "easeInOut",
                   }}
                 />
-                <motion.div
+                <motion.div  
                   className="relative z-10 p-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg"
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
@@ -435,14 +467,15 @@ export default function Home() {
                 </motion.div>
               </motion.div>
               <AnimatedCounter
-                value={10}
+                value={Number(usersCount)}
                 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent"
               />
               <motion.div
                 className="text-sm md:text-base text-muted-foreground mt-3 font-medium"
                 variants={statsItemVariants}
               >
-                Active Traders
+                {t('ActiveSwapers')|| 'Active Swapers'}
+               
               </motion.div>
               <motion.div
                 className="w-12 h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full mt-2"
@@ -480,6 +513,7 @@ export default function Home() {
                 </motion.div>
               </motion.div>
               <AnimatedCounter
+               shape={false}
                 value={99.9}
                 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent"
               />
@@ -487,7 +521,8 @@ export default function Home() {
                 className="text-sm md:text-base text-muted-foreground mt-3 font-medium"
                 variants={statsItemVariants}
               >
-                Safe Trades
+                {t('SafeSwaps')||'Safe Swaps'}
+      
               </motion.div>
               <motion.div
                 className="w-12 h-1 bg-gradient-to-r from-green-500 to-green-600 rounded-full mt-2"
@@ -525,14 +560,14 @@ export default function Home() {
                 </motion.div>
               </motion.div>
               <AnimatedCounter
-                value={50}
+                value={ Number(itemsCount)}
                 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent"
               />
               <motion.div
                 className="text-sm md:text-base text-muted-foreground mt-3 font-medium"
                 variants={statsItemVariants}
               >
-                Items Traded
+               {t('ItemsSwaps')||'Items Swaps'}
               </motion.div>
               <motion.div
                 className="w-12 h-1 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full mt-2"
@@ -553,7 +588,7 @@ export default function Home() {
               animate="animate"
             >
               <TrendingUp className="h-4 w-4" />
-              <span className="text-sm font-medium">Popular Categories</span>
+              <span className="text-sm font-medium">{t('PopularCategories')||'Popular Categories'}</span>
             </motion.div>
             <motion.h2
               className="text-4xl md:text-5xl font-bold mb-6"
@@ -566,7 +601,7 @@ export default function Home() {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              Browse Categories
+              {t('BrowseCategories')||'Browse Categories'}
             </motion.h2>
             <motion.p
               className="text-muted-foreground max-w-2xl mx-auto text-lg"
@@ -574,7 +609,7 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.6 }}
             >
-              Discover amazing items across various categories and find exactly what you're looking for
+             {t('Discoveramazingitemsacrossvariouscategoriesandfindexactlywhatyourelookingfor') || "Discover amazing items across various categories and find exactly what you're looking for"}
             </motion.p>
           </motion.div>
 
@@ -681,7 +716,8 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
               >
-                Ready to Trade Your Items?
+                {t('ReadytoTradeYourItems') || 'Ready to Trade Your Items?'}
+
               </motion.h3>
 
               <motion.div
@@ -735,7 +771,7 @@ export default function Home() {
               animate="animate"
             >
               <Sparkles className="h-4 w-4" />
-              <span className="text-sm font-medium">Curated For You</span>
+              <span className="text-sm font-medium">{t('CuratedForYou')||"Curated For You"}</span>
             </motion.div>
             <motion.h2
               className="text-4xl md:text-5xl font-bold mb-6"
@@ -748,15 +784,16 @@ export default function Home() {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
-              Featured Collections
+              {t('FeaturedCollections')|| 'Featured Collections'}
+
             </motion.h2>
             <motion.p
               className="text-muted-foreground max-w-2xl mx-auto text-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.6 }}
-            >
-              Discover our handpicked collections of exceptional items curated by our expert team
+            >  {t('Discoverourhandpickedcollectionsofexceptionalitemscuratedbyourexpertteam')|| 'Discover our handpicked collections of exceptional items curated by our expert team'}
+             
             </motion.p>
           </motion.div>
 
@@ -785,12 +822,14 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ delay: 0.6 }}
           >
+           <Link href='categories'>
             <Button 
               size="lg" 
               className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary text-white font-medium rounded-full px-8"
             >
-              View All Collections
+              {t('ViewAllCollections')||'View All Collections'}
             </Button>
+           </Link>
           </motion.div>
         </motion.section>
 

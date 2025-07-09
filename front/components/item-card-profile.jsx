@@ -92,8 +92,8 @@ export function ItemCardProfile({
 
   const getDataImage = async () => {
     try {
-      const images2 = await getImageProducts(images)
-      setBigImage(images2.data[0].directus_files_id)
+      const image = await getImageProducts(images)
+      setBigImage(image.data[0].directus_files_id)
       setIsLoading(false)
     } catch (error) {
       console.error("Error loading image:", error)
@@ -117,40 +117,38 @@ export function ItemCardProfile({
       router.push(`/auth/login`)
     }
   }
-
-  const handleGetWishItem = async () => {
+ const handleGetWishItem = async () => {
     try {
       const user = await decodedToken()
-      const WishItem = await getWishList(user.data.id)
-      if (WishItem.data) {
+      const WishItem = await getWishList(user.id)
+      if (WishItem.data && user.id) {
         const isItem = WishItem.data.find((i) => i.item_id == id) ? true : false
         setSwitchHeart(isItem)
       }
     } catch (error) {
-      console.error("Error getting wishlist:", error)
+      console.error("Error getting wish item:", error)
     }
   }
-
   const handleAddWishItem = async () => {
-    try {
+   try {
       const user = await decodedToken()
-      const WishItem = await getWishList(user.data.id)
+      const WishItem = await getWishList(user.id)
       const WishItemId = WishItem.data.filter((i) => i.item_id == id)
-      if (WishItem.data) {
+      if (WishItem.data && user.id) {
         const isItem = WishItem.data.find((i) => i.item_id == id)
         if (isItem) {
           await deleteWishList(WishItemId[0]?.id)
           setSwitchHeart(false)
           toast({
             title: t("successAddWish") || "Success",
-            description: t("deletedWishDesc") || "Deleted wishlist",
+            description: t("deletedWishDesc") || "Removed from wishlist",
           })
         } else {
-          await addWishList(id, user.data.id)
+          await addWishList(id, user.id)
           setSwitchHeart(true)
           toast({
             title: t("successAddWish") || "Success",
-            description: t("successAddWishDesc") || "Item added to wishlist successfully.",
+            description: t("successAddWishDesc") || "Added to wishlist successfully.",
           })
         }
       }

@@ -234,7 +234,7 @@ export default function ProfileSettingsPage() {
     if (token) {
       const { id } = await decodedToken(token)
       const userData = await getUserById(id)
-      setUser(userData)
+      setUser(userData.data)
     }
   }
 
@@ -492,7 +492,7 @@ export default function ProfileSettingsPage() {
           {/* Main Content */}
           <motion.div className="md:col-span-3" variants={itemVariants}>
             <AnimatePresence mode="wait">
-              <TabsContent value="profile">
+              <TabsContent value="profile" key='profile'>
                 <motion.div variants={tabVariants} initial="hidden" animate="visible" exit="exit" key="profile">
                   <motion.div variants={cardVariants} whileHover="hover">
                     <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 overflow-hidden">
@@ -865,7 +865,7 @@ export default function ProfileSettingsPage() {
                 </motion.div>
               </TabsContent>
 
-              <TabsContent value="preferences">
+              <TabsContent value="preferences" key='preferences'>
                 <motion.div variants={tabVariants} initial="hidden" animate="visible" exit="exit" key="preferences">
                   <motion.div variants={cardVariants} whileHover="hover">
                     <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
@@ -924,7 +924,7 @@ export default function ProfileSettingsPage() {
                 </motion.div>
               </TabsContent>
 
-              <TabsContent value="security">
+              <TabsContent value="security"  key='security'>
                 <motion.div variants={tabVariants} initial="hidden" animate="visible" exit="exit" key="security">
                   <motion.div variants={cardVariants} whileHover="hover">
                     <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
@@ -1035,7 +1035,7 @@ export default function ProfileSettingsPage() {
                 </motion.div>
               </TabsContent>
 
-              <TabsContent value="add">
+              <TabsContent value="add"  key='add'>
                 <motion.div variants={tabVariants} initial="hidden" animate="visible" exit="exit" key="add">
                   <motion.div variants={cardVariants} whileHover="hover">
                     <Card className="shadow-xl border-0 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">

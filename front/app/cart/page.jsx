@@ -13,6 +13,7 @@ import {
   deleteOfferById,
   deleteOfferItemsById,
   completedOfferById,
+  deleteFinallyOfferById
 } from "@/callAPI/swap"
 import { getUserById } from "@/callAPI/users"
 import { getCookie, decodedToken } from "@/callAPI/utiles"
@@ -291,6 +292,23 @@ const Cart = () => {
     updateCashAdjustmentAfterRemove()
   }, [getOffers])
 
+  const removeRejectesSwap = async (offerId)=>{
+  const SwapFinallyRemoved = await deleteFinallyOfferById(offerId)
+  if(SwapFinallyRemoved){
+    toast({
+        title: t("successfully") || "Successfully",
+        description: t("Swapdeletedsuccessfully") || "Swap deleted successfully",
+      })
+  }
+  else {
+     toast({
+        title: t("error") || "Error",
+        description: t("Failedtodeleteswap") || "Failed to delete swap",
+        variant: "destructive",
+      })
+  }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -317,7 +335,7 @@ const Cart = () => {
       <AnimatePresence>
         {showDeleteDialog && (
           <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-            <DialogContent asChild>
+            <DialogContent>
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -362,7 +380,7 @@ const Cart = () => {
       <AnimatePresence>
         {showComleteDialog && (
           <Dialog open={showComleteDialog} onOpenChange={setShowComleteDialog}>
-            <DialogContent asChild>
+            <DialogContent>
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -469,6 +487,7 @@ const Cart = () => {
           </motion.div>
 
           {/* Offers List */}
+         
           <motion.div variants={containerVariants} initial="hidden" animate="visible">
             <AnimatePresence mode="popLayout">
               {[...offers]
@@ -481,7 +500,8 @@ const Cart = () => {
                     layoutId={`offer-${offer.id}`}
                     className="my-2"
                   >
-                    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+ {
+             offer.finaly_deleted==='true' && (<Card className="overflow-hidden hover:shadow-lg transition-shadow">
                       <CardHeader>
                         {!["rejected", "completed"].includes(offer.status_offer) && (
                           <motion.div
@@ -539,8 +559,10 @@ const Cart = () => {
                           </motion.div>
                         )}
                       </CardHeader>
+                      
                       <CardContent>
                         {["pending", "accepted"].includes(offer.status_offer) ? (
+                          
                           <>
                             {/* My Items */}
                             <motion.div
@@ -650,6 +672,7 @@ const Cart = () => {
                             })()}
                           </motion.div>
                         ) : (
+                         
                           <motion.div
                             className="text-center text-red-600"
                             initial={{ opacity: 0, scale: 0.9 }}
@@ -661,7 +684,9 @@ const Cart = () => {
                               animate={{ scale: 1 }}
                               transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
                             >
-                              <Trash2 className="h-8 w-8 mx-auto mb-2" />
+                              <Trash2 className="h-8 w-8 mx-auto mb-2 hover:scale-110 hover:bg-[#de2626] hover:text-white rounded" 
+                              onClick={()=>{removeRejectesSwap(offer.id)}}
+                              />
                             </motion.div>
                             <h3 className="text-xl font-semibold mb-2">{t("SwapRejected") || "Swap Rejected"}</h3>
                             <p className="text-muted-foreground mb-4">
@@ -694,13 +719,13 @@ const Cart = () => {
                                 {userSwaps.find((u) => u.id === offer.to_user_id)?.first_name?.[0] || "U"}
                               </AvatarFallback>
                             </Avatar>
-
                             <div>
                               <div className="font-semibold text-base capitalize">
                                 {userSwaps.find((u) => u.id === offer.to_user_id)?.first_name || t("User") || "User"}
                               </div>
-                            </div>
+                            </div>                            
                           </div>
+                        
 
                           {offer.status_offer === "pending" ? (
                             <motion.div
@@ -751,7 +776,9 @@ const Cart = () => {
                           ) : null}
                         </motion.div>
                       </CardContent>
-                    </Card>
+                    </Card>)
+          }
+                    
                   </motion.div>
                 ))}
             </AnimatePresence>

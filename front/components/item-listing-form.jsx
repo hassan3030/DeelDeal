@@ -195,7 +195,7 @@ export function ItemListingForm() {
   }
 
   const requestAiPriceEstimate = async () => {
-    const { name, description, category, condition } = form.getValues()
+    const { name, description, category, condition, price } = form.getValues()
 
     if (!name || !description || !category || !condition) {
       toast({
@@ -211,10 +211,79 @@ export function ItemListingForm() {
     setIsEstimating(true)
 
     try {
+      // Simulate AI processing time
       await new Promise((resolve) => setTimeout(resolve, 1500))
-      const mockEstimate = Math.floor(Math.random() * 1000) + 100
-      setAiPriceEstimation(mockEstimate)
-      form.setValue("valueEstimate", mockEstimate)
+      
+      // Base price factors - either from user input or category-based defaults
+      const basePrice = parseFloat(price) || getCategoryBasePrice(category)
+      
+      // Condition factors - how condition affects value
+      const conditionFactors = {
+        "new": 1.0,
+        "excellent": 0.85,
+        "good": 0.7,
+        "fair": 0.5,
+        "poor": 0.3
+      }
+      
+      // Category-specific depreciation rates
+      const categoryDepreciationRates = {
+        "electronics": 0.25, // Electronics depreciate faster
+        "clothing": 0.4,
+        "furniture": 0.15,
+        "books": 0.1,
+        "toys": 0.2,
+        "sports": 0.15,
+        "automotive": 0.2,
+        "jewelry": 0.05, // Jewelry holds value better
+        "collectibles": 0.05,
+        "art": 0.02
+      }
+      
+      // Market demand multiplier (could be based on real market data)
+      const marketDemandMultiplier = getMarketDemandMultiplier(category)
+      
+      // Image quality factor (placeholder - in a real system this would analyze images)
+      const imageQualityFactor = images.length > 0 ? 1.05 : 0.95
+      
+      // Calculate the estimated value
+      let estimatedValue = basePrice
+      
+      // Apply condition adjustment
+      const conditionFactor = conditionFactors[condition] || 0.7
+      estimatedValue *= conditionFactor
+      
+      // Apply category-specific depreciation
+      const depreciationRate = categoryDepreciationRates[category] || 0.2
+      estimatedValue *= (1 - depreciationRate)
+      
+      // Apply market demand
+      estimatedValue *= marketDemandMultiplier
+      
+      // Apply image quality factor
+      estimatedValue *= imageQualityFactor
+      
+      // Add slight randomness to make it feel more "AI-like" (±5%)
+      const randomFactor = 0.95 + (Math.random() * 0.1)
+      estimatedValue *= randomFactor
+      
+      // Round to nearest whole number
+      const finalEstimate = Math.round(estimatedValue)
+      
+      setAiPriceEstimation(finalEstimate)
+      form.setValue("valueEstimate", finalEstimate)
+      
+      console.log("AI Price Estimation Details:", {
+        basePrice,
+        condition,
+        conditionFactor,
+        category,
+        depreciationRate,
+        marketDemandMultiplier,
+        imageQualityFactor,
+        randomFactor,
+        finalEstimate
+      })
     } catch (error) {
       console.error("Error getting AI price estimate:", error)
       toast({
@@ -227,6 +296,41 @@ export function ItemListingForm() {
     } finally {
       setIsEstimating(false)
     }
+  }
+  
+  // Helper function to get base price by category
+  const getCategoryBasePrice = (category) => {
+    const basePrices = {
+      "electronics": 500,
+      "clothing": 50,
+      "furniture": 200,
+      "books": 15,
+      "toys": 25,
+      "sports": 75,
+      "automotive": 300,
+      "jewelry": 200,
+      "collectibles": 100,
+      "art": 150
+    }
+    return basePrices[category] || 100
+  }
+  
+  // Helper function to simulate market demand
+  const getMarketDemandMultiplier = (category) => {
+    // Simulated market demand (in a real app, this could come from an API)
+    const marketDemand = {
+      "electronics": 1.2, // High demand
+      "clothing": 0.9,
+      "furniture": 0.85,
+      "books": 0.7,
+      "toys": 0.8,
+      "sports": 1.1,
+      "automotive": 0.95,
+      "jewelry": 1.15,
+      "collectibles": 1.3, // Very high demand
+      "art": 1.25
+    }
+    return marketDemand[category] || 1.0
   }
 
   const onSubmit = async (data) => {
@@ -383,7 +487,7 @@ export function ItemListingForm() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
+                <motion.div  >
                   <Button
                     onClick={() => {
                       handleSubmit()

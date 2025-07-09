@@ -163,7 +163,7 @@ export default function ProfilePage() {
         )
       }
       const userData = await getUserById(id)
-      setUser(userData)
+      setUser(userData.data)
     }
   }
 
@@ -179,12 +179,12 @@ export default function ProfilePage() {
 
   const handleGetBreviousRating = async (id) => {
     const response = await getReview(id)
-    console.log("response", response)
+    console.log("response", response.data)
 
-    if (!response) {
-      setRate(33)
+    if (!response.data) {
+      setRate(0)
     } else {
-      const rates = response.map(({ rating }) => rating)
+      const rates = response.data.map(({ rating }) => rating)
       console.log("rates", rates)
       const calculateAverageRating = getCalculateAverageRating(rates)
       console.log("calculateAverageRating", calculateAverageRating)
@@ -196,15 +196,15 @@ export default function ProfilePage() {
 
   const getUserProducts = async () => {
     const userPruducts = await getProductByUserId()
-    setmyUnavailableItems(userPruducts.filter((u) => u.status_swap === "unavailable"))
-    setmyAvailableItems(userPruducts.filter((u) => u.status_swap === "available"))
-    return userPruducts
+    setmyUnavailableItems(userPruducts.data.filter((u) => u.status_swap === "unavailable"))
+    setmyAvailableItems(userPruducts.data.filter((u) => u.status_swap === "available"))
+    return userPruducts.data
   }
 
   const getNotificationsLength = async () => {
     const notifications = await getOffersNotifications(id)
-    console.log("notifications", notifications)
-    setNotificationsLength(Array.isArray(notifications) ? notifications.length : 0)
+    console.log("notifications", notifications.data)
+    setNotificationsLength(Array.isArray(notifications.count) ? notifications.count : 0)
   }
 
   //get offers
@@ -220,25 +220,25 @@ export default function ProfilePage() {
       const offers = await getOfferById(id)
 
       // get offers items based offors id
-      for (const offer of offers) {
+      for (const offer of offers.data) {
         const offerItem = await getOfferItemsByOfferId(offer.id)
-        offerItems.push(...offerItem)
+        offerItems.push(...offerItem.data)
       }
 
       // get items itself based offors items id
       for (const item of offerItems) {
         const product = await getProductById(item.item_id)
-        items.push({ ...product })
+        items.push({ ...product.data })
       }
 
       // get user swaps based on user id and offers id
       for (const item of items) {
         const user = await getUserByProductId(item.id)
-        usersSwaper.push({ ...user })
+        usersSwaper.push({ ...user.data })
       }
 
       const uniqueUsers = usersSwaper.filter((obj, index, self) => index === self.findIndex((t) => t.id === obj.id))
-      setUserOffers(offers)
+      setUserOffers(offers.data)
       setUserSwaps(uniqueUsers)
       setSwapItems(items)
 
@@ -446,7 +446,7 @@ export default function ProfilePage() {
             </motion.div>
 
             <AnimatePresence mode="wait">
-              <TabsContent value="items" className="mt-6">
+              <TabsContent value="items" className="mt-6" key={crypto.randomUUID()}>
                 <motion.div variants={tabVariants} initial="hidden" animate="visible" exit="exit" key="items">
                   <div className="flex items-center justify-between mb-4">
                     <motion.h2
@@ -477,7 +477,7 @@ export default function ProfilePage() {
                 </motion.div>
               </TabsContent>
 
-              <TabsContent value="offers" className="mt-6">
+              <TabsContent value="offers" className="mt-6" key={crypto.randomUUID()}>
                 <motion.div variants={tabVariants} initial="hidden" animate="visible" exit="exit" key="offers">
                   <motion.h2
                     className="mb-4 text-xl font-bold bg-gradient-to-r from-[#49c5b6] to-[#3db6a7] bg-clip-text text-transparent"
@@ -496,7 +496,7 @@ export default function ProfilePage() {
                 </motion.div>
               </TabsContent>
 
-              <TabsContent value="notifications" className="mt-6">
+              <TabsContent value="notifications" className="mt-6" key={crypto.randomUUID()}>
                 <motion.div variants={tabVariants} initial="hidden" animate="visible" exit="exit" key="notifications">
                   <motion.h2
                     className="mb-4 text-xl font-bold bg-gradient-to-r from-[#49c5b6] to-[#3db6a7] bg-clip-text text-transparent"
@@ -515,7 +515,7 @@ export default function ProfilePage() {
                 </motion.div>
               </TabsContent>
 
-              <TabsContent value="unavailableItems" className="mt-6">
+              <TabsContent value="unavailableItems" className="mt-6" key={crypto.randomUUID()}>
                 <motion.div
                   variants={tabVariants}
                   initial="hidden"

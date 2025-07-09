@@ -46,7 +46,7 @@ const cardVariants = {
 const buttonVariants = {
   hover: {
     scale: 1.05,
-    transition: { type: "spring", stiffness: 400, damping: 10 },
+    transition: { type: "spring", stiffness: 100, damping: 5 },
   },
   tap: { scale: 0.95 },
 }
@@ -77,9 +77,9 @@ export default function ManageItemsPage() {
   const filteredItems = async () => {
     setIsLoading(true)
     const data = await getProductByUserId()
-    setItems(data)
+    setItems(data.data)
     setIsLoading(false)
-    return data
+    return data.data
   }
 
   useEffect(() => {
@@ -120,8 +120,8 @@ export default function ManageItemsPage() {
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <motion.div variants={buttonVariants} whileHover="hover" whileTap="tap">
-          <Button className="mb-2" variant="outline" size="sm" onClick={() => router.back()}>
+        <motion.div  whileHover="hover" whileTap="tap">
+          <Button className="mb-2 hover:scale-105" variant="outline" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
           </Button>
         </motion.div>

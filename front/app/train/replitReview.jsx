@@ -1,15 +1,4 @@
 'use client'
-// const x =()=>{
-
-//   return(
-//     <>
-//     <h1>fwehdsiuhfkuew</h1>
-//     </>
-//   )
-// }
-
-// export  default x ;
-
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";

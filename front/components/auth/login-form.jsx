@@ -108,26 +108,26 @@ export function LoginForm() {
     },
   })
 
-  useEffect(() => {
-    if (true) {
-      const loadGoogleScript = () => {
-        const script = document.createElement("script")
-        script.src = "https://accounts.google.com/gsi/client"
-        script.async = true
-        script.defer = true
-        document.body.appendChild(script)
-        return () => {
-          document.body.removeChild(script)
-        }
-      }
+  // useEffect(() => {
+  //   if (true) {
+  //     const loadGoogleScript = () => {
+  //       const script = document.createElement("script")
+  //       script.src = "https://accounts.google.com/gsi/client"
+  //       script.async = true
+  //       script.defer = true
+  //       document.body.appendChild(script)
+  //       return () => {
+  //         document.body.removeChild(script)
+  //       }
+  //     }
 
-      const googleCleanup = loadGoogleScript()
+  //     const googleCleanup = loadGoogleScript()
 
-      return () => {
-        googleCleanup()
-      }
-    }
-  }, [])
+  //     return () => {
+  //       googleCleanup()
+  //     }
+  //   }
+  // }, [])
 
   const validateForm = (data) => {
     let isValid = true
@@ -161,13 +161,20 @@ export function LoginForm() {
 
     try {
       const response = await login(data.email, data.password)
-      console.log(response)
-      if (response) {
+      console.log('loginloginloginloginloginloginlogin',response)
+      if (response.success) {
         toast({
           title: t("loginSuccessful") || "Login successful!",
           description: t("welcomeBack") || "Welcome back to DeelDeal!",
         })
         router.push("/")
+      }
+      else{
+         toast({
+        title: t("loginFailed") || "Login failed",
+        description: t("invalidCredentials") || "Invalid email or password. Please try again.",
+        variant: "destructive",
+      })
       }
     } catch (error) {
       toast({
@@ -294,12 +301,12 @@ export function LoginForm() {
               onFocus={() => setIsFocused((prev) => ({ ...prev, password: true }))}
               onBlur={() => setIsFocused((prev) => ({ ...prev, password: false }))}
             />
-            <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+            <motion.div>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground"
+                className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground "
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

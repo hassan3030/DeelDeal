@@ -89,16 +89,16 @@ const Wishlist = () => {
         const wishList = await getWishList(user.id)
 
         const items = await Promise.all(
-          wishList.map(async (wish) => {
+          wishList.data.map(async (wish) => {
             const product = await getProductById(wish.item_id)
 
             return {
               wishlist_id: wish.id,
-              images: product.images,
-              id: product.id,
-              name: product.name,
-              category: product.category,
-              description: product.description,
+              images: product.data.images,
+              id: product.data.id,
+              name: product.data.name,
+              category: product.data.category,
+              description: product.data.description,
               dateAdded: new Date(wish.date_created).toLocaleDateString(),
             }
           }),
@@ -222,7 +222,7 @@ const WishlistCard = ({ item, onRemove }) => {
 
   const getDataImage = async () => {
     const images2 = await getImageProducts(item.images)
-    setBigImage(images2[0]?.directus_files_id || "")
+    setBigImage(images2.data[0]?.directus_files_id || "")
   }
 
   useEffect(() => {

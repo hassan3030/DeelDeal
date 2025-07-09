@@ -101,6 +101,7 @@ export function ProductCarousel({ title, viewAllHref, viewAllLabel, children }) 
   }
 
   return (
+    
     <motion.div className="relative" variants={containerVariants} initial="hidden" animate="visible">
       <motion.div className="mb-4 flex items-center justify-between" variants={headerVariants}>
         <motion.h2
@@ -187,7 +188,7 @@ export function ProductCarousel({ title, viewAllHref, viewAllLabel, children }) 
       </div>
 
       {/* Scroll indicators */}
-      <motion.div
+      {/* <motion.div
         className="flex justify-center mt-2 gap-1"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -209,7 +210,7 @@ export function ProductCarousel({ title, viewAllHref, viewAllLabel, children }) 
             />
           </motion.div>
         ))}
-      </motion.div>
+      </motion.div> */}
     </motion.div>
   )
 }

@@ -15,7 +15,7 @@ import { getProductById, getImageProducts } from "@/callAPI/products"
 import { getCookie, decodedToken } from "@/callAPI/utiles"
 import { getUserByProductId } from "@/callAPI/users"
 import { useToast } from "@/components/ui/use-toast"
-import LoadinpPage from "../loading"
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -73,16 +73,16 @@ export default function ProductPage() {
     const fetchData = async () => {
       try {
         const prod = await getProductById(id)
-        if (!prod) {
+        if (!prod.data) {
           notFound()
-          return
+          return null
         }
-        setProduct(prod)
+        setProduct(prod.data)
 
         // Images
-        if (prod.images && prod.images.length > 0) {
-          const images2 = await getImageProducts(prod.images)
-          const filesArray = images2.map((item) => `http://localhost:8055/assets/${item.directus_files_id}`)
+        if (prod.data.images && prod.data.images.length > 0) {
+          const images2 = await getImageProducts(prod.data.images)
+          const filesArray = images2.data.map((item) => `http://localhost:8055/assets/${item.directus_files_id}`)
           setImages(filesArray)
         } else {
           setImages([])
@@ -91,9 +91,9 @@ export default function ProductPage() {
         // User
         if (id) {
           const userData = await getUserByProductId(id)
-          setUser(userData)
-          setName(`${userData?.first_name || ""} ${userData?.last_name || ""}`.trim())
-          setAvatar(userData?.avatar ? `http://localhost:8055/assets/${userData.avatar}` : "")
+          setUser(userData.data)
+          setName(`${userData.data?.first_name || ""} ${userData.data?.last_name || ""}`.trim())
+          setAvatar(userData.data?.avatar ? `http://localhost:8055/assets/${userData.data.avatar}` : "")
         } else {
           setUser(null)
           setName("")
@@ -121,7 +121,7 @@ export default function ProductPage() {
   }
 
   if (!product) {
-    return <LoadinpPage loadin={t("loading")} />
+    return null
   }
 
   return (
@@ -291,8 +291,8 @@ export default function ProductPage() {
                 <TabsTrigger value="Category">{t("category")}</TabsTrigger>
                 <TabsTrigger value="swap_status">{t("statusSwap")}</TabsTrigger>
               </TabsList>
-              <AnimatePresence mode="wait">
-                <TabsContent value="features" className="mt-4">
+              <AnimatePresence mode="wait"  >
+                <TabsContent value="features" className="mt-4" key={crypto.randomUUID()}>
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -302,7 +302,7 @@ export default function ProductPage() {
                     {product.description}
                   </motion.div>
                 </TabsContent>
-                <TabsContent value="Category" className="mt-4">
+                <TabsContent value="Category" className="mt-4" key={crypto.randomUUID()}>
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -313,7 +313,7 @@ export default function ProductPage() {
                     {t(product.category)}
                   </motion.div>
                 </TabsContent>
-                <TabsContent value="swap_status" className="mt-4">
+                <TabsContent value="swap_status" className="mt-4" key={crypto.randomUUID()}>
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}

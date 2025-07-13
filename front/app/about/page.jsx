@@ -2,30 +2,29 @@
 import {useState , useEffect} from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building, Users, Award } from "lucide-react";
-import  LoadingPage  from "./loading";
 import { useTranslations } from "@/lib/use-translations";
 
 const AboutPage = () => {
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
-    const { t } = useTranslations();
+  // const [loading, setLoading] = useState(true);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => setLoading(false), 800);
+  //   return () => clearTimeout(timer);
+  // }, []);
+  //   const { t } = useTranslations();
 
-  if (loading) return <LoadingPage />;
+  // if (loading) return <LoadingPage />;
 
   return (
     <>
 <div className="container mx-auto py-10 px-4 max-w-6xl">
-      <header className="mb-12 text-center">
+      {/* <header className="mb-12 text-center">
         <h1 className="text-4xl font-bold mb-4">{t("AboutOurCompany")||"About Our Company"}</h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-{t("We're dedicated to providing exceptional services and products to our customers around the world")||"          We're dedicated to providing exceptional services and products to our customers around the world."}
+{t("We're dedicated to providing exceptional services and products to our customers around the world")||"We're dedicated to providing exceptional services and products to our customers around the world."}
         </p>
-      </header>
+      </header> */}
 
-      <section className="mb-16">
+      {/* <section className="mb-16">
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center gap-4">
@@ -79,7 +78,7 @@ const AboutPage = () => {
             </CardContent>
           </Card>
         </div>
-      </section>
+      </section> */}
 
       <section className="mb-16">
         {/* <Card>
@@ -108,7 +107,7 @@ const AboutPage = () => {
         </Card> */}
       </section>
 
-      <section className="mb-12">
+      {/* <section className="mb-12">
         <h2 className="text-3xl font-bold text-center mb-8">Our Leadership Team</h2>
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
           {[
@@ -139,7 +138,7 @@ const AboutPage = () => {
             </Card>
           ))}
         </div>
-      </section>
+      </section> */}
     </div> 
 
 

@@ -17,7 +17,7 @@ export default {
         // client_secret: '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',
         client_id: process.env.AUTH_GOOGLE_CLIENT_ID,
         client_secret: process.env.AUTH_GOOGLE_CLIENT_SECRET,
-        redirect_uri: 'http://localhost:8055/auth/login/google',
+        redirect_uri: process.env.AUTH_GOOGLE_REDIRECT_URI || 'http://localhost:8055/auth/login/google',
         profile_map: {
           id: 'sub',
           email: 'email',

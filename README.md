@@ -32,3 +32,37 @@ DeelDeal is a platform designed to connect freelancers and clients, facilitating
    ```bash
    git clone https://github.com/yourusername/DeelDeal.git
    cd DeelDeal
+
+### Directus Deployment
+
+1.  **Navigate to the `directus` directory:**
+    ```bash
+    cd directus
+    ```
+
+2.  **Create a `.env` file from the example:**
+    ```bash
+    cp .env.example .env
+    ```
+
+3.  **Update the `.env` file with your production credentials:**
+    - `PUBLIC_URL`: Your production domain (e.g., `https://api.yourdomain.com`)
+    - `DB_HOST`: Your production database host
+    - `DB_USER`: Your production database user
+    - `DB_PASSWORD`: Your production database password
+    - `SECRET`: A long, random string for security
+    - `EMAIL_SMTP_USER`: Your Gmail address for sending emails
+    - `EMAIL_SMTP_PASSWORD`: Your Gmail password or app password
+    - `EMAIL_FROM`: The email address to send emails from
+    - `AUTH_GOOGLE_CLIENT_ID`: Your Google OAuth client ID
+    - `AUTH_GOOGLE_CLIENT_SECRET`: Your Google OAuth client secret
+
+4.  **Install the dependencies:**
+    ```bash
+    npm install
+    ```
+
+5.  **Start the Directus server:**
+    ```bash
+    npx directus start
+    ```
